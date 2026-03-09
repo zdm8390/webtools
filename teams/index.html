@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>チーム分けアプリ</title>
+    <title>チーム戦メイカー</title>
     <style>
         body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        h2 { text-align: center; } 
         .input-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
         input[type="text"] { padding: 8px; width: 100%; box-sizing: border-box; }
         .settings { background: #f0f0f0; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
@@ -17,12 +18,22 @@
         .team-blue { background: #e3f2fd; border: 2px solid #42a5f5; }
         .team h3 { margin-top: 0; text-align: center; }
         ul { list-style-type: none; padding: 0; margin: 0; }
-        li { padding: 5px 0; border-bottom: 1px dashed #ccc; text-align: center; }
+        li { padding: 5px 0; border-bottom: 1px dashed #ccc; text-align: left; padding-left: 10px; }
+        
+        /* 今回追加したCSS（文字色の変更） */
+        .team-red li {
+            color: #d32f2f; /* 見やすい濃いめの赤 */
+            font-weight: bold; /* 名前を目立たせるために太字に */
+        }
+        .team-blue li {
+            color: #1976d2; /* 見やすい濃いめの青 */
+            font-weight: bold; /* 名前を目立たせるために太字に */
+        }
     </style>
 </head>
 <body>
 
-    <h2>ランダムチーム分け</h2>
+    <h2>チーム戦メイカー</h2>
 
     <div class="input-grid" id="inputContainer">
         </div>
@@ -32,8 +43,8 @@
             <input type="checkbox" id="useCustomRatio"> 詳細設定：人数を偏らせる
         </label>
         <div id="ratioSettings" style="display: none; margin-top: 10px;">
-            赤チームの人数: <input type="number" id="redCountInput" min="0" max="16" value="1"> 人
-            <br><small style="color: #666;">※残りのメンバーは青チームになります。</small>
+            TeamRedの人数: <input type="number" id="redCountInput" min="0" max="16" value="1"> 人
+            <br><small style="color: #666;">※残りのメンバーはTeamBlueになります。</small>
         </div>
     </div>
 
@@ -41,11 +52,11 @@
 
     <div class="results">
         <div class="team team-red">
-            <h3 style="color: #ef5350;">赤チーム</h3>
+            <h3 style="color: #ef5350;">TeamRed</h3>
             <ul id="redTeamList"></ul>
         </div>
         <div class="team team-blue">
-            <h3 style="color: #42a5f5;">青チーム</h3>
+            <h3 style="color: #42a5f5;">TeamBlue</h3>
             <ul id="blueTeamList"></ul>
         </div>
     </div>
@@ -68,7 +79,7 @@
             ratioSettings.style.display = e.target.checked ? 'block' : 'none';
         });
 
-        // 3. 配列をシャッフルする関数（Fisher-Yatesアルゴリズム）
+        // 3. 配列をシャッフルする関数
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -79,7 +90,6 @@
 
         // 4. メインのチーム分け処理
         function splitTeams() {
-            // 入力された名前を取得（空欄は除外）
             const inputs = document.querySelectorAll('.member-input');
             let members = Array.from(inputs).map(input => input.value.trim()).filter(val => val !== '');
 
@@ -88,33 +98,26 @@
                 return;
             }
 
-            // メンバーをランダムにシャッフル
             members = shuffleArray(members);
 
             const total = members.length;
             let redCount = 0;
 
             if (checkbox.checked) {
-                // 詳細設定オンの場合：指定された人数を赤チームに
                 const inputCount = parseInt(document.getElementById('redCountInput').value);
-                // 入力人数が総人数を超えないように調整
                 redCount = Math.min(inputCount, total); 
             } else {
-                // デフォルト：同数に分ける
                 const half = Math.floor(total / 2);
                 if (total % 2 !== 0) {
-                    // 奇数の場合、赤を多くするか青を多くするかをランダム(50%の確率)で決める
                     redCount = Math.random() < 0.5 ? half + 1 : half;
                 } else {
                     redCount = half;
                 }
             }
 
-            // チームを分割
             const redTeam = members.slice(0, redCount);
             const blueTeam = members.slice(redCount);
 
-            // 結果を画面に表示
             displayTeam('redTeamList', redTeam);
             displayTeam('blueTeamList', blueTeam);
         }
@@ -122,15 +125,18 @@
         // リストにメンバーを表示する関数
         function displayTeam(elementId, teamMembers) {
             const ul = document.getElementById(elementId);
-            ul.innerHTML = ''; // 一旦クリア
-            teamMembers.forEach(member => {
+            ul.innerHTML = ''; 
+            
+            if (teamMembers.length === 0) {
+                ul.innerHTML = '<li style="color:#aaa; text-align:center; font-weight:normal;">(なし)</li>';
+                return;
+            }
+
+            teamMembers.forEach((member, index) => {
                 const li = document.createElement('li');
-                li.textContent = member;
+                li.textContent = `${index + 1}. ${member}`;
                 ul.appendChild(li);
             });
-            if (teamMembers.length === 0) {
-                ul.innerHTML = '<li style="color:#aaa;">(なし)</li>';
-            }
         }
     </script>
 </body>
