@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&family=Dela+Gothic+One&family=Mochi+Mochi+One&family=New+Tegumin&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+}
+
+/* Cyberpunk and retro neon effects */
+@keyframes cyber-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 
+      0 0 4px var(--neon-color, #ec4899),
+      0 0 12px var(--neon-color, #ec4899),
+      0 0 30px var(--neon-color, #ec4899);
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+  }
+}
+
+.cyber-glow {
+  text-shadow: 
+    0 0 4px var(--neon-color, #ec4899),
+    0 0 12px var(--neon-color, #ec4899),
+    0 0 30px var(--neon-color, #ec4899);
+}
+
+.cyber-glow-text {
+  animation: cyber-flicker 4s infinite alternate;
+}
+
+/* Glassmorphism details */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Font helpers */
+.font-mono-tech {
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.font-dela {
+  font-family: 'Dela Gothic One', sans-serif;
+}
+
+.font-mochi {
+  font-family: 'Mochi Mochi One', sans-serif;
+}
+
+.font-tegumin {
+  font-family: 'New Tegumin', serif;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

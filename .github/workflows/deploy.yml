@@ -29,28 +29,41 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: ChimeOut/package-lock.json
+          cache-dependency-path: |
+            ChimeOut/package-lock.json
+            CCG/package-lock.json
 
-      - name: Install dependencies
+      - name: Install dependencies (ChimeOut)
         working-directory: ChimeOut
         run: npm ci
 
-      - name: Build application
+      - name: Build application (ChimeOut)
         working-directory: ChimeOut
+        run: npm run build
+
+      - name: Install dependencies (CCG)
+        working-directory: CCG
+        run: npm ci
+
+      - name: Build application (CCG)
+        working-directory: CCG
         run: npm run build
 
       - name: Prepare deployment directory structure
         run: |
-          # Move build output to a temporary staging folder
+          # Move ChimeOut build output to a temporary staging folder and clean up source files
           mv ChimeOut/dist ./chimeout-temp-dist
-          # Delete the ChimeOut source folder containing development files
           rm -rf ChimeOut
-          # Recreate ChimeOut folder
           mkdir ChimeOut
-          # Move the compiled production assets back into the ChimeOut folder
           mv chimeout-temp-dist/* ChimeOut/
-          # Remove temp folder
           rm -rf chimeout-temp-dist
+
+          # Move CCG build output to a temporary staging folder and clean up source files
+          mv CCG/dist ./ccg-temp-dist
+          rm -rf CCG
+          mkdir CCG
+          mv ccg-temp-dist/* CCG/
+          rm -rf ccg-temp-dist
 
       - name: Setup Pages configuration
         uses: actions/configure-pages@v4
