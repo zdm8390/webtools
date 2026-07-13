@@ -47,7 +47,7 @@ const COMMIT_TEMPLATES: CommitTemplates = {
     textColor: 'text-yellow-400',
     badgeBg: 'bg-yellow-400/20',
     badgeText: 'text-yellow-300',
-    buttonTexts: ['給料泥棒モード起動', '現実から目を背ける', '「ヨシ！」と叫ぶ'],
+    buttonTexts: ['給料泥棒モード起動', '仕事を放棄する', '「ヨシ！」と叫ぶ'],
     copyFeedback: '草生え散らかしました！ｗｗｗ',
     fontClass: 'font-mochi',
     templates: [
@@ -188,6 +188,24 @@ interface HistoryItem {
 
 export default function App() {
   const [originalMessage, setOriginalMessage] = useState<string>('');
+  
+  const SAMPLE_COMMITS = [
+    'feat: add email verification system for user registration',
+    'fix: resolve sql injection vulnerability in login query',
+    'fix: resolve database deadlock on concurrent writes',
+    'chore: update dependency lodash to version 4.17.21',
+    'docs: correct spelling mistakes and update layout in README.md',
+    'refactor: simplify user authentication middleware and helper functions',
+    'perf: optimize image rendering speed by lazy loading assets',
+    'test: add unit tests for payment processing module',
+    'style: align icons and adjust margins on sidebar component',
+    'fix: memory leak in websocket connections'
+  ];
+
+  const loadSample = () => {
+    const randomIndex = Math.floor(Math.random() * SAMPLE_COMMITS.length);
+    setOriginalMessage(SAMPLE_COMMITS[randomIndex]);
+  };
   const [generatedMessage, setGeneratedMessage] = useState<string>('');
   const [mode, setMode] = useState<string>('netmeme');
   const [buttonIndex, setButtonIndex] = useState<number>(0);
@@ -208,9 +226,9 @@ export default function App() {
 
   // Load configuration from local storage
   useEffect(() => {
-    const savedKey = localStorage.getItem('shitcommit_api_key') || '';
-    const savedModel = localStorage.getItem('shitcommit_model') || 'gemini-2.5-flash';
-    const savedHistory = localStorage.getItem('shitcommit_history');
+    const savedKey = localStorage.getItem('crazycommit_api_key') || '';
+    const savedModel = localStorage.getItem('crazycommit_model') || 'gemini-2.5-flash';
+    const savedHistory = localStorage.getItem('crazycommit_history');
     
     setApiKey(savedKey);
     setTempApiKey(savedKey);
@@ -230,7 +248,7 @@ export default function App() {
   const updateHistory = (newItem: HistoryItem) => {
     setHistory(prev => {
       const updated = [newItem, ...prev.filter(item => item.generated !== newItem.generated)].slice(0, 30);
-      localStorage.setItem('shitcommit_history', JSON.stringify(updated));
+      localStorage.setItem('crazycommit_history', JSON.stringify(updated));
       return updated;
     });
   };
@@ -254,7 +272,7 @@ export default function App() {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `You are ShitCommit Generator, a humor assistant that converts normal/technical commit messages or code changes into crazy, hilarious, or dramatic commit messages.
+            text: `You are CrazyCommit Generator, a humor assistant that converts normal/technical commit messages or code changes into crazy, hilarious, or dramatic commit messages.
             
 Selected Mode: "${activeMode}" (${modeMeta.name})
 Instruction: ${modeMeta.sub}
@@ -468,8 +486,8 @@ Rules:
 
   // Save settings
   const handleSaveSettings = () => {
-    localStorage.setItem('shitcommit_api_key', tempApiKey.trim());
-    localStorage.setItem('shitcommit_model', tempModel);
+    localStorage.setItem('crazycommit_api_key', tempApiKey.trim());
+    localStorage.setItem('crazycommit_model', tempModel);
     setApiKey(tempApiKey.trim());
     setModel(tempModel);
     setIsSettingsOpen(false);
@@ -479,7 +497,7 @@ Rules:
   const handleClearHistory = () => {
     if (window.confirm('コミット履歴をすべてクリアしますか？')) {
       setHistory([]);
-      localStorage.removeItem('shitcommit_history');
+      localStorage.removeItem('crazycommit_history');
     }
   };
 
@@ -507,7 +525,7 @@ Rules:
             </span>
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter mt-2 font-mono-tech bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400 cyber-glow-text">
-            ShitCommit<span className="text-red-500">.js</span>
+            CrazyCommit<span className="text-red-500">.js</span>
           </h1>
           <p className="text-xs md:text-sm text-slate-400 mt-1 font-mono-tech">
             &gt;_ CONVERT COMPATIBLE GIT COMMITS INTO AESTHETIC CLOUD DUST
@@ -552,9 +570,12 @@ Rules:
                   1. 元のコミットメッセージを入力
                 </h2>
               </div>
-              <span className="text-[10px] font-mono-tech text-slate-500 uppercase">
-                INPUT_STREAM
-              </span>
+              <button
+                onClick={loadSample}
+                className="text-[10px] font-mono-tech px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
+              >
+                サンプルを入力
+              </button>
             </div>
 
             <textarea
@@ -677,7 +698,7 @@ Rules:
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-slate-400" />
                 <h2 className="text-sm font-semibold tracking-wider uppercase font-mono-tech text-slate-300">
-                  3. 生成されたShitコミット
+                  3. 生成されたCrazyコミット
                 </h2>
               </div>
               <span className={`text-[10px] uppercase font-mono-tech ${activeTheme.textColor}`}>
@@ -829,12 +850,27 @@ Rules:
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="bg-red-500/5 border border-red-500/10 p-3 rounded-lg text-xs text-slate-400 leading-relaxed font-mono-tech">
-                <div className="text-red-500 font-bold mb-1 flex items-center gap-1">
-                  <Key className="w-3.5 h-3.5" />
-                  Gemini APIキーの利用
+              <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-xl text-xs text-slate-300 leading-relaxed space-y-2">
+                <div className="text-red-500 font-bold flex items-center gap-1.5 font-mono-tech">
+                  <Key className="w-4 h-4 text-red-500" />
+                  Gemini APIキー利用ガイド
                 </div>
-                APIキーを設定すると、GoogleのGeminiモデルを利用して入力コンテキストに合わせた真のクレイジーなメッセージを無限生成できます。キーはローカルにのみ保存され、サーバー等に転送されません。空欄のままにすると、高速なローカルテンプレートジェネレータが作動します。
+                <ul className="list-disc pl-4 space-y-1.5 text-slate-400 text-[11px] font-sans">
+                  <li><strong>無料でも取得可能:</strong> Google AI Studioから誰でも無料で簡単にAPIキーを取得できます。</li>
+                  <li><strong>キーはローカル保存で安全:</strong> 入力されたキーは外部サーバーへ送信されず、お使いのブラウザのローカルストレージ（localStorage）内のみに安全に保存され、直接GoogleのAPIと通信します。</li>
+                  <li><strong>AIによる高度な狂気:</strong> キーを設定することで、AIモデルがコミット内容を文脈ごとに完全に理解し、超高度かつ独創的なクレイジーメッセージを無限に生成できるようになります。</li>
+                  <li><strong>未設定時の動作:</strong> 空欄のまま保存した場合は、超高速なローカル内テンプレートジェネレーターが作動します。</li>
+                </ul>
+                <div className="pt-1.5 font-mono-tech text-[11px]">
+                  <a 
+                    href="https://aistudio.google.com/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-red-400 hover:text-red-300 underline font-semibold flex items-center gap-1 text-slate-300"
+                  >
+                    👉 無料でAPIキーを取得する（Google AI Studio）
+                  </a>
+                </div>
               </div>
 
               <div className="space-y-1.5">
@@ -885,7 +921,7 @@ Rules:
       )}
 
       <footer className="w-full max-w-6xl mt-12 py-6 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-slate-600 font-mono-tech">
-        <span>© 2026 SHITCOMMIT.JS CREATED BY COLD_COFFEE.EXE</span>
+        <span>© 2026 CRAZYCOMMIT.JS CREATED BY COLD_COFFEE.EXE</span>
         <div className="flex gap-4">
           <a href="#" className="hover:text-slate-400">LICENSE: MIT</a>
           <span>•</span>
