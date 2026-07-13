@@ -468,7 +468,7 @@ Rules:
         }],
         generationConfig: {
           temperature: 0.95,
-          maxOutputTokens: 250
+          maxOutputTokens: 800
         }
       })
     });
@@ -980,12 +980,33 @@ Rules:
 
             <div className={`relative border rounded-lg p-5 min-h-[140px] flex items-center justify-center transition-all duration-500 ${
               darkMode ? 'bg-slate-950 border-slate-900' : 'bg-slate-100 border-slate-200'
+            } ${
+              isLoading ? 'animate-pulse' : ''
             }`}
                  style={{ 
-                   borderColor: generatedMessage ? `${activeTheme.neonColor}40` : '',
-                   boxShadow: (generatedMessage && darkMode) ? `inset 0 0 20px ${activeTheme.neonColor}0d` : 'none'
+                   borderColor: isLoading 
+                     ? activeTheme.neonColor 
+                     : generatedMessage 
+                       ? `${activeTheme.neonColor}40` 
+                       : '',
+                   boxShadow: (isLoading || (generatedMessage && darkMode)) 
+                     ? `inset 0 0 25px ${activeTheme.neonColor}15` 
+                     : 'none'
                  }}>
-              {generatedMessage ? (
+              {isLoading ? (
+                <div className="text-center flex flex-col items-center gap-3">
+                  <div className="flex gap-1.5 items-center justify-center">
+                    <span className="w-2.5 h-2.5 rounded-full animate-bounce" style={{ backgroundColor: activeTheme.neonColor, animationDelay: '0ms' }} />
+                    <span className="w-2.5 h-2.5 rounded-full animate-bounce" style={{ backgroundColor: activeTheme.neonColor, animationDelay: '150ms' }} />
+                    <span className="w-2.5 h-2.5 rounded-full animate-bounce" style={{ backgroundColor: activeTheme.neonColor, animationDelay: '300ms' }} />
+                  </div>
+                  <span className={`text-xs font-mono-tech uppercase tracking-widest ${
+                    darkMode ? 'text-slate-400' : 'text-slate-600'
+                  }`}>
+                    {language === 'en' ? 'Thinking... [MATRIX_SYNC]' : '思考中... [狂気回路を同期中]'}
+                  </span>
+                </div>
+              ) : generatedMessage ? (
                 <p className={`leading-relaxed ${activeTheme.fontClass} ${
                   darkMode ? 'text-slate-100' : 'text-slate-900'
                 } ${
