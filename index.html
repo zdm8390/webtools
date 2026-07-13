@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="zdm8390/webtools - Web便利ツールポータル。不穏空気検知システム、クレイジーコミット生成、チーム戦分けツールなどのダッシュボード。" />
+    <title>Webtools Portal | zdm8390</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        /* Modern Reset and Design Tokens */
+        :root {
+            --bg-color: #06070a;
+            --text-color: #f1f5f9;
+            --text-muted: #94a3b8;
+            --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            
+            --color-ccg: #ec4899;
+            --color-chime: #06b6d4;
+            --color-teams: #6366f1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Ambient Glowing Blobs */
+        .ambient-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(150px);
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.12;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+
+        .blob-1 {
+            background-color: var(--color-ccg);
+            width: 450px;
+            height: 450px;
+            top: -10%;
+            left: 10%;
+        }
+
+        .blob-2 {
+            background-color: var(--color-chime);
+            width: 500px;
+            height: 500px;
+            bottom: 5%;
+            right: 15%;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            background-color: var(--color-teams);
+            width: 400px;
+            height: 400px;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                transform: translate(80px, 50px) scale(1.15);
+            }
+        }
+
+        /* Scanline scan effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.06),
+                rgba(0, 255, 0, 0.02),
+                rgba(0, 0, 255, 0.06)
+            );
+            background-size: 100% 4px, 6px 100%;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.45;
+        }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            z-index: 10;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Header Styles */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        header .repo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        header h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+
+        header p {
+            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Portal Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 28px;
+            margin-bottom: 40px;
+        }
+
+        /* Portal Card Styles */
+        .portal-card {
+            background: rgba(10, 11, 18, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 36px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: justify-between;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+            color: var(--text-color);
+            box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.3);
+        }
+
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--theme-color, #fff);
+            opacity: 0.7;
+            transform: scaleX(0.4);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 20px 40px -15px rgba(0, 0, 0, 0.5),
+                0 0 25px -5px var(--glow-color);
+        }
+
+        .portal-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        /* Card Content Layout */
+        .card-header {
+            display: flex;
+            justify-content: justify-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .icon-container {
+            width: 54px;
+            height: 54px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--icon-bg);
+            border: 1px solid var(--icon-border);
+            transition: transform 0.4s ease;
+        }
+
+        .portal-card:hover .icon-container {
+            transform: rotate(-5deg) scale(1.08);
+        }
+
+        .icon-container svg {
+            width: 26px;
+            height: 26px;
+            color: var(--theme-color);
+        }
+
+        .status-badge {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            color: var(--theme-color);
+            background: var(--icon-bg);
+            border: 1px solid var(--icon-border);
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .card-body {
+            flex: 1;
+            margin-bottom: 30px;
+        }
+
+        .card-body h2 {
+            font-size: 1.45rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+            transition: color 0.3s ease;
+        }
+
+        .portal-card:hover h2 {
+            color: var(--theme-color);
+        }
+
+        .card-body p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        /* Launch Button Indicator inside Card */
+        .launch-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            letter-spacing: 0.15em;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-top: auto;
+            align-self: flex-start;
+        }
+
+        .launch-indicator svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .portal-card:hover .launch-indicator svg {
+            transform: translateX(5px);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            z-index: 10;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        footer a {
+            color: var(--text-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        footer a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        footer a svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Individual Themes */
+        .theme-ccg {
+            --theme-color: var(--color-ccg);
+            --glow-color: rgba(236, 72, 153, 0.15);
+            --icon-bg: rgba(236, 72, 153, 0.06);
+            --icon-border: rgba(236, 72, 153, 0.2);
+        }
+
+        .theme-chime {
+            --theme-color: var(--color-chime);
+            --glow-color: rgba(6, 182, 212, 0.15);
+            --icon-bg: rgba(6, 182, 212, 0.06);
+            --icon-border: rgba(6, 182, 212, 0.2);
+        }
+
+        .theme-teams {
+            --theme-color: var(--color-teams);
+            --glow-color: rgba(99, 102, 241, 0.15);
+            --icon-bg: rgba(99, 102, 241, 0.06);
+            --icon-border: rgba(99, 102, 241, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Visual Overlays -->
+    <div class="scanlines"></div>
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+    <div class="ambient-blob blob-3"></div>
+
+    <div class="container">
+        <header>
+            <div class="repo-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -2px; margin-right: 4px;"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
+                zdm8390 / webtools
+            </div>
+            <h1>Webtools Dashboard</h1>
+            <p>HanaのWebツール・コレクション。開発効率化、不穏検知、チーム分けなど、便利でユニークなツールのエントランス。</p>
+        </header>
+
+        <nav class="dashboard-grid" aria-label="便利ツールポータル">
+            <!-- Card 1: CrazyCommit.js -->
+            <a href="./CCG/" class="portal-card theme-ccg">
+                <div class="card-header">
+                    <div class="icon-container" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                        </svg>
+                    </div>
+                    <span class="status-badge">React + AI</span>
+                </div>
+                <div class="card-body">
+                    <h2>CrazyCommit.js</h2>
+                    <p>真面目なコミットメッセージを、ネットミーム・村上春樹・パプリカ・サンボマスターなどのクレイジーなテキストに面白おかしく変換する、ユーモア溢れるコミットメッセージジェネレーター。</p>
+                </div>
+                <div class="launch-indicator">
+                    LAUNCH TOOL
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
+            </a>
+
+            <!-- Card 2: Chime-Out Radar -->
+            <a href="./ChimeOut/" class="portal-card theme-chime">
+                <div class="card-header">
+                    <div class="icon-container" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="6"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                        </svg>
+                    </div>
+                    <span class="status-badge">Vite + React</span>
+                </div>
+                <div class="card-body">
+                    <h2>Chime-Out Radar</h2>
+                    <p>不穏な空気や定時退勤の気配を警告で知らせる、ユーモラスな不穏空気検知システム。チャイム音やグラフィカルなインジケーターで退勤をさりげなくサポートします。</p>
+                </div>
+                <div class="launch-indicator">
+                    LAUNCH TOOL
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
+            </a>
+
+            <!-- Card 3: チーム戦メイカー -->
+            <a href="./teams/" class="portal-card theme-teams">
+                <div class="card-header">
+                    <div class="icon-container" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <span class="status-badge">Vanilla JS</span>
+                </div>
+                <div class="card-body">
+                    <h2>チーム戦メイカー</h2>
+                    <p>メンバーの名前を入力し、公平かつランダムにチームを切り分け・シャッフルできるツール。ゲームのチーム分けやプロジェクトの編成などに幅広く活用できます。</p>
+                </div>
+                <div class="launch-indicator">
+                    LAUNCH TOOL
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
+            </a>
+        </nav>
+    </div>
+
+    <footer>
+        <a href="https://github.com/zdm8390/webtools" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
+            zdm8390/webtools GitHub Repository
+        </a>
+        <div style="margin-top: 8px;">© 2026 WEBTOOLS PORTAL DIRECTORY</div>
+    </footer>
+
+</body>
+</html>
