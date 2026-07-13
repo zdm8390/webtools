@@ -411,6 +411,30 @@ export default function App() {
     const modeMeta = COMMIT_TEMPLATES[activeMode];
     const isEn = language === 'en';
     
+    // Few-shot examples based on mode and language to enforce length and style
+    let examples = '';
+    if (isEn) {
+      if (activeMode === 'netmeme') {
+        examples = `Input: "fix login bug"\nOutput: It compiled, so LGTM! 👈( ﾟ∀ﾟ ) (I probably fixed the login screen, who knows. 知らんけど。)\nInput: "feat: add validation to signup form"\nOutput: "I added validation to signup form"?! Wow... *cries in corner* Is this even working?`;
+      } else if (activeMode === 'haruki') {
+        examples = `Input: "fix login bug"\nOutput: There is no such thing as a perfect login screen. Just as there is no such thing as perfect despair. I silently fixed the login bug in the midnight silence. Yare yare.\nInput: "feat: add validation to signup form"\nOutput: She looked at the validation I added to the signup form and smiled sadly. "Is it really safe?" she asked. I said nothing, just opened another cold beer.`;
+      } else if (activeMode === 'paprika') {
+        examples = `Input: "fix login bug"\nOutput: The parade of login bugs is coming! Quantized login screens are carrying the shrine of bug fix, dancing beyond type safety. See, we forgot to dry the sheets of compile errors!\nInput: "feat: add validation to signup form"\nOutput: When the winds of Oceania blow the skirt of signup validation, the dream circuit melts into the net screaming "user signup!" Blow the trumpets of compile, O compiler!`;
+      } else { // sambomaster
+        examples = `Input: "fix login bug"\nOutput: Listen up! There is not enough love in this world! That's why I poured my soul into this login bug fix for you on the other side of the screen! This is my Rock 'n' Roll!\nInput: "feat: add validation to signup form"\nOutput: Don't give up! Even if the registration form crumbles, our validation implementation will never end! Belief is everything! I love you! Rock 'n' Roll!`;
+      }
+    } else {
+      if (activeMode === 'netmeme') {
+        examples = `Input: "パスワード再設定画面の不具合修正"\nOutput: 動いたからヨシ！👈( ﾟ∀ﾟ ) (パスワード再設定画面を直した気がする、知らんけど。)\nInput: "ユーザー登録機能の実装"\nOutput: 「ユーザー登録機能を実装した」ってコト！？ワァ……（泣）なぁぜなぁぜ？`;
+      } else if (activeMode === 'haruki') {
+        examples = `Input: "パスワード再設定画面の不具合修正"\nOutput: 完璧なパスワード再設定機能などといったものは存在しない。完璧な絶望が存在しないようにね。僕はただ、深夜の静寂の中で誰も読まないであろうその不具合修正を静かに終わらせた。やれやれ。\nInput: "ユーザー登録機能の実装"\nOutput: 彼女は僕の追加した登録機能を見て、少し哀しそうに微笑んだ。「ねえ、それって本当に正しいの？」と。僕は何も答えず、ただレコードの針を落とした。`;
+      } else if (activeMode === 'paprika') {
+        examples = `Input: "パスワード再設定画面の不具合修正"\nOutput: バグのパレードがやってくるよ！量子化された再設定画面たちが修正コードの神輿を担いで、型安全の向こう側で踊っているんだ。ほら、コンパイルエラーのシーツを干し忘れたからさ！\nInput: "ユーザー登録機能の実装"\nOutput: オセアニアの風が登録機能のスカートをなびかせる時、夢の回路は「ユーザー登録！」と叫びながらネットの海へ融解していく。コンパイラよ、祝祭のラッパを吹き鳴らせ！`;
+      } else { // sambomaster
+        examples = `Input: "パスワード再設定画面の不具合修正"\nOutput: お前ら！この世界はですね、愛が足りないんですよ！だから僕はね、画面の向こう側にいるあなたのために、この不具合修正を魂込めてぶち込んだわけです！これが僕のロックンロールなんですよ！\nInput: "ユーザー登録機能の実装"\nOutput: 諦めるなよお前ら！どんなに新規登録が崩壊しようと、僕らの機能実装は絶対に終わらないんですよ！愛してるぜ！ロックンロール！`;
+      }
+    }
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -430,12 +454,15 @@ ${activeMode === 'haruki' ? '- Deeply poetic, reflective, nostalgic, lonely. Use
 ${activeMode === 'paprika' ? '- Surreal, psychedelic, chaotic dream sequence. Uses cinema metaphors, parading machines, frog shrines, melting dimensions, colorful explosions, and highly intellectual nonsense.' : ''}
 ${activeMode === 'sambomaster' ? '- High-energy rock singer Yamaguchi (Sambomaster). Speaks in loud, emotional shouting! Calls out to "お前ら" (you guys) or "あなた" (you) / "you guys" or "you". Relentlessly mentions "愛" (love) and "ロックンロール" (rock and roll). Ends with sentences like "〜なんですよ！" or "〜ってわけです！" in Japanese style.' : ''}
 
+Examples of expected conversion:
+${examples}
+
 Convert this input code change: "${input}"
 
 Rules:
 1. Output ONLY the generated commit message.
 2. The output MUST be in ${isEn ? 'English' : 'Japanese'}.
-3. Keep it as one short line/paragraph suitable for a commit message (no bullet points, no explanation, no quotes).
+3. Output a rich, funny, and expressive commit message (typically 1 to 3 sentences, matching the style, tone, and length of the examples). Do not make it too short or dry.
 4. Do NOT output markdown code blocks. Just plain text.`
           }]
         }],
@@ -1184,7 +1211,7 @@ Rules:
                   onChange={(e) => setTempModel(e.target.value)}
                 >
                   <option value="gemini-3.5-flash">Gemini 3.5 Flash (推奨・爆速)</option>
-                  <option value="gemini-3.5-pro">Gemini 3.5 Pro (超高度・狂気増量)</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (超高度・狂気増量)</option>
                   <option value="gemini-1.5-flash">Gemini 1.5 Flash (旧標準)</option>
                 </select>
               </div>
