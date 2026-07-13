@@ -17,7 +17,10 @@ import {
   ExternalLink,
   Info,
   HelpCircle,
-  CheckCircle2
+  CheckCircle2,
+  Cpu,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 // Web Speech API Types
@@ -55,9 +58,11 @@ const translations = {
     secure: "安全",
     controlBoard: "システム制御盤",
     apiKeyLabel: "Gemini API キー",
+    apiSafetyNotice: "※ APIキーはブラウザの LocalStorage にのみ暗号的に保存されます。開発者や第三者の外部サーバーにアップロード・転送されることは一切ありませんのでご安心ください。",
     getApiKey: "APIキーの無料取得手順はこちら",
     saveKey: "キーを保存",
     saved: "保存完了",
+    modelSelectLabel: "使用するAIモデル",
     atmosphereMonitoring: "空気監視コントロール",
     startMonitoring: "空気監視を開始",
     stopMonitoring: "空気監視を停止",
@@ -88,7 +93,10 @@ const translations = {
     tabGuide: "無料APIキー取得ガイド",
     enterKeyPrompt: "空気分析を開始するには、まず左側でGemini APIキーを設定してください。",
     deviceNotSupported: "お使いのブラウザは音声認識に対応していません。Google ChromeまたはMicrosoft Edgeを使用してください。",
-    simulatedText: "(シミュレーターによる設定値)"
+    simulatedText: "(シミュレーターによる設定値)",
+    injectLabel: "モック対話の注入シミュレート",
+    aiErrorOccurred: "AI解析エラーが発生しました",
+    themeToggleLabel: "テーマ切り替え"
   },
   en: {
     title: "Chime-Out Radar",
@@ -104,9 +112,11 @@ const translations = {
     secure: "Secure",
     controlBoard: "System Control Board",
     apiKeyLabel: "Gemini API Key",
+    apiSafetyNotice: "* Your API Key is stored securely in your local browser LocalStorage. It is never uploaded or transmitted to the developer's server or any third-party websites.",
     getApiKey: "Get Gemini API Key (Free Guide)",
     saveKey: "Save Key",
     saved: "Saved",
+    modelSelectLabel: "AI Model to Use",
     atmosphereMonitoring: "Atmosphere Monitoring",
     startMonitoring: "Start Monitoring",
     stopMonitoring: "Stop Monitoring",
@@ -137,18 +147,27 @@ const translations = {
     tabGuide: "API Key Guide (Free)",
     enterKeyPrompt: "Please configure your Gemini API Key in the left panel to start analyzing atmosphere.",
     deviceNotSupported: "Your browser does not support Speech Recognition. Please use Chrome or Edge.",
-    simulatedText: "(Simulated evaluation values)"
+    simulatedText: "(Simulated evaluation values)",
+    injectLabel: "Inject Dialogue Snippets",
+    aiErrorOccurred: "AI Analysis Error Occurred",
+    themeToggleLabel: "Toggle Theme"
   }
 };
 
 export default function App() {
   // --- State Variables ---
-  const [lang, setLang] = useState<'ja' | 'en'>('ja'); // Default to Japanese (ja)
+  const [lang, setLang] = useState<'ja' | 'en'>('ja'); // Default to Japanese
+  const [isLightMode, setIsLightMode] = useState<boolean>(() => {
+    return localStorage.getItem('theme_preference') === 'light';
+  });
   const [activeTab, setActiveTab] = useState<'dashboard' | 'guide'>('dashboard');
   const [apiKey, setApiKey] = useState<string>(() => {
     return localStorage.getItem('gemini_api_key') || '';
   });
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
+  const [selectedModel, setSelectedModel] = useState<string>(() => {
+    return localStorage.getItem('gemini_model_name') || 'gemini-2.5-flash';
+  });
   const [isListening, setIsListening] = useState<boolean>(false);
   const [transcripts, setTranscripts] = useState<TranscriptItem[]>([]);
   const [interimTranscript, setInterimTranscript] = useState<string>('');
@@ -160,11 +179,13 @@ export default function App() {
   const [manualInput, setManualInput] = useState<string>('');
   const [apiSaveSuccess, setApiSaveSuccess] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [friendlyApiError, setFriendlyApiError] = useState<string | null>(null);
 
   // --- Refs ---
   const recognitionRef = useRef<any>(null);
   const isListeningRef = useRef<boolean>(isListening);
   const apiKeyRef = useRef<string>(apiKey);
+  const selectedModelRef = useRef<string>(selectedModel);
   const transcriptsRef = useRef<TranscriptItem[]>(transcripts);
   const lastTensionLevelRef = useRef<number>(lastTensionLevel);
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -180,12 +201,21 @@ export default function App() {
   }, [apiKey]);
 
   useEffect(() => {
+    selectedModelRef.current = selectedModel;
+  }, [selectedModel]);
+
+  useEffect(() => {
     transcriptsRef.current = transcripts;
   }, [transcripts]);
 
   useEffect(() => {
     lastTensionLevelRef.current = lastTensionLevel;
   }, [lastTensionLevel]);
+
+  // Sync theme to localStorage
+  useEffect(() => {
+    localStorage.setItem('theme_preference', isLightMode ? 'light' : 'dark');
+  }, [isLightMode]);
 
   // Autoscroll logs
   useEffect(() => {
@@ -281,7 +311,17 @@ export default function App() {
     setApiSaveSuccess(true);
     addSystemLog('API Key updated in LocalStorage.');
     setError(null);
+    setFriendlyApiError(null);
     setTimeout(() => setApiSaveSuccess(false), 2000);
+  };
+
+  // --- Model Selection Management ---
+  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setSelectedModel(val);
+    localStorage.setItem('gemini_model_name', val);
+    addSystemLog(`AI model updated to: ${val}`);
+    setFriendlyApiError(null);
   };
 
   // --- Speech Recognition Logic ---
@@ -386,6 +426,29 @@ export default function App() {
     addSystemLog('Stopping monitoring...');
   };
 
+  // --- Friendly API Error Helper ---
+  const getFriendlyErrorMessage = (rawError: string): string => {
+    const lower = rawError.toLowerCase();
+    if (lower.includes('not found') || lower.includes('models/')) {
+      return lang === 'ja'
+        ? '【モデルエラー】指定されたAIモデル（gemini-1.5-flashなど）は提供終了またはサポートされていません。左側の設定で「gemini-2.5-flash」等の現在有効なモデルに変更してください。'
+        : '【Model Error】The selected AI model is deprecated or not found. Please switch to a currently supported model like "gemini-2.5-flash" in the left panel.';
+    }
+    if (lower.includes('api key') || lower.includes('key') || lower.includes('invalid') || lower.includes('api_key_invalid')) {
+      return lang === 'ja'
+        ? '【認証エラー】APIキーが無効または間違っています。入力したキーが正しいか確認するか、「無料APIキー取得ガイド」を参考に新しいキーを再取得してください。'
+        : '【Auth Error】Invalid API Key. Please make sure the key is correct or grab a new one from the Guide tab.';
+    }
+    if (lower.includes('quota') || lower.includes('limit') || lower.includes('429') || lower.includes('resource exhausted')) {
+      return lang === 'ja'
+        ? '【利用制限】APIの無料利用枠の上限に達したか、短時間のリクエスト制限を超えました。しばらく待つか、別のAPIキーを試してください。'
+        : '【Quota Limit】API rate limit or quota exceeded. Please wait a minute before requesting again.';
+    }
+    return lang === 'ja'
+      ? `【API通信エラー】${rawError}。キー設定やネットワーク、選択したモデルが正しいか確認してください。`
+      : `【API Error】${rawError}. Please verify your key, model, and internet connection.`;
+  };
+
   // --- Atmosphere Analysis (Gemini API) ---
   const getTranscriptBuffer = () => {
     const now = new Date();
@@ -416,8 +479,9 @@ export default function App() {
       return;
     }
 
+    const modelName = selectedModelRef.current;
     setIsAnalyzing(true);
-    addSystemLog('Atmosphere Scan: Sending buffer to Gemini 1.5 Flash...');
+    addSystemLog(`Atmosphere Scan: Sending buffer to Gemini (${modelName})...`);
 
     // Format transcripts
     const bufferText = buffer
@@ -427,14 +491,14 @@ export default function App() {
       })
       .join('\n');
 
-    const prompt = `以下の会議の発言ログを分析し、場の空気の『不穏さ・ピリつき度・険悪さ』を0から100の数値だけで評価してください。余計な解説、挨拶、文字は一切出力せず、必ず半角数字（例: 75）のみを返してください。
+    const prompt = `以下の会議の発言ログを分析し、場の空気の『不穏さ・ピリつき度・険悪さ』を0から 100 の数値だけで評価してください。余計な解説、挨拶、文字は一切出力せず、必ず半角数字（例: 75）のみを返してください。
 
 ■ 発言ログ：
 ${bufferText}`;
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`,
         {
           method: 'POST',
           headers: {
@@ -468,6 +532,7 @@ ${bufferText}`;
         // Set state
         setTensionLevel(normalizedScore);
         setLastTensionLevel(normalizedScore);
+        setFriendlyApiError(null); // Clear errors on success
 
         // Add to history
         setAnalysisHistory((prev) => [
@@ -491,7 +556,9 @@ ${bufferText}`;
       }
     } catch (err: any) {
       console.error('Gemini API call failed:', err);
-      addSystemLog(`Scan Error: ${err.message}`);
+      const friendlyMsg = getFriendlyErrorMessage(err.message || String(err));
+      setFriendlyApiError(friendlyMsg);
+      addSystemLog(`Scan Error: ${err.message || err}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -533,6 +600,7 @@ ${bufferText}`;
     const prev = lastTensionLevelRef.current;
     setTensionLevel(score);
     setLastTensionLevel(score);
+    setFriendlyApiError(null); // Clear errors on simulation
     setAnalysisHistory((prevHist) => [
       {
         timestamp: new Date(),
@@ -588,6 +656,7 @@ ${bufferText}`;
     setTensionLevel(0);
     setLastTensionLevel(0);
     setSystemLogs([]);
+    setFriendlyApiError(null);
     addSystemLog('Logs and speech buffers cleared.');
   };
 
@@ -641,7 +710,9 @@ ${bufferText}`;
   const strokeDashoffset = circumference - (tensionLevel / 100) * circumference;
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col p-4 md:p-6 cyber-grid cyber-scanline select-none">
+    <div className={`min-h-screen w-full relative flex flex-col p-4 md:p-6 transition-colors duration-500 select-none ${
+      isLightMode ? 'light-cyber-grid bg-[#f5f6fa] text-slate-800' : 'cyber-grid bg-[#0d0e12] text-gray-100'
+    } cyber-scanline`}>
       
       {/* Full screen ominous flashing overlay if tension >= 70 */}
       {tensionLevel >= 70 && (
@@ -649,7 +720,9 @@ ${bufferText}`;
       )}
 
       {/* Top Header */}
-      <header className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between border-b border-white/10 pb-4 mb-6">
+      <header className={`w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between border-b pb-4 mb-6 transition-colors ${
+        isLightMode ? 'border-slate-200' : 'border-white/10'
+      }`}>
         <div className="flex items-center space-x-3 mb-4 sm:mb-0">
           <div className="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
             <ShieldAlert className="w-8 h-8 text-cyber-purple glow-purple" />
@@ -658,20 +731,24 @@ ${bufferText}`;
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 font-sans uppercase">
               {t.title}
             </h1>
-            <p className="text-xs text-gray-500 font-mono">{t.subtitle}</p>
+            <p className={`text-xs font-mono transition-colors ${isLightMode ? 'text-slate-500' : 'text-gray-500'}`}>{t.subtitle}</p>
           </div>
         </div>
 
-        {/* Navigation & Language Select */}
+        {/* Navigation, Theme & Language Select */}
         <div className="flex flex-wrap gap-3 items-center justify-end">
           {/* Subpage Tabs */}
-          <div className="flex space-x-1 bg-black/40 border border-white/10 rounded-lg p-0.5">
+          <div className={`flex space-x-1 border rounded-lg p-0.5 transition-colors ${
+            isLightMode ? 'bg-slate-200/50 border-slate-300' : 'bg-black/40 border-white/10'
+          }`}>
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-3 py-1.5 rounded-md text-xs font-mono tracking-wider transition-all ${
                 activeTab === 'dashboard'
-                  ? 'bg-cyber-purple/20 text-cyber-purple border border-cyber-purple/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
+                  ? isLightMode
+                    ? 'bg-white text-cyber-purple border border-slate-300 shadow-sm font-bold'
+                    : 'bg-cyber-purple/20 text-cyber-purple border border-cyber-purple/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/5 border border-transparent'
               }`}
             >
               {t.tabDashboard}
@@ -680,8 +757,10 @@ ${bufferText}`;
               onClick={() => setActiveTab('guide')}
               className={`px-3 py-1.5 rounded-md text-xs font-mono tracking-wider transition-all flex items-center space-x-1 ${
                 activeTab === 'guide'
-                  ? 'bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
+                  ? isLightMode
+                    ? 'bg-white text-cyber-cyan border border-slate-300 shadow-sm font-bold'
+                    : 'bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/5 border border-transparent'
               }`}
             >
               <HelpCircle className="w-3.5 h-3.5" />
@@ -689,12 +768,35 @@ ${bufferText}`;
             </button>
           </div>
 
+          {/* Theme Toggle (Light / Dark) */}
+          <div className={`flex border rounded-lg p-0.5 transition-colors ${
+            isLightMode ? 'bg-slate-200/50 border-slate-300' : 'bg-black/40 border-white/10'
+          }`}>
+            <button
+              onClick={() => setIsLightMode(!isLightMode)}
+              className={`p-1.5 rounded-md transition-all flex items-center justify-center`}
+              title={t.themeToggleLabel}
+            >
+              {isLightMode ? (
+                <Moon className="w-4 h-4 text-cyber-purple" />
+              ) : (
+                <Sun className="w-4 h-4 text-yellow-400" />
+              )}
+            </button>
+          </div>
+
           {/* Language Toggle */}
-          <div className="flex space-x-1 bg-black/40 border border-white/10 rounded-lg p-0.5">
+          <div className={`flex space-x-1 border rounded-lg p-0.5 transition-colors ${
+            isLightMode ? 'bg-slate-200/50 border-slate-300' : 'bg-black/40 border-white/10'
+          }`}>
             <button
               onClick={() => setLang('ja')}
               className={`w-8 py-1 rounded text-xs font-mono transition-all ${
-                lang === 'ja' ? 'bg-white/10 text-white font-bold' : 'text-gray-500 hover:text-gray-300'
+                lang === 'ja'
+                  ? isLightMode
+                    ? 'bg-white text-slate-800 font-bold shadow-sm'
+                    : 'bg-white/10 text-white font-bold'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               JA
@@ -702,7 +804,11 @@ ${bufferText}`;
             <button
               onClick={() => setLang('en')}
               className={`w-8 py-1 rounded text-xs font-mono transition-all ${
-                lang === 'en' ? 'bg-white/10 text-white font-bold' : 'text-gray-500 hover:text-gray-300'
+                lang === 'en'
+                  ? isLightMode
+                    ? 'bg-white text-slate-800 font-bold shadow-sm'
+                    : 'bg-white/10 text-white font-bold'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               EN
@@ -720,12 +826,14 @@ ${bufferText}`;
           <section className="lg:col-span-4 flex flex-col space-y-6">
             
             {/* Card 1: Configuration Panel */}
-            <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-5 shadow-2xl relative overflow-hidden">
+            <div className={`border rounded-xl p-5 shadow-2xl relative overflow-hidden transition-all duration-300 ${
+              isLightMode ? 'bg-white border-slate-200 text-slate-800 shadow-slate-200/55' : 'bg-[#12131a]/95 border-white/10 text-gray-100'
+            }`}>
               <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
               
-              <div className="flex items-center space-x-2 mb-4 border-b border-white/5 pb-3">
+              <div className="flex items-center space-x-2 mb-4 border-b pb-3 border-inherit/10">
                 <Settings className="w-4 h-4 text-cyber-purple" />
-                <h2 className="text-sm font-bold tracking-wider uppercase text-gray-300 font-mono">
+                <h2 className={`text-sm font-bold tracking-wider uppercase font-mono ${isLightMode ? 'text-slate-700' : 'text-gray-300'}`}>
                   {t.controlBoard}
                 </h2>
               </div>
@@ -733,41 +841,80 @@ ${bufferText}`;
               {/* Error alerts */}
               {error && (
                 <div className="mb-4 p-3 bg-red-950/40 border border-red-500/40 rounded-lg flex items-start space-x-2">
-                  <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-4.5 h-4.5 text-red-400 flex-shrink-0 mt-0.5" />
                   <span className="text-xs text-red-300 font-mono leading-relaxed">{error}</span>
                 </div>
               )}
 
               {/* API Key Form */}
-              <form onSubmit={handleSaveApiKey} className="space-y-3">
-                <label className="block text-xs font-mono text-gray-400 uppercase">
-                  {t.apiKeyLabel}
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Key className="h-4.5 w-4.5 text-gray-500" />
+              <form onSubmit={handleSaveApiKey} className="space-y-4">
+                <div>
+                  <label className={`block text-xs font-mono uppercase mb-1.5 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
+                    {t.apiKeyLabel}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Key className="h-4.5 w-4.5 text-gray-500" />
+                    </div>
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      className={`block w-full pl-9 pr-10 py-2 border rounded-lg text-sm font-mono focus:outline-none focus:ring-1 transition-all ${
+                        isLightMode
+                          ? 'border-slate-300 bg-slate-50 text-slate-800 focus:ring-cyber-purple focus:border-cyber-purple'
+                          : 'border-white/10 bg-black/40 text-gray-200 focus:ring-cyber-purple focus:border-cyber-purple'
+                      }`}
+                      placeholder="AIzaSy..."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className={`absolute inset-y-0 right-0 pr-3 flex items-center transition-colors ${
+                        isLightMode ? 'text-slate-400 hover:text-slate-600' : 'text-gray-500 hover:text-gray-300'
+                      }`}
+                    >
+                      {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
-                  <input
-                    type={showApiKey ? 'text' : 'password'}
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    className="block w-full pl-9 pr-10 py-2 border border-white/10 rounded-lg bg-black/40 text-gray-200 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-cyber-purple focus:border-cyber-purple"
-                    placeholder="AIzaSy..."
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300"
+                </div>
+
+                {/* AI Model Selector */}
+                <div>
+                  <label className={`block text-xs font-mono uppercase mb-1.5 flex items-center space-x-1 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
+                    <Cpu className="w-3.5 h-3.5 text-cyber-purple" />
+                    <span>{t.modelSelectLabel}</span>
+                  </label>
+                  <select
+                    value={selectedModel}
+                    onChange={handleModelChange}
+                    className={`block w-full px-3 py-2 border rounded-lg text-xs font-mono focus:outline-none focus:ring-1 cursor-pointer transition-all ${
+                      isLightMode
+                        ? 'border-slate-300 bg-slate-50 text-slate-800 focus:ring-cyber-purple focus:border-cyber-purple'
+                        : 'border-white/10 bg-[#191b24] text-gray-200 focus:ring-cyber-purple focus:border-cyber-purple'
+                    }`}
                   >
-                    {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                    <option value="gemini-2.5-flash">gemini-2.5-flash (Standard / Recommended)</option>
+                    <option value="gemini-3.5-flash">gemini-3.5-flash (Latest / High Speed)</option>
+                    <option value="gemini-1.5-flash">gemini-1.5-flash (Deprecated / Legacy)</option>
+                  </select>
                 </div>
                 
+                {/* Security reassuring message */}
+                <p className={`text-[10px] p-2.5 rounded-lg leading-normal flex items-start space-x-1.5 font-mono border ${
+                  isLightMode
+                    ? 'text-cyan-800 bg-cyan-50 border-cyan-200/80'
+                    : 'text-cyber-cyan bg-cyan-950/20 border-cyber-cyan/10'
+                }`}>
+                  <ShieldAlert className="w-4 h-4 text-cyber-cyan flex-shrink-0 mt-0.5" />
+                  <span>{t.apiSafetyNotice}</span>
+                </p>
+
                 <div className="flex justify-between items-center pt-1">
                   <button
                     type="button"
                     onClick={() => setActiveTab('guide')}
-                    className="text-[10px] text-cyber-cyan hover:underline flex items-center space-x-0.5"
+                    className="text-[10px] text-cyber-cyan hover:underline flex items-center space-x-0.5 font-mono"
                   >
                     <span>{t.getApiKey}</span>
                     <ExternalLink className="w-2.5 h-2.5" />
@@ -775,7 +922,7 @@ ${bufferText}`;
                   
                   <button
                     type="submit"
-                    className="px-4 py-1.5 rounded bg-gradient-to-r from-cyber-purple to-cyber-pink text-xs font-mono font-bold text-white hover:opacity-90 active:scale-95 transition-all duration-150 flex items-center space-x-1"
+                    className="px-4 py-1.5 rounded bg-gradient-to-r from-cyber-purple to-cyber-pink text-xs font-mono font-bold text-white hover:opacity-90 active:scale-95 transition-all duration-150 flex items-center space-x-1 cursor-pointer"
                   >
                     {apiSaveSuccess ? (
                       <>
@@ -791,17 +938,21 @@ ${bufferText}`;
 
               {/* Speech Recognition Controls */}
               <div className="mt-6 pt-5 border-t border-white/5 space-y-3">
-                <label className="block text-xs font-mono text-gray-400 uppercase">
+                <label className={`block text-xs font-mono uppercase ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
                   {t.atmosphereMonitoring}
                 </label>
 
                 {/* State badges (Compact) */}
                 <div className="grid grid-cols-2 gap-2 pb-2">
-                  <div className="flex items-center space-x-1.5 px-2 py-1 rounded bg-black/20 border border-white/5 text-[10px] font-mono text-gray-400">
+                  <div className={`flex items-center space-x-1.5 px-2 py-1 rounded border text-[10px] font-mono transition-colors ${
+                    isLightMode ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-black/20 border-white/5 text-gray-400'
+                  }`}>
                     <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-cyan-400 animate-ping' : 'bg-gray-500'}`} />
                     <span>{t.micStatus}: {isListening ? t.listening : t.off}</span>
                   </div>
-                  <div className="flex items-center space-x-1.5 px-2 py-1 rounded bg-black/20 border border-white/5 text-[10px] font-mono text-gray-400">
+                  <div className={`flex items-center space-x-1.5 px-2 py-1 rounded border text-[10px] font-mono transition-colors ${
+                    isLightMode ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-black/20 border-white/5 text-gray-400'
+                  }`}>
                     <span className={`w-2 h-2 rounded-full ${isAnalyzing ? 'bg-pink-400 animate-pulse' : 'bg-gray-500'}`} />
                     <span>{t.aiStatus}: {isAnalyzing ? t.analyzing : t.idle}</span>
                   </div>
@@ -810,7 +961,7 @@ ${bufferText}`;
                 {!isListening ? (
                   <button
                     onClick={startMonitoring}
-                    className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-sm font-bold text-white flex items-center justify-center space-x-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-[0.98]"
+                    className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-sm font-bold text-white flex items-center justify-center space-x-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-[0.98] cursor-pointer"
                   >
                     <Mic className="w-4.5 h-4.5 animate-pulse" />
                     <span>{t.startMonitoring}</span>
@@ -818,7 +969,7 @@ ${bufferText}`;
                 ) : (
                   <button
                     onClick={stopMonitoring}
-                    className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-red-600 to-pink-700 hover:from-red-500 hover:to-pink-600 text-sm font-bold text-white flex items-center justify-center space-x-2 transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] active:scale-[0.98]"
+                    className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-red-600 to-pink-700 hover:from-red-500 hover:to-pink-600 text-sm font-bold text-white flex items-center justify-center space-x-2 transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] active:scale-[0.98] cursor-pointer"
                   >
                     <MicOff className="w-4.5 h-4.5" />
                     <span>{t.stopMonitoring}</span>
@@ -828,10 +979,12 @@ ${bufferText}`;
             </div>
 
             {/* Card 2: Simulation Panel (Crucial for Demo/Testing) */}
-            <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-5 shadow-2xl relative overflow-hidden">
-              <div className="flex items-center space-x-2 mb-4 border-b border-white/5 pb-3">
+            <div className={`border rounded-xl p-5 shadow-2xl relative overflow-hidden transition-all duration-300 ${
+              isLightMode ? 'bg-white border-slate-200 text-slate-800 shadow-slate-200/55' : 'bg-[#12131a]/95 border-white/10 text-gray-100'
+            }`}>
+              <div className="flex items-center space-x-2 mb-4 border-b pb-3 border-inherit/10">
                 <Activity className="w-4 h-4 text-cyber-pink" />
-                <h2 className="text-sm font-bold tracking-wider uppercase text-gray-300 font-mono">
+                <h2 className={`text-sm font-bold tracking-wider uppercase font-mono ${isLightMode ? 'text-slate-700' : 'text-gray-300'}`}>
                   {t.simulator}
                 </h2>
               </div>
@@ -840,7 +993,7 @@ ${bufferText}`;
                 {/* Slider simulation */}
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs font-mono text-gray-400">{t.atmosphereValue}</span>
+                    <span className={`text-xs font-mono ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>{t.atmosphereValue}</span>
                     <span className="text-xs font-mono font-bold text-cyber-pink">{tensionLevel}%</span>
                   </div>
                   <input
@@ -849,7 +1002,9 @@ ${bufferText}`;
                     max="100"
                     value={tensionLevel}
                     onChange={(e) => triggerSimulation(parseInt(e.target.value, 10))}
-                    className="w-full h-1.5 bg-black/40 rounded-lg appearance-none cursor-pointer accent-cyber-pink"
+                    className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-cyber-pink ${
+                      isLightMode ? 'bg-slate-200' : 'bg-black/40'
+                    }`}
                   />
                 </div>
 
@@ -857,19 +1012,25 @@ ${bufferText}`;
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => triggerSimulation(15)}
-                    className="py-1.5 px-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded text-[10px] font-mono text-cyan-400"
+                    className={`py-1.5 px-2 border rounded text-[10px] font-mono transition-all cursor-pointer ${
+                      isLightMode ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700' : 'bg-white/5 border-white/5 hover:bg-white/10 text-gray-300'
+                    }`}
                   >
                     {t.stableButton}
                   </button>
                   <button
                     onClick={() => triggerSimulation(55)}
-                    className="py-1.5 px-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded text-[10px] font-mono text-pink-400"
+                    className={`py-1.5 px-2 border rounded text-[10px] font-mono transition-all cursor-pointer ${
+                      isLightMode ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700' : 'bg-white/5 border-white/5 hover:bg-white/10 text-gray-300'
+                    }`}
                   >
                     {t.tenseButton}
                   </button>
                   <button
                     onClick={() => triggerSimulation(85)}
-                    className="py-1.5 px-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded text-[10px] font-mono text-red-400 animate-pulse border-red-500/30"
+                    className={`py-1.5 px-2 border rounded text-[10px] font-mono transition-all cursor-pointer animate-pulse ${
+                      isLightMode ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white/5 border-white/5 hover:bg-white/10 text-red-400 border-red-500/30'
+                    }`}
                   >
                     {t.crisisButton}
                   </button>
@@ -877,17 +1038,27 @@ ${bufferText}`;
 
                 {/* Demo text loaders */}
                 <div className="pt-2 border-t border-white/5 space-y-2">
-                  <span className="block text-[10px] font-mono text-gray-500 uppercase">Inject Dialogue Snippets</span>
+                  <span className={`block text-[10px] font-mono uppercase ${isLightMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                    {t.injectLabel}
+                  </span>
                   <div className="flex space-x-2">
                     <button
                       onClick={() => loadDemoDialogue('chill')}
-                      className="flex-1 py-1.5 bg-cyan-950/20 border border-cyan-500/20 hover:bg-cyan-900/30 rounded text-[11px] font-mono text-cyan-300 hover:text-cyan-200 transition-colors"
+                      className={`flex-1 py-1.5 border rounded text-[11px] font-mono transition-all cursor-pointer ${
+                        isLightMode
+                          ? 'bg-cyan-50 border-cyan-200 text-cyan-700 hover:bg-cyan-100/60'
+                          : 'bg-cyan-950/20 border-cyan-500/20 text-cyan-300 hover:text-cyan-200'
+                      }`}
                     >
                       {t.loadPeacefulDemo}
                     </button>
                     <button
                       onClick={() => loadDemoDialogue('tense')}
-                      className="flex-1 py-1.5 bg-red-950/20 border border-red-500/20 hover:bg-red-900/30 rounded text-[11px] font-mono text-red-300 hover:text-red-200 transition-colors"
+                      className={`flex-1 py-1.5 border rounded text-[11px] font-mono transition-all cursor-pointer ${
+                        isLightMode
+                          ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100/60'
+                          : 'bg-red-950/20 border-red-500/20 text-red-300 hover:text-red-200'
+                      }`}
                     >
                       {t.loadAngryDemo}
                     </button>
@@ -898,7 +1069,11 @@ ${bufferText}`;
                 <div className="pt-3 border-t border-white/5 flex items-center justify-between">
                   <button
                     onClick={playGong}
-                    className="py-1.5 px-3 bg-purple-950/30 border border-purple-500/30 hover:bg-purple-900/40 rounded text-xs font-mono text-purple-300 flex items-center space-x-1"
+                    className={`py-1.5 px-3 border rounded text-xs font-mono flex items-center space-x-1 cursor-pointer ${
+                      isLightMode
+                        ? 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100/60'
+                        : 'bg-purple-950/30 border-purple-500/30 text-purple-300'
+                    }`}
                   >
                     <Volume2 className="w-3.5 h-3.5" />
                     <span>{t.testGong}</span>
@@ -906,7 +1081,11 @@ ${bufferText}`;
 
                   <button
                     onClick={clearLogsAndTranscripts}
-                    className="py-1.5 px-3 bg-white/5 hover:bg-white/10 rounded text-xs font-mono text-gray-400 flex items-center space-x-1"
+                    className={`py-1.5 px-3 border rounded text-xs font-mono flex items-center space-x-1 cursor-pointer ${
+                      isLightMode
+                        ? 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
+                        : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
+                    }`}
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>{t.resetAll}</span>
@@ -918,13 +1097,15 @@ ${bufferText}`;
 
           {/* Center: Tension Visualizer Gauge */}
           <section className="lg:col-span-4 flex flex-col space-y-6">
-            <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-6 shadow-2xl flex flex-col items-center justify-between flex-grow min-h-[400px] relative overflow-hidden">
+            <div className={`border rounded-xl p-6 shadow-2xl flex flex-col items-center justify-between flex-grow min-h-[400px] relative overflow-hidden transition-all duration-300 ${
+              isLightMode ? 'bg-white border-slate-200 shadow-slate-200/55' : 'bg-[#12131a]/95 border-white/10'
+            }`}>
               
               {/* Ambient colorful grid backdrop glow */}
               <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 ${currentTheme.bgGlow} rounded-full blur-3xl transition-colors duration-1000 pointer-events-none`} />
 
-              <div className="w-full flex items-center justify-between border-b border-white/5 pb-3 z-10">
-                <span className="text-xs font-mono text-gray-400 uppercase tracking-wider">
+              <div className="w-full flex items-center justify-between border-b pb-3 border-inherit/10 z-10">
+                <span className={`text-xs font-mono uppercase tracking-wider ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
                   {t.gaugeTitle}
                 </span>
                 <span className="text-xs font-mono text-gray-500">
@@ -940,7 +1121,7 @@ ${bufferText}`;
                     cx="128"
                     cy="128"
                     r={radius}
-                    stroke="rgba(255, 255, 255, 0.03)"
+                    stroke={isLightMode ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.03)'}
                     strokeWidth={strokeWidth}
                     fill="transparent"
                   />
@@ -949,7 +1130,7 @@ ${bufferText}`;
                     cx="128"
                     cy="128"
                     r={radius}
-                    stroke="rgba(255, 255, 255, 0.05)"
+                    stroke={isLightMode ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)'}
                     strokeWidth={strokeWidth + 2}
                     fill="transparent"
                   />
@@ -970,7 +1151,7 @@ ${bufferText}`;
 
                 {/* Inner score reading */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-6xl font-black font-mono tracking-tighter text-white select-text">
+                  <span className={`text-6xl font-black font-mono tracking-tighter select-text ${isLightMode ? 'text-slate-800' : 'text-white'}`}>
                     {tensionLevel}
                   </span>
                   <span className="text-xs font-mono tracking-widest text-gray-500 uppercase">
@@ -981,7 +1162,9 @@ ${bufferText}`;
 
               {/* Atmosphere status readouts */}
               <div className="w-full space-y-4 text-center z-10">
-                <div className="inline-block px-4 py-1.5 rounded border border-white/10 bg-black/60 shadow-lg">
+                <div className={`inline-block px-4 py-1.5 rounded border shadow-lg ${
+                  isLightMode ? 'bg-slate-50 border-slate-200' : 'bg-black/60 border-white/10'
+                }`}>
                   <span className="text-xs font-mono text-gray-400 block mb-0.5">{t.statusTitle}</span>
                   <span className={`text-base font-extrabold tracking-wide uppercase ${currentTheme.color} transition-all duration-500`}>
                     {currentTheme.label}
@@ -989,7 +1172,7 @@ ${bufferText}`;
                 </div>
 
                 {/* Score bar */}
-                <div className="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-white/5">
+                <div className={`w-full h-2 rounded-full overflow-hidden border ${isLightMode ? 'bg-slate-200 border-slate-300' : 'bg-black/40 border-white/5'}`}>
                   <div
                     className={`h-full ${currentTheme.barColor} transition-all duration-1000 ease-out`}
                     style={{ width: `${tensionLevel}%` }}
@@ -997,21 +1180,39 @@ ${bufferText}`;
                 </div>
 
                 {/* Fun / Snarky advice banner */}
-                <p className="text-xs text-gray-400 italic bg-white/5 border border-white/5 p-3 rounded-lg leading-relaxed select-text">
+                <p className={`text-xs p-3 rounded-lg leading-relaxed select-text border ${
+                  isLightMode
+                    ? 'bg-slate-50 border-slate-200 text-slate-600'
+                    : 'bg-white/5 border-white/5 text-gray-400 italic'
+                }`}>
                   {currentTheme.commentary}
                 </p>
               </div>
+
+              {/* User Friendly API Error Callout Banner */}
+              {friendlyApiError && (
+                <div className="w-full mt-4 p-3 bg-red-950/40 border border-red-500/40 rounded-lg flex items-start space-x-2 animate-pulse z-25 text-left">
+                  <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-xs text-red-300 font-mono">
+                    <span className="font-bold block mb-1 text-red-200">{t.aiErrorOccurred}</span>
+                    {friendlyApiError}
+                  </div>
+                </div>
+              )}
+
             </div>
           </section>
 
-          {/* Right Side: Live Timeline */}
+          {/* Right Side: Live Dialogue Timeline */}
           <section className="lg:col-span-4 flex flex-col space-y-6">
-            <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-5 shadow-2xl flex flex-col h-[500px] relative overflow-hidden">
+            <div className={`border rounded-xl p-5 shadow-2xl flex flex-col h-[500px] relative overflow-hidden transition-all duration-300 ${
+              isLightMode ? 'bg-white border-slate-200 shadow-slate-200/55' : 'bg-[#12131a]/95 border-white/10'
+            }`}>
               
-              <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
+              <div className="flex items-center justify-between border-b pb-3 mb-4 border-inherit/10">
                 <div className="flex items-center space-x-2">
                   <Terminal className="w-4 h-4 text-cyber-cyan" />
-                  <h2 className="text-sm font-bold tracking-wider uppercase text-gray-300 font-mono">
+                  <h2 className={`text-sm font-bold tracking-wider uppercase font-mono ${isLightMode ? 'text-slate-700' : 'text-gray-300'}`}>
                     {t.dialogueTimeline}
                   </h2>
                 </div>
@@ -1033,16 +1234,22 @@ ${bufferText}`;
                   </div>
                 ) : (
                   transcripts.map((tItem) => (
-                    <div key={tItem.id} className="p-2.5 rounded bg-black/30 border border-white/5 hover:border-white/10 transition-colors">
+                    <div key={tItem.id} className={`p-2.5 rounded border transition-colors ${
+                      isLightMode
+                        ? 'bg-slate-50/70 border-slate-200/80 hover:border-slate-300/80'
+                        : 'bg-black/30 border-white/5 hover:border-white/10'
+                    }`}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] font-mono text-gray-500">
+                        <span className={`text-[10px] font-mono ${isLightMode ? 'text-slate-400' : 'text-gray-500'}`}>
                           {tItem.timestamp.toLocaleTimeString()}
                         </span>
                         <span className="text-[9px] font-mono text-cyber-cyan bg-cyan-950/20 px-1 rounded">
                           {t.final}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-300 font-mono break-words leading-relaxed select-text">
+                      <p className={`text-xs font-mono break-words leading-relaxed select-text transition-colors ${
+                        isLightMode ? 'text-slate-700 font-medium' : 'text-gray-300'
+                      }`}>
                         {tItem.text}
                       </p>
                     </div>
@@ -1075,11 +1282,15 @@ ${bufferText}`;
                   value={manualInput}
                   onChange={(e) => setManualInput(e.target.value)}
                   placeholder={t.placeholderManual}
-                  className="flex-grow px-3 py-2 border border-white/10 rounded-lg bg-black/50 text-xs font-mono text-gray-300 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyber-cyan focus:border-cyber-cyan"
+                  className={`flex-grow px-3 py-2 border rounded-lg text-xs font-mono transition-all ${
+                    isLightMode
+                      ? 'border-slate-300 bg-slate-50 text-slate-800 placeholder-slate-400 focus:ring-cyber-cyan focus:border-cyber-cyan'
+                      : 'border-white/10 bg-black/50 text-gray-300 placeholder-gray-600 focus:ring-cyber-cyan focus:border-cyber-cyan'
+                  }`}
                 />
                 <button
                   type="submit"
-                  className="p-2 rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-cyber-cyan hover:bg-cyan-900/50 active:scale-95 transition-all"
+                  className="p-2 rounded-lg bg-cyber-cyan/25 border border-cyber-cyan/30 text-cyber-cyan hover:bg-cyber-cyan/35 active:scale-95 transition-all cursor-pointer"
                   title="Send speech text"
                 >
                   <Send className="w-4 h-4" />
@@ -1090,28 +1301,34 @@ ${bufferText}`;
         </main>
       ) : (
         /* TAB 2: API KEY GET GUIDE (SUBPAGE) */
-        <main className="w-full max-w-4xl mx-auto flex-grow bg-[#12131a]/95 border border-white/10 rounded-xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        <main className={`w-full max-w-4xl mx-auto flex-grow border rounded-xl p-6 md:p-8 shadow-2xl relative overflow-hidden transition-all duration-300 ${
+          isLightMode ? 'bg-white border-slate-200 text-slate-800 shadow-slate-200/55' : 'bg-[#12131a]/95 border-white/10 text-gray-100'
+        }`}>
           <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
           
-          <div className="flex items-center space-x-3 border-b border-white/10 pb-4 mb-6">
+          <div className="flex items-center space-x-3 border-b pb-4 mb-6 border-inherit/10">
             <HelpCircle className="w-6 h-6 text-cyber-cyan" />
             <div>
-              <h2 className="text-xl font-bold text-gray-100 font-mono">
+              <h2 className="text-xl font-bold font-mono">
                 Gemini API キー 無料取得手順ガイド
               </h2>
               <p className="text-xs text-gray-500">How to get a Google Gemini API Key for free</p>
             </div>
           </div>
 
-          <div className="space-y-6 text-gray-300 leading-relaxed font-sans text-sm">
+          <div className="space-y-6 leading-relaxed font-sans text-sm">
             
             {/* Free Tier Callout Box */}
-            <div className="p-4 bg-cyan-950/20 border border-cyber-cyan/30 rounded-lg flex items-start space-x-3 shadow-lg">
+            <div className={`p-4 rounded-lg flex items-start space-x-3 shadow-lg border ${
+              isLightMode
+                ? 'bg-cyan-50 border-cyan-200/70 text-cyan-900'
+                : 'bg-cyan-950/20 border-cyber-cyan/30 text-gray-300'
+            }`}>
               <Info className="w-5 h-5 text-cyber-cyan flex-shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <h3 className="text-sm font-bold text-cyber-cyan font-mono">完全無料で利用できます！</h3>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                  Google AI Studioが提供する <strong>Gemini 1.5 Flash</strong> の無料利用枠 (Free Tier) は、
+                <p className="text-xs leading-relaxed">
+                  Google AI Studioが提供する <strong>Gemini API</strong> の無料利用枠 (Free Tier) は、
                   <strong>1分間に15リクエスト、1日に1,500リクエストまで</strong> 料金が一切かかりません。
                   本アプリの空気自動解析は <strong>18秒に1回</strong>（1分間に3〜4リクエスト程度）しかリクエストを行わないため、
                   何時間連続で稼働させても無料枠をオーバーすることはなく、<strong>課金される心配はありません。</strong>
@@ -1121,20 +1338,20 @@ ${bufferText}`;
 
             {/* Step-by-Step Instructions */}
             <div className="space-y-4">
-              <h3 className="text-base font-bold text-gray-200 border-l-2 border-cyber-purple pl-2 font-mono">
+              <h3 className="text-base font-bold border-l-2 border-cyber-purple pl-2 font-mono">
                 取得ステップ（所要時間: 約1分）
               </h3>
               
-              <ol className="relative border-l border-white/10 ml-3 space-y-6">
+              <ol className="relative border-l ml-3 space-y-6 border-inherit/10">
                 
                 <li className="ml-6">
                   <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-cyber-purple text-xs font-mono font-bold text-cyber-purple">
                     1
                   </span>
-                  <h4 className="text-sm font-bold text-gray-200 font-mono">
+                  <h4 className="text-sm font-bold font-mono">
                     Google AI Studio を開く
                   </h4>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className={`text-xs mt-1 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
                     Google公式の開発者ポータルである以下のサイトにアクセスします。
                   </p>
                   <a
@@ -1152,10 +1369,10 @@ ${bufferText}`;
                   <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-white/20 text-xs font-mono font-bold text-gray-400">
                     2
                   </span>
-                  <h4 className="text-sm font-bold text-gray-200 font-mono">
+                  <h4 className="text-sm font-bold font-mono">
                     Googleアカウントでログイン
                   </h4>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className={`text-xs mt-1 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
                     お持ちの通常のGoogleアカウント（Gmailアドレスなど）でログインしてください。利用規約の同意画面が出た場合は、内容を確認して同意します。
                   </p>
                 </li>
@@ -1164,10 +1381,10 @@ ${bufferText}`;
                   <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-white/20 text-xs font-mono font-bold text-gray-400">
                     3
                   </span>
-                  <h4 className="text-sm font-bold text-gray-200 font-mono">
+                  <h4 className="text-sm font-bold font-mono">
                     「Get API Key」をクリック
                   </h4>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className={`text-xs mt-1 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
                     ログイン後、画面の左上にある青い **「Get API key」** または **「Create API key」** ボタンをクリックします。
                   </p>
                 </li>
@@ -1176,10 +1393,10 @@ ${bufferText}`;
                   <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-white/20 text-xs font-mono font-bold text-gray-400">
                     4
                   </span>
-                  <h4 className="text-sm font-bold text-gray-200 font-mono">
+                  <h4 className="text-sm font-bold font-mono">
                     キーの作成とコピー
                   </h4>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className={`text-xs mt-1 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
                     表示された画面で「Create API key in new project」を選んでキーを作成し、生成された `AIzaSy...` で始まる文字列をコピーします。
                   </p>
                 </li>
@@ -1188,10 +1405,10 @@ ${bufferText}`;
                   <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-cyber-cyan text-xs font-mono font-bold text-cyber-cyan shadow-[0_0_8px_rgba(6,182,212,0.2)]">
                     5
                   </span>
-                  <h4 className="text-sm font-bold text-gray-200 font-mono">
+                  <h4 className="text-sm font-bold font-mono">
                     Chime-Out Radar に貼り付けて保存
                   </h4>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className={`text-xs mt-1 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
                     上のタブから「**{t.tabDashboard}**」に戻り、左側の「**Gemini API キー**」の入力欄に貼り付け、「**キーを保存**」を押します。
                   </p>
                 </li>
@@ -1201,11 +1418,11 @@ ${bufferText}`;
 
             {/* Security Note */}
             <div className="pt-4 border-t border-white/10 space-y-2">
-              <h3 className="text-sm font-bold text-gray-200 font-mono flex items-center space-x-1.5">
+              <h3 className="text-sm font-bold font-mono flex items-center space-x-1.5">
                 <CheckCircle2 className="w-4 h-4 text-green-400" />
                 <span>セキュリティとプライバシーについて</span>
               </h3>
-              <p className="text-xs text-gray-400 leading-relaxed pl-5">
+              <p className={`text-xs leading-relaxed pl-5 ${isLightMode ? 'text-slate-600' : 'text-gray-400'}`}>
                 入力したAPIキーはブラウザの保存領域（LocalStorage）にのみ安全に保存されます。
                 APIキーや文字起こしデータが、本アプリの開発者や第三者の外部サーバーに転送されたり、
                 GitHubのソースコード内に保存されたりすることは一切ありません。すべての通信はあなたのPCとGoogle社のサーバー間で直接かつ安全に処理されます。
@@ -1216,7 +1433,11 @@ ${bufferText}`;
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className="px-6 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-gray-300 transition-all active:scale-95"
+                className={`px-6 py-2 rounded-lg border text-xs font-mono transition-all active:scale-95 cursor-pointer ${
+                  isLightMode
+                    ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-300'
+                }`}
               >
                 ← レーダー画面に戻る
               </button>
@@ -1231,24 +1452,26 @@ ${bufferText}`;
         <footer className="w-full max-w-7xl mx-auto mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* Atmosphere scan history */}
-          <div className="bg-[#12131a]/85 border border-white/5 rounded-xl p-4 shadow-xl flex flex-col h-[200px]">
-            <div className="flex items-center space-x-1.5 border-b border-white/5 pb-2 mb-2">
+          <div className={`border rounded-xl p-4 shadow-xl flex flex-col h-[200px] transition-all duration-300 ${
+            isLightMode ? 'bg-white border-slate-200 shadow-slate-100 text-slate-800' : 'bg-[#12131a]/85 border-white/5 text-gray-100'
+          }`}>
+            <div className="flex items-center space-x-1.5 border-b pb-2 mb-2 border-inherit/10">
               <Activity className="w-3.5 h-3.5 text-cyber-purple" />
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-gray-400">
+              <span className={`text-[11px] font-mono font-bold uppercase tracking-wider ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
                 {t.scanLog}
               </span>
             </div>
-            <div className="flex-grow overflow-y-auto space-y-1.5 text-xs font-mono pr-1">
+            <div className={`flex-grow overflow-y-auto space-y-1.5 text-xs font-mono pr-1 ${isLightMode ? 'text-slate-700' : 'text-gray-400'}`}>
               {analysisHistory.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-gray-600 text-[10px]">
+                <div className="h-full flex items-center justify-center text-gray-500 text-[10px]">
                   {t.noScanLog}
                 </div>
               ) : (
                 analysisHistory.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center py-1 border-b border-white/5">
+                  <div key={idx} className="flex justify-between items-center py-1 border-b border-inherit/10">
                     <div className="flex items-center space-x-2">
                       <span className="text-gray-500">[{item.timestamp.toLocaleTimeString()}]</span>
-                      <span className="text-gray-300 max-w-[200px] md:max-w-md truncate select-text">
+                      <span className={`max-w-[200px] md:max-w-md truncate select-text font-medium ${isLightMode ? 'text-slate-700' : 'text-gray-300'}`}>
                         {item.texts.length > 0 ? item.texts.join(', ') : '(No text)'}
                       </span>
                     </div>
@@ -1262,14 +1485,16 @@ ${bufferText}`;
           </div>
 
           {/* System logs */}
-          <div className="bg-[#12131a]/85 border border-white/5 rounded-xl p-4 shadow-xl flex flex-col h-[200px]">
-            <div className="flex items-center space-x-1.5 border-b border-white/5 pb-2 mb-2">
+          <div className={`border rounded-xl p-4 shadow-xl flex flex-col h-[200px] transition-all duration-300 ${
+            isLightMode ? 'bg-white border-slate-200 shadow-slate-100 text-slate-800' : 'bg-[#12131a]/85 border-white/5 text-gray-100'
+          }`}>
+            <div className="flex items-center space-x-1.5 border-b pb-2 mb-2 border-inherit/10">
               <Terminal className="w-3.5 h-3.5 text-gray-400" />
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-gray-400">
+              <span className={`text-[11px] font-mono font-bold uppercase tracking-wider ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
                 {t.systemLog}
               </span>
             </div>
-            <div className="flex-grow overflow-y-auto space-y-1 text-[10px] font-mono text-gray-500 pr-1">
+            <div className={`flex-grow overflow-y-auto space-y-1 text-[10px] font-mono pr-1 ${isLightMode ? 'text-slate-500' : 'text-gray-500'}`}>
               {systemLogs.map((log, index) => (
                 <div key={index} className="leading-normal break-words select-text">
                   {log}
