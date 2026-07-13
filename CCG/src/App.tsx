@@ -510,7 +510,14 @@ Rules:
       const defaultErr = isEn 
         ? 'Error connecting to Gemini API. Fell back to local mode.' 
         : 'Gemini API接続中にエラーが発生しました。ローカルモードで生成します。';
-      setErrorMessage(err.message || defaultErr);
+      
+      let errMsg = err.message || defaultErr;
+      if (errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('limit')) {
+        errMsg = isEn
+          ? 'API Quota Exceeded. You may have reached AI Studio limits, or the selected model is restricted on the free tier. Try switching the Model to "Gemini 2.5 Flash" in Settings (Gear Icon).'
+          : 'APIの利用制限（クォータ）を超過しました。無料枠の上限に達したか、選択したモデル（Pro版など）が無料枠制限（Limit: 0）に引っかかっている可能性があります。右上設定（歯車マーク）からモデルを「Gemini 2.5 Flash」に変更してください。';
+      }
+      setErrorMessage(errMsg);
       
       // Fallback immediately to local generator so user doesn't get blocked
       const { action, target } = extractKeywords(rawInput, isEn);
