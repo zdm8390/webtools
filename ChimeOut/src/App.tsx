@@ -14,7 +14,10 @@ import {
   Eye,
   EyeOff,
   Check,
-  ExternalLink
+  ExternalLink,
+  Info,
+  HelpCircle,
+  CheckCircle2
 } from 'lucide-react';
 
 // Web Speech API Types
@@ -36,8 +39,112 @@ interface AnalysisRecord {
   texts: string[];
 }
 
+// Translations dictionary
+const translations = {
+  ja: {
+    title: "Chime-Out Radar",
+    subtitle: "オンライン会議不穏空気検知システム",
+    micStatus: "マイク",
+    aiStatus: "AI分析",
+    levelStatus: "不穏状況",
+    listening: "集音中",
+    off: "停止",
+    analyzing: "分析中",
+    idle: "待機",
+    hostile: "不穏検知",
+    secure: "安全",
+    controlBoard: "システム制御盤",
+    apiKeyLabel: "Gemini API キー",
+    getApiKey: "APIキーの無料取得手順はこちら",
+    saveKey: "キーを保存",
+    saved: "保存完了",
+    atmosphereMonitoring: "空気監視コントロール",
+    startMonitoring: "空気監視を開始",
+    stopMonitoring: "空気監視を停止",
+    simulator: "不穏度シミュレーター",
+    atmosphereValue: "不穏度シミュレーション値",
+    stableButton: "良好 (15%)",
+    tenseButton: "緊張 (55%)",
+    crisisButton: "険悪 (85%)",
+    loadPeacefulDemo: "💬 平和な会話を注入",
+    loadAngryDemo: "🔥 険悪な会話を注入",
+    testGong: "警告音（鐘）をテスト再生",
+    resetAll: "全データをリセット",
+    gaugeTitle: "空気の不穏度メーター",
+    updateLoop: "18秒間隔で自動判定",
+    statusTitle: "空気の評価ステータス",
+    dialogueTimeline: "会話ログのタイムライン",
+    bufferInfo: "直近30秒 / 最新5発言",
+    timelineEmpty: "-- 会話はまだ記録されていません --",
+    timelineEmptyDesc: "集音を開始するか、デモ会話ログを挿入して空気判定を開始してください。",
+    nowSpeaking: "集音中...",
+    interim: "集音データ",
+    final: "確定値",
+    placeholderManual: "テキストを直接入力して会話に追加...",
+    scanLog: "不穏度判定の履歴",
+    noScanLog: "判定履歴はありません。",
+    systemLog: "システムログ",
+    tabDashboard: "レーダー画面",
+    tabGuide: "無料APIキー取得ガイド",
+    enterKeyPrompt: "空気分析を開始するには、まず左側でGemini APIキーを設定してください。",
+    deviceNotSupported: "お使いのブラウザは音声認識に対応していません。Google ChromeまたはMicrosoft Edgeを使用してください。",
+    simulatedText: "(シミュレーターによる設定値)"
+  },
+  en: {
+    title: "Chime-Out Radar",
+    subtitle: "Atmosphere & Tension Detector",
+    micStatus: "Mic",
+    aiStatus: "AI",
+    levelStatus: "Level",
+    listening: "Listening",
+    off: "Off",
+    analyzing: "Analyzing",
+    idle: "Idle",
+    hostile: "Hostile",
+    secure: "Secure",
+    controlBoard: "System Control Board",
+    apiKeyLabel: "Gemini API Key",
+    getApiKey: "Get Gemini API Key (Free Guide)",
+    saveKey: "Save Key",
+    saved: "Saved",
+    atmosphereMonitoring: "Atmosphere Monitoring",
+    startMonitoring: "Start Monitoring",
+    stopMonitoring: "Stop Monitoring",
+    simulator: "Atmosphere Simulator",
+    atmosphereValue: "Atmosphere Value",
+    stableButton: "Stable (15%)",
+    tenseButton: "Tense (55%)",
+    crisisButton: "Crisis (85%)",
+    loadPeacefulDemo: "💬 Load Peaceful Demo",
+    loadAngryDemo: "🔥 Load Angry Demo",
+    testGong: "Test Gong Sound",
+    resetAll: "Reset All",
+    gaugeTitle: "Atmosphere Scanner Gauge",
+    updateLoop: "18s Update Loop",
+    statusTitle: "ATMOSPHERE STATUS",
+    dialogueTimeline: "Dialogue Timeline",
+    bufferInfo: "Buffer (30s / last 5)",
+    timelineEmpty: "-- TIMELINE IS EMPTY --",
+    timelineEmptyDesc: "Start monitoring or load a demo dialogue to begin tracking tension.",
+    nowSpeaking: "Now speaking...",
+    interim: "Interim",
+    final: "Final",
+    placeholderManual: "Type manual speech text...",
+    scanLog: "Atmosphere Scan Log (History)",
+    noScanLog: "No evaluations recorded yet.",
+    systemLog: "System Operations Logs",
+    tabDashboard: "Radar Dashboard",
+    tabGuide: "API Key Guide (Free)",
+    enterKeyPrompt: "Please configure your Gemini API Key in the left panel to start analyzing atmosphere.",
+    deviceNotSupported: "Your browser does not support Speech Recognition. Please use Chrome or Edge.",
+    simulatedText: "(Simulated evaluation values)"
+  }
+};
+
 export default function App() {
   // --- State Variables ---
+  const [lang, setLang] = useState<'ja' | 'en'>('ja'); // Default to Japanese (ja)
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'guide'>('dashboard');
   const [apiKey, setApiKey] = useState<string>(() => {
     return localStorage.getItem('gemini_api_key') || '';
   });
@@ -98,6 +205,8 @@ export default function App() {
       addSystemLog('Speech Recognition engine ready.');
     }
   }, []);
+
+  const t = translations[lang];
 
   // --- Audio Engine (Web Audio API Synthesized Gong) ---
   const playGong = () => {
@@ -171,17 +280,18 @@ export default function App() {
     localStorage.setItem('gemini_api_key', apiKey.trim());
     setApiSaveSuccess(true);
     addSystemLog('API Key updated in LocalStorage.');
+    setError(null);
     setTimeout(() => setApiSaveSuccess(false), 2000);
   };
 
   // --- Speech Recognition Logic ---
   const startMonitoring = () => {
     if (!SpeechRecognition) {
-      setError('Your browser does not support Speech Recognition. Please use Chrome or Edge.');
+      setError(t.deviceNotSupported);
       return;
     }
     if (!apiKey.trim()) {
-      setError('Please input and save your Gemini API Key first.');
+      setError(t.enterKeyPrompt);
       return;
     }
 
@@ -427,7 +537,7 @@ ${bufferText}`;
       {
         timestamp: new Date(),
         score: score,
-        texts: ['(Simulated evaluation values)']
+        texts: [t.simulatedText]
       },
       ...prevHist.slice(0, 19)
     ]);
@@ -488,30 +598,36 @@ ${bufferText}`;
         color: 'text-cyber-red',
         borderColor: 'border-glow-red',
         bgGlow: 'bg-red-500/10',
-        label: 'CRITICAL (険悪)',
+        label: lang === 'ja' ? 'CRITICAL (険悪)' : 'CRITICAL',
         textColor: 'text-red-500',
         barColor: 'bg-cyber-red',
-        commentary: '⚠️ 険悪な空気を検知。発言者の声調・単語のトゲが強まっています。防音装備または撤退を推奨。'
+        commentary: lang === 'ja'
+          ? '⚠️ 険悪な空気を検知。発言者の声調・単語のトゲが強まっています。防音装備または撤退を推奨。'
+          : '⚠️ Ominous tension detected. Sarcasm or defensive tones are elevated. Suggest stepping away or applying caution.'
       };
     } else if (val >= 40) {
       return {
         color: 'text-cyber-pink animate-pulse',
         borderColor: 'border-glow-pink',
         bgGlow: 'bg-pink-500/10',
-        label: 'TENSE (緊張)',
+        label: lang === 'ja' ? 'TENSE (緊張)' : 'TENSE / ELEVATED',
         textColor: 'text-pink-400',
         barColor: 'bg-cyber-pink',
-        commentary: '⚡ 微妙なピリつき、または沈黙が発生している可能性があります。慎重に言葉を選んでください。'
+        commentary: lang === 'ja'
+          ? '⚡ 微妙なピリつき、または沈黙が発生している可能性があります。慎重に言葉を選んでください。'
+          : '⚡ Subtle awkwardness or long silences detected. Choose your words carefully.'
       };
     } else {
       return {
         color: 'text-cyber-cyan',
         borderColor: 'border-glow-cyan',
         bgGlow: 'bg-cyan-500/10',
-        label: 'STABLE (良好)',
+        label: lang === 'ja' ? 'STABLE (良好)' : 'STABLE / CHILL',
         textColor: 'text-cyan-400',
         barColor: 'bg-cyber-cyan',
-        commentary: '🟢 場の空気は極めて平穏です。ユーモアや軽い雑談も受け入れられるコンディションです。'
+        commentary: lang === 'ja'
+          ? '🟢 場の空気は極めて平穏です。ユーモアや軽い雑談も受け入れられるコンディションです。'
+          : '🟢 Air pressure nominal. Conversation is going smoothly. Good time for jokes.'
       };
     }
   };
@@ -540,458 +656,631 @@ ${bufferText}`;
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 font-sans uppercase">
-              Chime-Out Radar
+              {t.title}
             </h1>
-            <p className="text-xs text-gray-500 font-mono">Atmosphere & Tension Detector v1.0.2</p>
+            <p className="text-xs text-gray-500 font-mono">{t.subtitle}</p>
           </div>
         </div>
 
-        {/* Dynamic State Indicators */}
-        <div className="flex flex-wrap gap-2 items-center justify-end">
-          {/* Microphone status badge */}
-          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-            <span className={`w-2.5 h-2.5 rounded-full ${isListening ? 'bg-cyan-400 animate-ping' : 'bg-gray-500'}`} />
-            <span className="text-xs font-mono uppercase text-gray-300">
-              Mic: {isListening ? 'Listening' : 'Off'}
-            </span>
+        {/* Navigation & Language Select */}
+        <div className="flex flex-wrap gap-3 items-center justify-end">
+          {/* Subpage Tabs */}
+          <div className="flex space-x-1 bg-black/40 border border-white/10 rounded-lg p-0.5">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-3 py-1.5 rounded-md text-xs font-mono tracking-wider transition-all ${
+                activeTab === 'dashboard'
+                  ? 'bg-cyber-purple/20 text-cyber-purple border border-cyber-purple/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              {t.tabDashboard}
+            </button>
+            <button
+              onClick={() => setActiveTab('guide')}
+              className={`px-3 py-1.5 rounded-md text-xs font-mono tracking-wider transition-all flex items-center space-x-1 ${
+                activeTab === 'guide'
+                  ? 'bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>{t.tabGuide}</span>
+            </button>
           </div>
 
-          {/* AI scan status badge */}
-          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-            <span className={`w-2.5 h-2.5 rounded-full ${isAnalyzing ? 'bg-pink-400 animate-pulse' : 'bg-gray-500'}`} />
-            <span className="text-xs font-mono uppercase text-gray-300">
-              AI: {isAnalyzing ? 'Analyzing' : 'Idle'}
-            </span>
-          </div>
-
-          {/* Threat level indicator */}
-          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-            <span className={`w-2.5 h-2.5 rounded-full ${tensionLevel >= 70 ? 'bg-red-500 animate-ping' : 'bg-gray-500'}`} />
-            <span className="text-xs font-mono uppercase text-gray-300">
-              Level: {tensionLevel >= 70 ? 'Hostile' : 'Secure'}
-            </span>
+          {/* Language Toggle */}
+          <div className="flex space-x-1 bg-black/40 border border-white/10 rounded-lg p-0.5">
+            <button
+              onClick={() => setLang('ja')}
+              className={`w-8 py-1 rounded text-xs font-mono transition-all ${
+                lang === 'ja' ? 'bg-white/10 text-white font-bold' : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              JA
+            </button>
+            <button
+              onClick={() => setLang('en')}
+              className={`w-8 py-1 rounded text-xs font-mono transition-all ${
+                lang === 'en' ? 'bg-white/10 text-white font-bold' : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              EN
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Main Grid Section */}
-      <main className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
-        
-        {/* Left Side: Controller / Setup */}
-        <section className="lg:col-span-4 flex flex-col space-y-6">
+      {/* Main Tab Area */}
+      {activeTab === 'dashboard' ? (
+        /* TAB 1: RADAR DASHBOARD */
+        <main className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
           
-          {/* Card 1: Configuration Panel */}
-          <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-5 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
+          {/* Left Side: Controller / Setup */}
+          <section className="lg:col-span-4 flex flex-col space-y-6">
             
-            <div className="flex items-center space-x-2 mb-4 border-b border-white/5 pb-3">
-              <Settings className="w-4 h-4 text-cyber-purple" />
-              <h2 className="text-sm font-bold tracking-wider uppercase text-gray-300 font-mono">
-                System Control Board
-              </h2>
-            </div>
-
-            {/* Error alerts */}
-            {error && (
-              <div className="mb-4 p-3 bg-red-950/40 border border-red-500/40 rounded-lg flex items-start space-x-2">
-                <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                <span className="text-xs text-red-300 font-mono">{error}</span>
-              </div>
-            )}
-
-            {/* API Key Form */}
-            <form onSubmit={handleSaveApiKey} className="space-y-3">
-              <label className="block text-xs font-mono text-gray-400 uppercase">
-                Gemini API Key
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Key className="h-4.5 w-4.5 text-gray-500" />
-                </div>
-                <input
-                  type={showApiKey ? 'text' : 'password'}
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="block w-full pl-9 pr-10 py-2 border border-white/10 rounded-lg bg-black/40 text-gray-200 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-cyber-purple focus:border-cyber-purple"
-                  placeholder="AIzaSy..."
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300"
-                >
-                  {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+            {/* Card 1: Configuration Panel */}
+            <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-5 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
               
-              <div className="flex justify-between items-center pt-1">
-                <a
-                  href="https://aistudio.google.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] text-cyber-cyan hover:underline flex items-center space-x-0.5"
-                >
-                  <span>Get Gemini API Key</span>
-                  <ExternalLink className="w-2.5 h-2.5" />
-                </a>
-                
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 rounded bg-gradient-to-r from-cyber-purple to-cyber-pink text-xs font-mono font-bold text-white hover:opacity-90 active:scale-95 transition-all duration-150 flex items-center space-x-1"
-                >
-                  {apiSaveSuccess ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Saved</span>
-                    </>
-                  ) : (
-                    <span>Save Key</span>
-                  )}
-                </button>
-              </div>
-            </form>
-
-            {/* Speech Recognition Controls */}
-            <div className="mt-6 pt-5 border-t border-white/5 space-y-3">
-              <label className="block text-xs font-mono text-gray-400 uppercase">
-                Atmosphere Monitoring
-              </label>
-
-              {!isListening ? (
-                <button
-                  onClick={startMonitoring}
-                  className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-sm font-bold text-white flex items-center justify-center space-x-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-[0.98]"
-                >
-                  <Mic className="w-4.5 h-4.5 animate-pulse" />
-                  <span>Start Monitoring</span>
-                </button>
-              ) : (
-                <button
-                  onClick={stopMonitoring}
-                  className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-red-600 to-pink-700 hover:from-red-500 hover:to-pink-600 text-sm font-bold text-white flex items-center justify-center space-x-2 transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] active:scale-[0.98]"
-                >
-                  <MicOff className="w-4.5 h-4.5" />
-                  <span>Stop Monitoring</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Card 2: Simulation Panel (Crucial for Demo/Testing) */}
-          <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-5 shadow-2xl relative overflow-hidden">
-            <div className="flex items-center space-x-2 mb-4 border-b border-white/5 pb-3">
-              <Activity className="w-4 h-4 text-cyber-pink" />
-              <h2 className="text-sm font-bold tracking-wider uppercase text-gray-300 font-mono">
-                Atmosphere Simulator
-              </h2>
-            </div>
-
-            <div className="space-y-4">
-              {/* Slider simulation */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs font-mono text-gray-400">Atmosphere Value</span>
-                  <span className="text-xs font-mono font-bold text-cyber-pink">{tensionLevel}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={tensionLevel}
-                  onChange={(e) => triggerSimulation(parseInt(e.target.value, 10))}
-                  className="w-full h-1.5 bg-black/40 rounded-lg appearance-none cursor-pointer accent-cyber-pink"
-                />
-              </div>
-
-              {/* Quick simulation buttons */}
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => triggerSimulation(15)}
-                  className="py-1.5 px-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded text-[10px] font-mono text-cyan-400"
-                >
-                  Stable (15%)
-                </button>
-                <button
-                  onClick={() => triggerSimulation(55)}
-                  className="py-1.5 px-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded text-[10px] font-mono text-pink-400"
-                >
-                  Tense (55%)
-                </button>
-                <button
-                  onClick={() => triggerSimulation(85)}
-                  className="py-1.5 px-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded text-[10px] font-mono text-red-400 animate-pulse border-red-500/30"
-                >
-                  Crisis (85%)
-                </button>
-              </div>
-
-              {/* Demo text loaders */}
-              <div className="pt-2 border-t border-white/5 space-y-2">
-                <span className="block text-[10px] font-mono text-gray-500 uppercase">Inject Dialogue Snippets</span>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => loadDemoDialogue('chill')}
-                    className="flex-1 py-1.5 bg-cyan-950/20 border border-cyan-500/20 hover:bg-cyan-900/30 rounded text-xs font-mono text-cyan-300 hover:text-cyan-200 transition-colors"
-                  >
-                    💬 Load Peaceful Demo
-                  </button>
-                  <button
-                    onClick={() => loadDemoDialogue('tense')}
-                    className="flex-1 py-1.5 bg-red-950/20 border border-red-500/20 hover:bg-red-900/30 rounded text-xs font-mono text-red-300 hover:text-red-200 transition-colors"
-                  >
-                    🔥 Load Angry Demo
-                  </button>
-                </div>
-              </div>
-
-              {/* Test Audio & Reset */}
-              <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-                <button
-                  onClick={playGong}
-                  className="py-1.5 px-3 bg-purple-950/30 border border-purple-500/30 hover:bg-purple-900/40 rounded text-xs font-mono text-purple-300 flex items-center space-x-1"
-                >
-                  <Volume2 className="w-3.5 h-3.5" />
-                  <span>Test Gong Sound</span>
-                </button>
-
-                <button
-                  onClick={clearLogsAndTranscripts}
-                  className="py-1.5 px-3 bg-white/5 hover:bg-white/10 rounded text-xs font-mono text-gray-400 flex items-center space-x-1"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset All</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Center: Tension Visualizer Gauge */}
-        <section className="lg:col-span-4 flex flex-col space-y-6">
-          <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-6 shadow-2xl flex flex-col items-center justify-between flex-grow min-h-[400px] relative overflow-hidden">
-            
-            {/* Ambient colorful grid backdrop glow */}
-            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 ${currentTheme.bgGlow} rounded-full blur-3xl transition-colors duration-1000 pointer-events-none`} />
-
-            <div className="w-full flex items-center justify-between border-b border-white/5 pb-3 z-10">
-              <span className="text-xs font-mono text-gray-400 uppercase tracking-wider">
-                Atmosphere Scanner Gauge
-              </span>
-              <span className="text-xs font-mono text-gray-500">
-                18s Update Loop
-              </span>
-            </div>
-
-            {/* SVG Circular Gauge */}
-            <div className="relative my-8 z-10 select-none">
-              <svg className="w-64 h-64 transform -rotate-90">
-                {/* Background Ring */}
-                <circle
-                  cx="128"
-                  cy="128"
-                  r={radius}
-                  stroke="rgba(255, 255, 255, 0.03)"
-                  strokeWidth={strokeWidth}
-                  fill="transparent"
-                />
-                {/* Glowing border ring */}
-                <circle
-                  cx="128"
-                  cy="128"
-                  r={radius}
-                  stroke="rgba(255, 255, 255, 0.05)"
-                  strokeWidth={strokeWidth + 2}
-                  fill="transparent"
-                />
-                {/* Active Progress Ring */}
-                <circle
-                  className="transition-all duration-1000 ease-out"
-                  cx="128"
-                  cy="128"
-                  r={radius}
-                  stroke={`var(--color-cyber-${tensionLevel >= 70 ? 'red' : tensionLevel >= 40 ? 'pink' : 'cyan'})`}
-                  strokeWidth={strokeWidth}
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  fill="transparent"
-                />
-              </svg>
-
-              {/* Inner score reading */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-6xl font-black font-mono tracking-tighter text-white select-text">
-                  {tensionLevel}
-                </span>
-                <span className="text-xs font-mono tracking-widest text-gray-500 uppercase">
-                  Tension %
-                </span>
-              </div>
-            </div>
-
-            {/* Atmosphere status readouts */}
-            <div className="w-full space-y-4 text-center z-10">
-              <div className="inline-block px-4 py-1.5 rounded border border-white/10 bg-black/60 shadow-lg">
-                <span className="text-xs font-mono text-gray-400 block mb-0.5">ATMOSPHERE STATUS</span>
-                <span className={`text-base font-extrabold tracking-wide uppercase ${currentTheme.color} transition-all duration-500`}>
-                  {currentTheme.label}
-                </span>
-              </div>
-
-              {/* Score bar */}
-              <div className="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-white/5">
-                <div
-                  className={`h-full ${currentTheme.barColor} transition-all duration-1000 ease-out`}
-                  style={{ width: `${tensionLevel}%` }}
-                />
-              </div>
-
-              {/* Fun / Snarky advice banner */}
-              <p className="text-xs text-gray-400 italic bg-white/5 border border-white/5 p-3 rounded-lg leading-relaxed select-text">
-                {currentTheme.commentary}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Right Side: Live Timeline */}
-        <section className="lg:col-span-4 flex flex-col space-y-6">
-          <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-5 shadow-2xl flex flex-col h-[500px] relative overflow-hidden">
-            
-            <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
-              <div className="flex items-center space-x-2">
-                <Terminal className="w-4 h-4 text-cyber-cyan" />
+              <div className="flex items-center space-x-2 mb-4 border-b border-white/5 pb-3">
+                <Settings className="w-4 h-4 text-cyber-purple" />
                 <h2 className="text-sm font-bold tracking-wider uppercase text-gray-300 font-mono">
-                  Dialogue Timeline
+                  {t.controlBoard}
                 </h2>
               </div>
-              <span className="text-[10px] font-mono text-gray-500 px-2 py-0.5 bg-white/5 rounded">
-                Buffer (30s / last 5)
-              </span>
+
+              {/* Error alerts */}
+              {error && (
+                <div className="mb-4 p-3 bg-red-950/40 border border-red-500/40 rounded-lg flex items-start space-x-2">
+                  <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-red-300 font-mono leading-relaxed">{error}</span>
+                </div>
+              )}
+
+              {/* API Key Form */}
+              <form onSubmit={handleSaveApiKey} className="space-y-3">
+                <label className="block text-xs font-mono text-gray-400 uppercase">
+                  {t.apiKeyLabel}
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Key className="h-4.5 w-4.5 text-gray-500" />
+                  </div>
+                  <input
+                    type={showApiKey ? 'text' : 'password'}
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    className="block w-full pl-9 pr-10 py-2 border border-white/10 rounded-lg bg-black/40 text-gray-200 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-cyber-purple focus:border-cyber-purple"
+                    placeholder="AIzaSy..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300"
+                  >
+                    {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                
+                <div className="flex justify-between items-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('guide')}
+                    className="text-[10px] text-cyber-cyan hover:underline flex items-center space-x-0.5"
+                  >
+                    <span>{t.getApiKey}</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </button>
+                  
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded bg-gradient-to-r from-cyber-purple to-cyber-pink text-xs font-mono font-bold text-white hover:opacity-90 active:scale-95 transition-all duration-150 flex items-center space-x-1"
+                  >
+                    {apiSaveSuccess ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{t.saved}</span>
+                      </>
+                    ) : (
+                      <span>{t.saveKey}</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              {/* Speech Recognition Controls */}
+              <div className="mt-6 pt-5 border-t border-white/5 space-y-3">
+                <label className="block text-xs font-mono text-gray-400 uppercase">
+                  {t.atmosphereMonitoring}
+                </label>
+
+                {/* State badges (Compact) */}
+                <div className="grid grid-cols-2 gap-2 pb-2">
+                  <div className="flex items-center space-x-1.5 px-2 py-1 rounded bg-black/20 border border-white/5 text-[10px] font-mono text-gray-400">
+                    <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-cyan-400 animate-ping' : 'bg-gray-500'}`} />
+                    <span>{t.micStatus}: {isListening ? t.listening : t.off}</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5 px-2 py-1 rounded bg-black/20 border border-white/5 text-[10px] font-mono text-gray-400">
+                    <span className={`w-2 h-2 rounded-full ${isAnalyzing ? 'bg-pink-400 animate-pulse' : 'bg-gray-500'}`} />
+                    <span>{t.aiStatus}: {isAnalyzing ? t.analyzing : t.idle}</span>
+                  </div>
+                </div>
+
+                {!isListening ? (
+                  <button
+                    onClick={startMonitoring}
+                    className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-sm font-bold text-white flex items-center justify-center space-x-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-[0.98]"
+                  >
+                    <Mic className="w-4.5 h-4.5 animate-pulse" />
+                    <span>{t.startMonitoring}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={stopMonitoring}
+                    className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-red-600 to-pink-700 hover:from-red-500 hover:to-pink-600 text-sm font-bold text-white flex items-center justify-center space-x-2 transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] active:scale-[0.98]"
+                  >
+                    <MicOff className="w-4.5 h-4.5" />
+                    <span>{t.stopMonitoring}</span>
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Transcript Timeline Messages */}
-            <div className="flex-grow overflow-y-auto space-y-3 pr-2 mb-4">
-              {transcripts.length === 0 && !interimTranscript ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-4">
-                  <p className="text-xs font-mono text-gray-600">
-                    -- TIMELINE IS EMPTY --
-                  </p>
-                  <p className="text-[11px] text-gray-500 mt-2 max-w-[200px]">
-                    Start monitoring or load a demo dialogue to begin tracking tension.
-                  </p>
+            {/* Card 2: Simulation Panel (Crucial for Demo/Testing) */}
+            <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-5 shadow-2xl relative overflow-hidden">
+              <div className="flex items-center space-x-2 mb-4 border-b border-white/5 pb-3">
+                <Activity className="w-4 h-4 text-cyber-pink" />
+                <h2 className="text-sm font-bold tracking-wider uppercase text-gray-300 font-mono">
+                  {t.simulator}
+                </h2>
+              </div>
+
+              <div className="space-y-4">
+                {/* Slider simulation */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs font-mono text-gray-400">{t.atmosphereValue}</span>
+                    <span className="text-xs font-mono font-bold text-cyber-pink">{tensionLevel}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={tensionLevel}
+                    onChange={(e) => triggerSimulation(parseInt(e.target.value, 10))}
+                    className="w-full h-1.5 bg-black/40 rounded-lg appearance-none cursor-pointer accent-cyber-pink"
+                  />
                 </div>
-              ) : (
-                transcripts.map((t) => (
-                  <div key={t.id} className="p-2.5 rounded bg-black/30 border border-white/5 hover:border-white/10 transition-colors">
+
+                {/* Quick simulation buttons */}
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => triggerSimulation(15)}
+                    className="py-1.5 px-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded text-[10px] font-mono text-cyan-400"
+                  >
+                    {t.stableButton}
+                  </button>
+                  <button
+                    onClick={() => triggerSimulation(55)}
+                    className="py-1.5 px-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded text-[10px] font-mono text-pink-400"
+                  >
+                    {t.tenseButton}
+                  </button>
+                  <button
+                    onClick={() => triggerSimulation(85)}
+                    className="py-1.5 px-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded text-[10px] font-mono text-red-400 animate-pulse border-red-500/30"
+                  >
+                    {t.crisisButton}
+                  </button>
+                </div>
+
+                {/* Demo text loaders */}
+                <div className="pt-2 border-t border-white/5 space-y-2">
+                  <span className="block text-[10px] font-mono text-gray-500 uppercase">Inject Dialogue Snippets</span>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => loadDemoDialogue('chill')}
+                      className="flex-1 py-1.5 bg-cyan-950/20 border border-cyan-500/20 hover:bg-cyan-900/30 rounded text-[11px] font-mono text-cyan-300 hover:text-cyan-200 transition-colors"
+                    >
+                      {t.loadPeacefulDemo}
+                    </button>
+                    <button
+                      onClick={() => loadDemoDialogue('tense')}
+                      className="flex-1 py-1.5 bg-red-950/20 border border-red-500/20 hover:bg-red-900/30 rounded text-[11px] font-mono text-red-300 hover:text-red-200 transition-colors"
+                    >
+                      {t.loadAngryDemo}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Test Audio & Reset */}
+                <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                  <button
+                    onClick={playGong}
+                    className="py-1.5 px-3 bg-purple-950/30 border border-purple-500/30 hover:bg-purple-900/40 rounded text-xs font-mono text-purple-300 flex items-center space-x-1"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" />
+                    <span>{t.testGong}</span>
+                  </button>
+
+                  <button
+                    onClick={clearLogsAndTranscripts}
+                    className="py-1.5 px-3 bg-white/5 hover:bg-white/10 rounded text-xs font-mono text-gray-400 flex items-center space-x-1"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>{t.resetAll}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Center: Tension Visualizer Gauge */}
+          <section className="lg:col-span-4 flex flex-col space-y-6">
+            <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-6 shadow-2xl flex flex-col items-center justify-between flex-grow min-h-[400px] relative overflow-hidden">
+              
+              {/* Ambient colorful grid backdrop glow */}
+              <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 ${currentTheme.bgGlow} rounded-full blur-3xl transition-colors duration-1000 pointer-events-none`} />
+
+              <div className="w-full flex items-center justify-between border-b border-white/5 pb-3 z-10">
+                <span className="text-xs font-mono text-gray-400 uppercase tracking-wider">
+                  {t.gaugeTitle}
+                </span>
+                <span className="text-xs font-mono text-gray-500">
+                  {t.updateLoop}
+                </span>
+              </div>
+
+              {/* SVG Circular Gauge */}
+              <div className="relative my-8 z-10 select-none">
+                <svg className="w-64 h-64 transform -rotate-90">
+                  {/* Background Ring */}
+                  <circle
+                    cx="128"
+                    cy="128"
+                    r={radius}
+                    stroke="rgba(255, 255, 255, 0.03)"
+                    strokeWidth={strokeWidth}
+                    fill="transparent"
+                  />
+                  {/* Glowing border ring */}
+                  <circle
+                    cx="128"
+                    cy="128"
+                    r={radius}
+                    stroke="rgba(255, 255, 255, 0.05)"
+                    strokeWidth={strokeWidth + 2}
+                    fill="transparent"
+                  />
+                  {/* Active Progress Ring */}
+                  <circle
+                    className="transition-all duration-1000 ease-out"
+                    cx="128"
+                    cy="128"
+                    r={radius}
+                    stroke={`var(--color-cyber-${tensionLevel >= 70 ? 'red' : tensionLevel >= 40 ? 'pink' : 'cyan'})`}
+                    strokeWidth={strokeWidth}
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    fill="transparent"
+                  />
+                </svg>
+
+                {/* Inner score reading */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-6xl font-black font-mono tracking-tighter text-white select-text">
+                    {tensionLevel}
+                  </span>
+                  <span className="text-xs font-mono tracking-widest text-gray-500 uppercase">
+                    Tension %
+                  </span>
+                </div>
+              </div>
+
+              {/* Atmosphere status readouts */}
+              <div className="w-full space-y-4 text-center z-10">
+                <div className="inline-block px-4 py-1.5 rounded border border-white/10 bg-black/60 shadow-lg">
+                  <span className="text-xs font-mono text-gray-400 block mb-0.5">{t.statusTitle}</span>
+                  <span className={`text-base font-extrabold tracking-wide uppercase ${currentTheme.color} transition-all duration-500`}>
+                    {currentTheme.label}
+                  </span>
+                </div>
+
+                {/* Score bar */}
+                <div className="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-white/5">
+                  <div
+                    className={`h-full ${currentTheme.barColor} transition-all duration-1000 ease-out`}
+                    style={{ width: `${tensionLevel}%` }}
+                  />
+                </div>
+
+                {/* Fun / Snarky advice banner */}
+                <p className="text-xs text-gray-400 italic bg-white/5 border border-white/5 p-3 rounded-lg leading-relaxed select-text">
+                  {currentTheme.commentary}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Right Side: Live Timeline */}
+          <section className="lg:col-span-4 flex flex-col space-y-6">
+            <div className="bg-[#12131a]/95 border border-white/10 rounded-xl p-5 shadow-2xl flex flex-col h-[500px] relative overflow-hidden">
+              
+              <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
+                <div className="flex items-center space-x-2">
+                  <Terminal className="w-4 h-4 text-cyber-cyan" />
+                  <h2 className="text-sm font-bold tracking-wider uppercase text-gray-300 font-mono">
+                    {t.dialogueTimeline}
+                  </h2>
+                </div>
+                <span className="text-[10px] font-mono text-gray-500 px-2 py-0.5 bg-white/5 rounded">
+                  {t.bufferInfo}
+                </span>
+              </div>
+
+              {/* Transcript Timeline Messages */}
+              <div className="flex-grow overflow-y-auto space-y-3 pr-2 mb-4">
+                {transcripts.length === 0 && !interimTranscript ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                    <p className="text-xs font-mono text-gray-600">
+                      {t.timelineEmpty}
+                    </p>
+                    <p className="text-[11px] text-gray-500 mt-2 max-w-[200px]">
+                      {t.timelineEmptyDesc}
+                    </p>
+                  </div>
+                ) : (
+                  transcripts.map((tItem) => (
+                    <div key={tItem.id} className="p-2.5 rounded bg-black/30 border border-white/5 hover:border-white/10 transition-colors">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-mono text-gray-500">
+                          {tItem.timestamp.toLocaleTimeString()}
+                        </span>
+                        <span className="text-[9px] font-mono text-cyber-cyan bg-cyan-950/20 px-1 rounded">
+                          {t.final}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-300 font-mono break-words leading-relaxed select-text">
+                        {tItem.text}
+                      </p>
+                    </div>
+                  ))
+                )}
+
+                {/* Interim Transcript (Real time preview) */}
+                {interimTranscript && (
+                  <div className="p-2.5 rounded bg-cyan-950/10 border border-cyber-cyan/20 animate-pulse">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-[10px] font-mono text-gray-500">
-                        {t.timestamp.toLocaleTimeString()}
+                      <span className="text-[10px] font-mono text-cyber-cyan">
+                        {t.nowSpeaking}
                       </span>
-                      <span className="text-[9px] font-mono text-cyber-cyan bg-cyan-950/20 px-1 rounded">
-                        Final
+                      <span className="text-[9px] font-mono text-cyber-cyan bg-cyan-900/30 px-1 rounded">
+                        {t.interim}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-300 font-mono break-words leading-relaxed select-text">
-                      {t.text}
+                    <p className="text-xs text-cyber-cyan/90 font-mono italic break-words select-text">
+                      {interimTranscript}
                     </p>
+                  </div>
+                )}
+                <div ref={transcriptEndRef} />
+              </div>
+
+              {/* Manual Text Input form */}
+              <form onSubmit={handleAddManualSpeech} className="mt-auto border-t border-white/5 pt-4 flex space-x-2">
+                <input
+                  type="text"
+                  value={manualInput}
+                  onChange={(e) => setManualInput(e.target.value)}
+                  placeholder={t.placeholderManual}
+                  className="flex-grow px-3 py-2 border border-white/10 rounded-lg bg-black/50 text-xs font-mono text-gray-300 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyber-cyan focus:border-cyber-cyan"
+                />
+                <button
+                  type="submit"
+                  className="p-2 rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-cyber-cyan hover:bg-cyan-900/50 active:scale-95 transition-all"
+                  title="Send speech text"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
+          </section>
+        </main>
+      ) : (
+        /* TAB 2: API KEY GET GUIDE (SUBPAGE) */
+        <main className="w-full max-w-4xl mx-auto flex-grow bg-[#12131a]/95 border border-white/10 rounded-xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex items-center space-x-3 border-b border-white/10 pb-4 mb-6">
+            <HelpCircle className="w-6 h-6 text-cyber-cyan" />
+            <div>
+              <h2 className="text-xl font-bold text-gray-100 font-mono">
+                Gemini API キー 無料取得手順ガイド
+              </h2>
+              <p className="text-xs text-gray-500">How to get a Google Gemini API Key for free</p>
+            </div>
+          </div>
+
+          <div className="space-y-6 text-gray-300 leading-relaxed font-sans text-sm">
+            
+            {/* Free Tier Callout Box */}
+            <div className="p-4 bg-cyan-950/20 border border-cyber-cyan/30 rounded-lg flex items-start space-x-3 shadow-lg">
+              <Info className="w-5 h-5 text-cyber-cyan flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-cyber-cyan font-mono">完全無料で利用できます！</h3>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  Google AI Studioが提供する <strong>Gemini 1.5 Flash</strong> の無料利用枠 (Free Tier) は、
+                  <strong>1分間に15リクエスト、1日に1,500リクエストまで</strong> 料金が一切かかりません。
+                  本アプリの空気自動解析は <strong>18秒に1回</strong>（1分間に3〜4リクエスト程度）しかリクエストを行わないため、
+                  何時間連続で稼働させても無料枠をオーバーすることはなく、<strong>課金される心配はありません。</strong>
+                </p>
+              </div>
+            </div>
+
+            {/* Step-by-Step Instructions */}
+            <div className="space-y-4">
+              <h3 className="text-base font-bold text-gray-200 border-l-2 border-cyber-purple pl-2 font-mono">
+                取得ステップ（所要時間: 約1分）
+              </h3>
+              
+              <ol className="relative border-l border-white/10 ml-3 space-y-6">
+                
+                <li className="ml-6">
+                  <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-cyber-purple text-xs font-mono font-bold text-cyber-purple">
+                    1
+                  </span>
+                  <h4 className="text-sm font-bold text-gray-200 font-mono">
+                    Google AI Studio を開く
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Google公式の開発者ポータルである以下のサイトにアクセスします。
+                  </p>
+                  <a
+                    href="https://aistudio.google.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1.5 mt-2 px-3.5 py-1.5 rounded bg-cyber-purple/20 border border-cyber-purple/40 hover:bg-cyber-purple/30 text-xs font-mono text-white transition-all shadow-[0_0_10px_rgba(168,85,247,0.1)] hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]"
+                  >
+                    <span>Google AI Studio を開く</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </li>
+
+                <li className="ml-6">
+                  <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-white/20 text-xs font-mono font-bold text-gray-400">
+                    2
+                  </span>
+                  <h4 className="text-sm font-bold text-gray-200 font-mono">
+                    Googleアカウントでログイン
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    お持ちの通常のGoogleアカウント（Gmailアドレスなど）でログインしてください。利用規約の同意画面が出た場合は、内容を確認して同意します。
+                  </p>
+                </li>
+
+                <li className="ml-6">
+                  <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-white/20 text-xs font-mono font-bold text-gray-400">
+                    3
+                  </span>
+                  <h4 className="text-sm font-bold text-gray-200 font-mono">
+                    「Get API Key」をクリック
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    ログイン後、画面の左上にある青い **「Get API key」** または **「Create API key」** ボタンをクリックします。
+                  </p>
+                </li>
+
+                <li className="ml-6">
+                  <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-white/20 text-xs font-mono font-bold text-gray-400">
+                    4
+                  </span>
+                  <h4 className="text-sm font-bold text-gray-200 font-mono">
+                    キーの作成とコピー
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    表示された画面で「Create API key in new project」を選んでキーを作成し、生成された `AIzaSy...` で始まる文字列をコピーします。
+                  </p>
+                </li>
+
+                <li className="ml-6">
+                  <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 rounded-full bg-black/80 border border-cyber-cyan text-xs font-mono font-bold text-cyber-cyan shadow-[0_0_8px_rgba(6,182,212,0.2)]">
+                    5
+                  </span>
+                  <h4 className="text-sm font-bold text-gray-200 font-mono">
+                    Chime-Out Radar に貼り付けて保存
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    上のタブから「**{t.tabDashboard}**」に戻り、左側の「**Gemini API キー**」の入力欄に貼り付け、「**キーを保存**」を押します。
+                  </p>
+                </li>
+
+              </ol>
+            </div>
+
+            {/* Security Note */}
+            <div className="pt-4 border-t border-white/10 space-y-2">
+              <h3 className="text-sm font-bold text-gray-200 font-mono flex items-center space-x-1.5">
+                <CheckCircle2 className="w-4 h-4 text-green-400" />
+                <span>セキュリティとプライバシーについて</span>
+              </h3>
+              <p className="text-xs text-gray-400 leading-relaxed pl-5">
+                入力したAPIキーはブラウザの保存領域（LocalStorage）にのみ安全に保存されます。
+                APIキーや文字起こしデータが、本アプリの開発者や第三者の外部サーバーに転送されたり、
+                GitHubのソースコード内に保存されたりすることは一切ありません。すべての通信はあなたのPCとGoogle社のサーバー間で直接かつ安全に処理されます。
+              </p>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className="px-6 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-gray-300 transition-all active:scale-95"
+              >
+                ← レーダー画面に戻る
+              </button>
+            </div>
+
+          </div>
+        </main>
+      )}
+
+      {/* Footer Area: Historical Log and System Event Logs */}
+      {activeTab === 'dashboard' && (
+        <footer className="w-full max-w-7xl mx-auto mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* Atmosphere scan history */}
+          <div className="bg-[#12131a]/85 border border-white/5 rounded-xl p-4 shadow-xl flex flex-col h-[200px]">
+            <div className="flex items-center space-x-1.5 border-b border-white/5 pb-2 mb-2">
+              <Activity className="w-3.5 h-3.5 text-cyber-purple" />
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-gray-400">
+                {t.scanLog}
+              </span>
+            </div>
+            <div className="flex-grow overflow-y-auto space-y-1.5 text-xs font-mono pr-1">
+              {analysisHistory.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-gray-600 text-[10px]">
+                  {t.noScanLog}
+                </div>
+              ) : (
+                analysisHistory.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center py-1 border-b border-white/5">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-500">[{item.timestamp.toLocaleTimeString()}]</span>
+                      <span className="text-gray-300 max-w-[200px] md:max-w-md truncate select-text">
+                        {item.texts.length > 0 ? item.texts.join(', ') : '(No text)'}
+                      </span>
+                    </div>
+                    <span className={`font-bold ${item.score >= 70 ? 'text-cyber-red' : item.score >= 40 ? 'text-cyber-pink' : 'text-cyber-cyan'}`}>
+                      {item.score}%
+                    </span>
                   </div>
                 ))
               )}
-
-              {/* Interim Transcript (Real time preview) */}
-              {interimTranscript && (
-                <div className="p-2.5 rounded bg-cyan-950/10 border border-cyber-cyan/20 animate-pulse">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-mono text-cyber-cyan">
-                      Now speaking...
-                    </span>
-                    <span className="text-[9px] font-mono text-cyber-cyan bg-cyan-900/30 px-1 rounded">
-                      Interim
-                    </span>
-                  </div>
-                  <p className="text-xs text-cyber-cyan/90 font-mono italic break-words select-text">
-                    {interimTranscript}
-                  </p>
-                </div>
-              )}
-              <div ref={transcriptEndRef} />
             </div>
-
-            {/* Manual Text Input form */}
-            <form onSubmit={handleAddManualSpeech} className="mt-auto border-t border-white/5 pt-4 flex space-x-2">
-              <input
-                type="text"
-                value={manualInput}
-                onChange={(e) => setManualInput(e.target.value)}
-                placeholder="Type manual speech text..."
-                className="flex-grow px-3 py-2 border border-white/10 rounded-lg bg-black/50 text-xs font-mono text-gray-300 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyber-cyan focus:border-cyber-cyan"
-              />
-              <button
-                type="submit"
-                className="p-2 rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-cyber-cyan hover:bg-cyan-900/50 active:scale-95 transition-all"
-                title="Send speech text"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
           </div>
-        </section>
-      </main>
 
-      {/* Footer Area: Historical Log and System Event Logs */}
-      <footer className="w-full max-w-7xl mx-auto mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Atmosphere scan history */}
-        <div className="bg-[#12131a]/85 border border-white/5 rounded-xl p-4 shadow-xl flex flex-col h-[200px]">
-          <div className="flex items-center space-x-1.5 border-b border-white/5 pb-2 mb-2">
-            <Activity className="w-3.5 h-3.5 text-cyber-purple" />
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-gray-400">
-              Atmosphere Scan Log (History)
-            </span>
-          </div>
-          <div className="flex-grow overflow-y-auto space-y-1.5 text-xs font-mono pr-1">
-            {analysisHistory.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-gray-600 text-[10px]">
-                No evaluations recorded yet.
-              </div>
-            ) : (
-              analysisHistory.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center py-1 border-b border-white/5">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-gray-500">[{item.timestamp.toLocaleTimeString()}]</span>
-                    <span className="text-gray-300 max-w-[200px] truncate">
-                      {item.texts.length > 0 ? item.texts.join(', ') : '(No text)'}
-                    </span>
-                  </div>
-                  <span className={`font-bold ${item.score >= 70 ? 'text-cyber-red' : item.score >= 40 ? 'text-cyber-pink' : 'text-cyber-cyan'}`}>
-                    {item.score}%
-                  </span>
+          {/* System logs */}
+          <div className="bg-[#12131a]/85 border border-white/5 rounded-xl p-4 shadow-xl flex flex-col h-[200px]">
+            <div className="flex items-center space-x-1.5 border-b border-white/5 pb-2 mb-2">
+              <Terminal className="w-3.5 h-3.5 text-gray-400" />
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-gray-400">
+                {t.systemLog}
+              </span>
+            </div>
+            <div className="flex-grow overflow-y-auto space-y-1 text-[10px] font-mono text-gray-500 pr-1">
+              {systemLogs.map((log, index) => (
+                <div key={index} className="leading-normal break-words select-text">
+                  {log}
                 </div>
-              ))
-            )}
+              ))}
+              <div ref={logEndRef} />
+            </div>
           </div>
-        </div>
 
-        {/* System logs */}
-        <div className="bg-[#12131a]/85 border border-white/5 rounded-xl p-4 shadow-xl flex flex-col h-[200px]">
-          <div className="flex items-center space-x-1.5 border-b border-white/5 pb-2 mb-2">
-            <Terminal className="w-3.5 h-3.5 text-gray-400" />
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-gray-400">
-              System Operations Logs
-            </span>
-          </div>
-          <div className="flex-grow overflow-y-auto space-y-1 text-[10px] font-mono text-gray-500 pr-1">
-            {systemLogs.map((log, index) => (
-              <div key={index} className="leading-normal break-words select-text">
-                {log}
-              </div>
-            ))}
-            <div ref={logEndRef} />
-          </div>
-        </div>
-
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }
