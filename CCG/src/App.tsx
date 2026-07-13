@@ -318,10 +318,10 @@ export default function App() {
   
   // Settings state
   const [apiKey, setApiKey] = useState<string>('');
-  const [model, setModel] = useState<string>('gemini-2.5-flash');
+  const [model, setModel] = useState<string>('gemini-3.5-flash');
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [tempApiKey, setTempApiKey] = useState<string>('');
-  const [tempModel, setTempModel] = useState<string>('gemini-2.5-flash');
+  const [tempModel, setTempModel] = useState<string>('gemini-3.5-flash');
   
   // App state
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -366,7 +366,7 @@ export default function App() {
   // Load preferences from local storage
   useEffect(() => {
     const savedKey = localStorage.getItem('crazycommit_api_key') || '';
-    const savedModel = localStorage.getItem('crazycommit_model') || 'gemini-2.5-flash';
+    const savedModel = localStorage.getItem('crazycommit_model') || 'gemini-3.5-flash';
     const savedHistory = localStorage.getItem('crazycommit_history');
     const savedDarkMode = localStorage.getItem('crazycommit_dark_mode') !== 'false'; // default true
     const savedLanguage = (localStorage.getItem('crazycommit_language') || 'jp') as 'jp' | 'en';
@@ -514,8 +514,8 @@ Rules:
       let errMsg = err.message || defaultErr;
       if (errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('limit')) {
         errMsg = isEn
-          ? 'API Quota Exceeded. You may have reached AI Studio limits, or the selected model is restricted on the free tier. Try switching the Model to "Gemini 2.5 Flash" in Settings (Gear Icon).'
-          : 'APIの利用制限（クォータ）を超過しました。無料枠の上限に達したか、選択したモデル（Pro版など）が無料枠制限（Limit: 0）に引っかかっている可能性があります。右上設定（歯車マーク）からモデルを「Gemini 2.5 Flash」に変更してください。';
+          ? 'API Quota Exceeded. You may have reached AI Studio limits, or the selected model is restricted on the free tier. Try switching the Model to "Gemini 3.5 Flash" in Settings (Gear Icon).'
+          : 'APIの利用制限（クォータ）を超過しました。無料枠の上限に達したか、選択したモデル（Pro版など）が無料枠制限（Limit: 0）に引っかかっている可能性があります。右上設定（歯車マーク）からモデルを「Gemini 3.5 Flash」に変更してください。';
       }
       setErrorMessage(errMsg);
       
@@ -1183,8 +1183,8 @@ Rules:
                   value={tempModel}
                   onChange={(e) => setTempModel(e.target.value)}
                 >
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (推奨・爆速)</option>
-                  <option value="gemini-2.5-pro">Gemini 2.5 Pro (超高度・狂気増量)</option>
+                  <option value="gemini-3.5-flash">Gemini 3.5 Flash (推奨・爆速)</option>
+                  <option value="gemini-3.5-pro">Gemini 3.5 Pro (超高度・狂気増量)</option>
                   <option value="gemini-1.5-flash">Gemini 1.5 Flash (旧標準)</option>
                 </select>
               </div>
