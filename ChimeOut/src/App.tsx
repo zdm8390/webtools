@@ -59,7 +59,7 @@ const translations = {
     controlBoard: "制御盤",
     apiKeyLabel: "Gemini API キー",
     apiSafetyNotice: "※キーはブラウザ(LocalStorage)に保存され、外部送信されません。",
-    getApiKey: "APIキー無料取得手順",
+    getApiKey: "APIキーの取得方法(無料)",
     saveKey: "保存",
     saved: "保存済",
     modelSelectLabel: "AIモデル",
@@ -90,13 +90,34 @@ const translations = {
     noScanLog: "履歴なし",
     systemLog: "システムログ",
     tabDashboard: "レーダー",
-    tabGuide: "キー取得ガイド(無料)",
+    tabGuide: "APIキーの取得方法(無料)",
     enterKeyPrompt: "左側でAPIキーを設定してください。",
     deviceNotSupported: "音声認識非対応です。Chrome/Edge推奨。",
     simulatedText: "(シミュレーター設定値)",
     injectLabel: "モック対話の注入",
     aiErrorOccurred: "解析エラー",
-    themeToggleLabel: "テーマ"
+    themeToggleLabel: "テーマ",
+    
+    // Guide translations
+    guideTitle: "Gemini API キー 無料取得手順ガイド",
+    guideSubtitle: "Google AI Studioから無料でAPIキーを取得する手順",
+    guideFreeTitle: "完全無料で利用可能です！",
+    guideFreeDesc: "Google AI Studioが提供する Gemini API の無料枠は、1分間に15リクエスト、1日に1,500リクエストまで料金が一切かかりません。本アプリの空気自動解析は18秒に1回（1分間に3〜4回程度）しかリクエストを行わないため、何時間連続で稼働させても無料枠をオーバーすることはなく、課金される心配はありません。",
+    guideStepsTitle: "取得手順（約1分）",
+    guideStep1Title: "Google AI Studio にアクセス",
+    guideStep1Desc: "Google公式の開発者ポータルである以下のサイトにアクセスします。",
+    guideStep1Btn: "Google AI Studio を開く",
+    guideStep2Title: "Googleアカウントでログイン",
+    guideStep2Desc: "お持ちの通常のGoogleアカウント（Gmail等）でログインします。",
+    guideStep3Title: "「Get API Key」をクリック",
+    guideStep3Desc: "ログイン後、画面の左上にある青い 「Get API key」 ボタンを押します。",
+    guideStep4Title: "キーをコピー",
+    guideStep4Desc: "「Create API key in new project」を選択して生成された AIzaSy... で始まるキーをコピーします。",
+    guideStep5Title: "アプリの制御盤に保存",
+    guideStep5Desc: "上の「レーダー」画面に戻り、左側の「Gemini API キー」欄にペーストして保存します。",
+    guidePrivacyTitle: "セキュリティとプライバシーについて",
+    guidePrivacyDesc: "入力したAPIキーはブラウザの保存領域（LocalStorage）にのみ安全に保存されます。APIキーや文字起こしデータが、本アプリの開発者や第三者の外部サーバーに転送されたり、GitHubのソースコード内に保存されたりすることは一切ありません。すべての通信はあなたのPCとGoogle社のサーバー間で直接かつ安全に処理されます。",
+    guideBackBtn: "← レーダーに戻る"
   },
   en: {
     title: "Chime-Out Radar",
@@ -113,7 +134,7 @@ const translations = {
     controlBoard: "Control Board",
     apiKeyLabel: "Gemini API Key",
     apiSafetyNotice: "* Saved locally in LocalStorage; never sent to external servers.",
-    getApiKey: "Get API Key (Free Guide)",
+    getApiKey: "Get API Key (Free)",
     saveKey: "Save",
     saved: "Saved",
     modelSelectLabel: "AI Model",
@@ -144,13 +165,34 @@ const translations = {
     noScanLog: "No history logs.",
     systemLog: "System Logs",
     tabDashboard: "Radar",
-    tabGuide: "API Key Guide (Free)",
+    tabGuide: "Get API Key (Free)",
     enterKeyPrompt: "Please configure your API Key in the left panel.",
     deviceNotSupported: "Speech Recognition not supported. Use Chrome/Edge.",
     simulatedText: "(Simulated value)",
     injectLabel: "Inject Demo Dialogue",
     aiErrorOccurred: "AI Error",
-    themeToggleLabel: "Theme"
+    themeToggleLabel: "Theme",
+
+    // Guide translations
+    guideTitle: "Gemini API Key Free Guide",
+    guideSubtitle: "Step-by-step instructions to get a free API Key from Google AI Studio",
+    guideFreeTitle: "100% Free to Use!",
+    guideFreeDesc: "Google AI Studio's Gemini API Free Tier provides up to 15 requests per minute and 1,500 requests per day at zero cost. Since this app only checks the atmosphere once every 18 seconds (around 3 to 4 requests per minute), it stays well within the free limits and you will never be charged.",
+    guideStepsTitle: "Steps (Takes ~1 min)",
+    guideStep1Title: "Access Google AI Studio",
+    guideStep1Desc: "Go to Google's official developer console website using the button below.",
+    guideStep1Btn: "Open Google AI Studio",
+    guideStep2Title: "Sign In with Google Account",
+    guideStep2Desc: "Sign in using your regular Google Account (such as Gmail).",
+    guideStep3Title: "Click \"Get API Key\"",
+    guideStep3Desc: "Once signed in, click the blue \"Get API key\" button in the top left corner.",
+    guideStep4Title: "Copy the API Key",
+    guideStep4Desc: "Select \"Create API key in new project\" and copy the generated key starting with AIzaSy...",
+    guideStep5Title: "Paste and Save in the App",
+    guideStep5Desc: "Return to the \"Radar\" dashboard tab and paste the key into the Gemini API Key input field, then save it.",
+    guidePrivacyTitle: "Security & Privacy",
+    guidePrivacyDesc: "Your API Key is stored locally in your browser's LocalStorage. The key and transcript data are never uploaded or transmitted to the developer or any third-party servers. All communications occur directly and securely between your browser and Google's official API servers.",
+    guideBackBtn: "← Back to Radar"
   }
 };
 
@@ -715,11 +757,11 @@ ${bufferText}`;
         <div className="fixed inset-0 pointer-events-none z-50 animate-warning-flash" />
       )}
 
-      {/* Top Header (Compact) */}
-      <header className={`w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between border-b pb-3 mb-4 transition-colors flex-shrink-0 ${
+      {/* Top Header (Compact & Left-Aligned) */}
+      <header className={`w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-3 mb-4 transition-colors flex-shrink-0 ${
         isLightMode ? 'border-slate-200' : 'border-white/10'
       }`}>
-        <div className="flex items-center space-x-3 mb-2 sm:mb-0">
+        <div className="flex items-center space-x-3 mb-2 sm:mb-0 text-left">
           <div className="p-2 rounded bg-purple-500/10 border border-purple-500/30">
             <ShieldAlert className="w-6 h-6 text-cyber-purple" />
           </div>
@@ -731,8 +773,8 @@ ${bufferText}`;
           </div>
         </div>
 
-        {/* Navigation, Theme & Language Select */}
-        <div className="flex flex-wrap gap-2 items-center justify-end">
+        {/* Navigation, Theme & Language Select (Right on Desktop, Left/Start on Mobile) */}
+        <div className="flex flex-wrap gap-2 items-center justify-start sm:justify-end w-full sm:w-auto">
           {/* Tabs */}
           <div className={`flex space-x-0.5 border rounded p-0.5 transition-colors ${
             isLightMode ? 'bg-slate-200/50 border-slate-300' : 'bg-black/40 border-white/10'
@@ -759,7 +801,7 @@ ${bufferText}`;
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              <HelpCircle className="w-3 h-3" />
+              <HelpCircle className="w-3.5 h-3.5" />
               <span>{t.tabGuide}</span>
             </button>
           </div>
@@ -770,7 +812,7 @@ ${bufferText}`;
           }`}>
             <button
               onClick={() => setIsLightMode(!isLightMode)}
-              className="p-1 rounded transition-all"
+              className="p-1 rounded transition-all cursor-pointer"
               title={t.themeToggleLabel}
             >
               {isLightMode ? <Moon className="w-3.5 h-3.5 text-cyber-purple" /> : <Sun className="w-3.5 h-3.5 text-yellow-400" />}
@@ -783,7 +825,7 @@ ${bufferText}`;
           }`}>
             <button
               onClick={() => setLang('ja')}
-              className={`w-7 py-0.5 rounded text-[10px] font-mono transition-all ${
+              className={`w-7 py-0.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
                 lang === 'ja' ? isLightMode ? 'bg-white text-slate-800 font-bold shadow-sm' : 'bg-white/10 text-white font-bold' : 'text-gray-500'
               }`}
             >
@@ -791,7 +833,7 @@ ${bufferText}`;
             </button>
             <button
               onClick={() => setLang('en')}
-              className={`w-7 py-0.5 rounded text-[10px] font-mono transition-all ${
+              className={`w-7 py-0.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
                 lang === 'en' ? isLightMode ? 'bg-white text-slate-800 font-bold shadow-sm' : 'bg-white/10 text-white font-bold' : 'text-gray-500'
               }`}
             >
@@ -873,9 +915,9 @@ ${bufferText}`;
                     <button
                       type="button"
                       onClick={() => setActiveTab('guide')}
-                      className="text-[10px] text-cyber-cyan hover:underline flex items-center space-x-0.5 font-mono"
+                      className="text-[10px] text-cyber-cyan hover:underline flex items-center space-x-0.5 font-mono cursor-pointer"
                     >
-                      <span>ガイド</span>
+                      <span>{t.tabGuide}</span>
                     </button>
                     
                     <button
@@ -1317,23 +1359,23 @@ ${bufferText}`;
           </section>
         </main>
       ) : (
-        /* TAB 2: API KEY GET GUIDE (SUBPAGE) */
+        /* TAB 2: API KEY GET GUIDE (SUBPAGE - MULTILINGUAL SUPPORTED) */
         <main className={`w-full max-w-4xl mx-auto flex-grow border rounded-xl p-5 shadow-2xl relative overflow-hidden transition-all duration-300 overflow-y-auto ${
           isLightMode ? 'bg-white border-slate-200 text-slate-800 shadow-slate-200/55' : 'bg-[#12131a]/95 border-white/10 text-gray-100'
         }`}>
           <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
           
-          <div className="flex items-center space-x-3 border-b pb-3 mb-4 border-inherit/10">
+          <div className="flex items-center space-x-3 border-b pb-3 mb-4 border-inherit/10 text-left">
             <HelpCircle className="w-5 h-5 text-cyber-cyan" />
             <div>
               <h2 className="text-base font-bold font-mono">
-                Gemini API キー 無料取得手順ガイド
+                {t.guideTitle}
               </h2>
-              <p className="text-[10px] text-gray-500">How to get a Google Gemini API Key for free</p>
+              <p className={`text-[10px] ${isLightMode ? 'text-slate-500' : 'text-gray-500'}`}>{t.guideSubtitle}</p>
             </div>
           </div>
 
-          <div className="space-y-4 leading-relaxed font-sans text-xs">
+          <div className="space-y-4 leading-relaxed font-sans text-xs text-left">
             
             {/* Free Tier Callout */}
             <div className={`p-3 rounded flex items-start space-x-2.5 border ${
@@ -1341,9 +1383,9 @@ ${bufferText}`;
             }`}>
               <Info className="w-4 h-4 text-cyber-cyan flex-shrink-0 mt-0.5" />
               <div className="space-y-0.5">
-                <h3 className="text-xs font-bold text-cyber-cyan font-mono">完全無料で利用可能</h3>
+                <h3 className="text-xs font-bold text-cyber-cyan font-mono">{t.guideFreeTitle}</h3>
                 <p className="text-[10px] leading-relaxed">
-                  Google AI Studioの <strong>Gemini API 無料枠</strong> は、毎分15リクエスト、1日1500リクエストまで課金なしで利用できます。本アプリの空気自動解析は <strong>18秒に1回</strong>（毎分3回）なので、長時間の会議でも上限に達せず、<strong>完全無料</strong>で運用可能です。
+                  {t.guideFreeDesc}
                 </p>
               </div>
             </div>
@@ -1351,7 +1393,7 @@ ${bufferText}`;
             {/* Steps */}
             <div className="space-y-3">
               <h3 className="text-xs font-bold border-l-2 border-cyber-purple pl-1.5 font-mono">
-                取得手順（約1分）
+                {t.guideStepsTitle}
               </h3>
               
               <ol className="relative border-l ml-2 space-y-4 border-inherit/10">
@@ -1361,15 +1403,18 @@ ${bufferText}`;
                     1
                   </span>
                   <h4 className="text-xs font-bold font-mono">
-                    Google AI Studio にアクセス
+                    {t.guideStep1Title}
                   </h4>
+                  <p className={`text-[10px] mt-0.5 mb-1.5 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
+                    {t.guideStep1Desc}
+                  </p>
                   <a
                     href="https://aistudio.google.com/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-1.5 mt-1 px-2.5 py-1 rounded bg-cyber-purple/20 border border-cyber-purple/40 hover:bg-cyber-purple/30 text-[10px] font-mono text-white transition-all"
+                    className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded bg-cyber-purple/20 border border-cyber-purple/40 hover:bg-cyber-purple/30 text-[10px] font-mono text-white transition-all cursor-pointer"
                   >
-                    <span>Google AI Studio を開く</span>
+                    <span>{t.guideStep1Btn}</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </li>
@@ -1379,10 +1424,10 @@ ${bufferText}`;
                     2
                   </span>
                   <h4 className="text-xs font-bold font-mono">
-                    Googleアカウントでログイン
+                    {t.guideStep2Title}
                   </h4>
                   <p className={`text-[10px] mt-0.5 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
-                    お持ちの通常のGoogleアカウント（Gmail等）でログインします。
+                    {t.guideStep2Desc}
                   </p>
                 </li>
 
@@ -1391,10 +1436,10 @@ ${bufferText}`;
                     3
                   </span>
                   <h4 className="text-xs font-bold font-mono">
-                    「Get API Key」をクリック
+                    {t.guideStep3Title}
                   </h4>
                   <p className={`text-[10px] mt-0.5 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
-                    画面の左上にある青い **「Get API key」** ボタンを押します。
+                    {t.guideStep3Desc}
                   </p>
                 </li>
 
@@ -1403,10 +1448,10 @@ ${bufferText}`;
                     4
                   </span>
                   <h4 className="text-xs font-bold font-mono">
-                    キーをコピー
+                    {t.guideStep4Title}
                   </h4>
                   <p className={`text-[10px] mt-0.5 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
-                    「Create API key in new project」を選択して生成された `AIzaSy...` をコピーします。
+                    {t.guideStep4Desc}
                   </p>
                 </li>
 
@@ -1415,10 +1460,10 @@ ${bufferText}`;
                     5
                   </span>
                   <h4 className="text-xs font-bold font-mono">
-                    アプリの制御盤に保存
+                    {t.guideStep5Title}
                   </h4>
                   <p className={`text-[10px] mt-0.5 ${isLightMode ? 'text-slate-500' : 'text-gray-400'}`}>
-                    「レーダー」画面に戻り、左側の「Gemini API キー」欄にペーストして保存します。
+                    {t.guideStep5Desc}
                   </p>
                 </li>
 
@@ -1429,10 +1474,10 @@ ${bufferText}`;
             <div className="pt-3 border-t border-inherit/10 space-y-1">
               <h3 className="text-xs font-bold font-mono flex items-center space-x-1">
                 <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
-                <span>セキュリティとプライバシー</span>
+                <span>{t.guidePrivacyTitle}</span>
               </h3>
               <p className={`text-[10px] leading-relaxed pl-4.5 ${isLightMode ? 'text-slate-600' : 'text-gray-400'}`}>
-                キーはブラウザ(LocalStorage)にのみ安全に保存され、開発者や第三者のサーバーに送信されることは一切ありません。
+                {t.guidePrivacyDesc}
               </p>
             </div>
 
@@ -1446,7 +1491,7 @@ ${bufferText}`;
                     : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-300'
                 }`}
               >
-                ← レーダーに戻る
+                {t.guideBackBtn}
               </button>
             </div>
 
