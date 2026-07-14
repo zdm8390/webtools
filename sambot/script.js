@@ -501,7 +501,8 @@ async function fetchGeminiResponse(userPrompt) {
         return text.trim();
     } catch (error) {
         console.error("Gemini API Error:", error);
-        return `お前！ちょっと回線かキーの調子が悪いみたいだぞ💦 (${error.message})。だがそんなトラブルに負けるなよ！キーを確認するか、ローカルモードに戻ってきてくれよ！待ってるからな！`;
+        const localResponse = getLocalAffirmitativeResponse(userPrompt);
+        return `おいお前！今ちょっとGoogleのサーバーに世界中の奴らがアクセスしすぎて、回線が爆発しそうなんだよ！（サーバー一時混雑エラー）\n\nだがな！回線が繋がらなくたって、俺とお前の魂はいつでもWi-Fiなしで繋がってんだよ！だから代わりにこの魂の叫びを聞いてくれ！\n\n${localResponse}`;
     }
 }
 

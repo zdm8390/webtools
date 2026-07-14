@@ -1,31 +1,32 @@
 /* ==========================================================================
    SAMBOT - STYLE SHEETS
-   Theme: Pastel Pop Punk / Rock Concert Stage / Happy Energy
+   Theme: Sambomaster Kyukyoku Best Album Jacket Homage
+   Colors: Sky Blue (Blue sky), Asphalt Gray (Road), Center-line Yellow, 
+           Passionate Red, and Bold Suit Black.
    ========================================================================== */
 
-/* Design Tokens - High Energy Rock & Pastel Colors */
+/* Design Tokens - Kyukyoku Best Album Art Color Palette */
 :root {
-    --bg-base: #fbf9f3; /* Bright Custard Ivory */
-    --bg-sidebar: #fff0f2; /* Energetic Pastel Pink */
+    --bg-base: #cfeafd; /* Bright Sky Blue (Jacket Sky) */
+    --bg-sidebar: #e2e8f0; /* Cool Asphalt Gray (Jacket Road) */
     --bg-chat: #ffffff; /* Clean Stage White */
     
-    --card-border: #32261e; /* Bold Punk-style Outline Border */
+    --card-border: #1e293b; /* Suit Black / Asphalt Dark Charcoal Outline */
     --card-bg: rgba(255, 255, 255, 0.95);
     
-    --text-primary: #32261e; /* Heavy Cocoa Brown (gives a cute cartoon/chunky look) */
-    --text-muted: #806c5f;
+    --text-primary: #1e293b; /* Sharp Suit Black-Gray */
+    --text-muted: #576574;
     
-    /* Energetic Pop Neon Colors */
-    --color-orange: #ff9f43; /* Melon Orange */
-    --color-pink: #ff4757;   /* Hot Punk Pink */
-    --color-yellow: #ffa502; /* Live Spotlight Yellow */
-    --color-blue: #54a0ff;   /* Neon Sky Blue */
-    --color-green: #2ed573;  /* Mint Pop Green */
+    /* Album Art Accent Colors */
+    --color-red: #ff3838;    /* Jacket passionate red brush-text */
+    --color-yellow: #ffd200; /* Road Yellow Center-line */
+    --color-blue: #10ac84;   /* Mint Accent */
+    --color-sky: #2e86de;    /* Deep sky blue */
     
     /* Gradients */
-    --grad-avatar: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
-    --grad-bubble-bot: linear-gradient(135deg, #ffeef1 0%, #ffccd5 100%); /* Passionate Light Pink */
-    --grad-bubble-user: linear-gradient(135deg, #fffde6 0%, #ffeaa7 100%); /* Sunny Yellow */
+    --grad-avatar: linear-gradient(135deg, #ff3838 0%, #ff6b81 100%);
+    --grad-bubble-bot: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); /* Passionate Light Red */
+    --grad-bubble-user: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); /* Centerline Light Yellow */
 
     --font-sans: 'Outfit', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-punk: 'Dela Gothic One', 'Noto Sans JP', sans-serif;
@@ -49,6 +50,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    /* Soft sky clouds gradient overlay */
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
 /* Custom Scrollbar Styles */
@@ -62,70 +65,38 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #e2d2c7;
+    background: #cbd5e1;
     border: 2px solid var(--bg-base);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-pink);
+    background: var(--color-red);
 }
 
-/* Neon Spotlight Visual Effects (Pop Concert Vibe) */
-.neon-light {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(130px);
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0.35;
-    animation: rotateSpotlight 15s infinite alternate ease-in-out;
-}
-
-.light-pink {
-    background-color: #ffb3c1;
-    width: 550px;
-    height: 550px;
-    top: -15%;
-    left: 20%;
-}
-
-.light-yellow {
-    background-color: #ffeaa7;
-    width: 600px;
-    height: 600px;
-    bottom: -10%;
-    right: 15%;
-    animation-delay: -5s;
-}
-
-@keyframes rotateSpotlight {
-    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-    100% { transform: translate(60px, 40px) scale(1.1) rotate(20deg); }
-}
-
-/* App Wrapper Grid Layout (Rounded & Bold Border) */
+/* App Wrapper Grid Layout (Heavy outlines, rounded) */
 .app-wrapper {
     display: flex;
     width: calc(100vw - 32px);
     height: calc(100vh - 32px);
     max-width: 1100px;
     max-height: 800px;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 4px solid var(--card-border); /* Chunky outline */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 4px solid var(--card-border);
     border-radius: 28px;
     overflow: hidden;
-    box-shadow: 0 20px 0 rgba(50, 38, 30, 0.1);
+    box-shadow: 0 16px 0 var(--card-border); /* Solid cartoon shadow */
 }
 
 /* ==========================================================================
-   Sidebar Styles
+   Sidebar Styles (Kyukyoku Best / Roadside layout)
    ========================================================================== */
 .sidebar {
     width: 290px;
-    border-right: 4px solid var(--card-border);
+    /* Dashed yellow border simulating the road's yellow centerline */
+    border-right: 5px dashed var(--color-yellow); 
     background: var(--bg-sidebar);
     padding: 24px 16px;
     display: flex;
@@ -133,6 +104,24 @@ body {
     gap: 20px;
     overflow-y: auto;
     flex-shrink: 0;
+    position: relative;
+}
+
+/* Road asphalt texture simulation overlay for sidebar */
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(rgba(0, 0, 0, 0.05) 8%, transparent 8%);
+    background-size: 8px 8px;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.sidebar > * {
+    position: relative;
+    z-index: 10;
 }
 
 .sidebar-header {
@@ -142,10 +131,10 @@ body {
 }
 
 .back-link {
-    color: var(--text-muted);
+    color: var(--text-primary);
     text-decoration: none;
     font-size: 0.82rem;
-    font-weight: 900;
+    font-family: var(--font-punk);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -153,7 +142,7 @@ body {
 }
 
 .back-link:hover {
-    color: var(--color-pink);
+    color: var(--color-red);
 }
 
 .back-link svg {
@@ -177,7 +166,8 @@ body {
 }
 
 .settings-trigger-btn:hover {
-    background: var(--color-yellow);
+    background: var(--color-red);
+    color: #ffffff;
     transform: rotate(30deg) translateY(-2px);
     box-shadow: 0 5px 0 var(--card-border);
 }
@@ -187,12 +177,7 @@ body {
     box-shadow: 0 1px 0 var(--card-border);
 }
 
-.settings-trigger-btn svg {
-    width: 18px;
-    height: 18px;
-}
-
-/* Artist Profile Card */
+/* Profile Card (Homage to jacket suit styling) */
 .profile-card {
     background: var(--card-bg);
     border: 3px solid var(--card-border);
@@ -200,7 +185,6 @@ body {
     padding: 20px 14px;
     text-align: center;
     box-shadow: 0 6px 0 var(--card-border);
-    position: relative;
 }
 
 .avatar-container {
@@ -216,8 +200,8 @@ body {
     border-radius: 50%;
     object-fit: cover;
     border: 4px solid #ffffff;
-    box-shadow: 0 6px 15px rgba(255, 71, 87, 0.3); /* Pink blast shadow */
-    animation: headbang 0.4s infinite alternate ease-in-out; /* Custom rock headbang */
+    box-shadow: 0 6px 15px rgba(255, 56, 56, 0.35); /* Red Pop Shadow */
+    animation: headbang 0.4s infinite alternate ease-in-out;
     display: block;
 }
 
@@ -226,7 +210,6 @@ body {
     100% { transform: translateY(-6px) scale(0.98) rotate(3deg); }
 }
 
-/* Headbang Speed Boost during chat */
 .avatar-img.shouting {
     animation: headbangFast 0.15s infinite alternate ease-in-out;
 }
@@ -247,20 +230,20 @@ body {
 }
 
 .status-indicator.online {
-    background-color: var(--color-green);
-    box-shadow: 0 0 8px var(--color-green);
+    background-color: var(--color-red);
+    box-shadow: 0 0 8px var(--color-red);
 }
 
 .profile-card h2 {
     font-family: var(--font-punk);
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     margin-bottom: 2px;
     color: var(--text-primary);
 }
 
 .profile-card .tagline {
     font-size: 0.72rem;
-    color: var(--color-pink);
+    color: var(--color-red);
     font-weight: 900;
     letter-spacing: 0.05em;
     margin-bottom: 8px;
@@ -272,7 +255,7 @@ body {
     line-height: 1.45;
 }
 
-/* Relax Mixer Widget */
+/* BGM Mixer Widget */
 .relax-mixer-card {
     background: var(--card-bg);
     border: 3px solid var(--card-border);
@@ -318,13 +301,13 @@ body {
     font-weight: 700;
 }
 
-/* Range input styling (Pop Rock style) */
+/* Range input styling (Best Road Centerline style) */
 .volume-slider {
     -webkit-appearance: none;
     width: 100%;
     height: 8px;
     border-radius: 4px;
-    background: #e2d2c7;
+    background: #cbd5e1;
     border: 2px solid var(--card-border);
     outline: none;
 }
@@ -342,7 +325,7 @@ body {
 
 .volume-slider::-webkit-slider-thumb:hover {
     transform: scale(1.3);
-    background-color: var(--color-pink);
+    background-color: var(--color-red);
 }
 
 .bgm-play-btn {
@@ -360,7 +343,7 @@ body {
 }
 
 .bgm-play-btn:hover {
-    background: var(--color-pink);
+    background: var(--color-red);
     color: #ffffff;
     transform: translateY(-2px);
     box-shadow: 0 5px 0 var(--card-border);
@@ -372,15 +355,10 @@ body {
 }
 
 .bgm-play-btn.playing {
-    background: var(--color-pink);
+    background: var(--color-red);
     border-color: var(--card-border);
     color: #ffffff;
     animation: buttonPulse 1.5s infinite ease-in-out;
-}
-
-@keyframes buttonPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(0.97); }
 }
 
 /* API Status card */
@@ -407,14 +385,14 @@ body {
 }
 
 .api-status-badge.mock {
-    background: #f0e6dd;
+    background: #cbd5e1;
     color: var(--text-primary);
     border: 2px solid var(--card-border);
 }
 
 .api-status-badge.api {
-    background: rgba(84, 160, 255, 0.08);
-    color: var(--color-blue);
+    background: rgba(255, 56, 56, 0.08);
+    color: var(--color-red);
     border: 2px solid var(--card-border);
 }
 
@@ -442,7 +420,7 @@ body {
 }
 
 .mobile-header {
-    display: none; /* Desktop only */
+    display: none;
 }
 
 /* Chat Messages Window */
@@ -454,9 +432,11 @@ body {
     flex-direction: column;
     gap: 16px;
     scroll-behavior: smooth;
+    /* Soft road perspective background */
+    background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
-/* Message Bubble styling (Chunky & Bold outlines) */
+/* Message Bubble styling (Best Jacket Inspired) */
 .message {
     display: flex;
     flex-direction: column;
@@ -478,19 +458,21 @@ body {
     line-height: 1.6;
     word-break: break-word;
     white-space: pre-wrap;
-    box-shadow: 0 4px 0 rgba(50, 38, 30, 0.08);
+    box-shadow: 0 4px 0 rgba(30, 41, 59, 0.08);
 }
 
+/* Red Jacket Accent Bubble */
 .message.cocoron .message-bubble {
     background: var(--grad-bubble-bot);
-    color: #450c18; /* Deep red-brown */
+    color: #5c0612; /* Deep passionate red-black */
     border-top-left-radius: 4px;
     border: 3px solid var(--card-border);
 }
 
+/* Yellow Centerline Accent Bubble */
 .message.user .message-bubble {
     background: var(--grad-bubble-user);
-    color: #4a3c0c; /* Deep yellow-brown */
+    color: #4a3800; /* Deep gold-brown */
     border-top-right-radius: 4px;
     border: 3px solid var(--card-border);
 }
@@ -510,7 +492,7 @@ body {
     align-self: flex-end;
 }
 
-/* Typing Indicator Animation (Pop Pink) */
+/* Typing Indicator Animation (Jacket Red) */
 .typing-indicator {
     align-self: flex-start;
     display: flex;
@@ -527,7 +509,7 @@ body {
 .typing-indicator span {
     width: 6px;
     height: 6px;
-    background-color: var(--color-pink);
+    background-color: var(--color-red);
     border-radius: 50%;
     animation: typingBounce 1.4s infinite ease-in-out;
 }
@@ -578,7 +560,7 @@ body {
     box-shadow: 0 1px 0 var(--card-border);
 }
 
-/* Input Bar Section (Heavy Border) */
+/* Input Bar Section */
 .chat-input-bar {
     padding: 16px 24px 24px 24px;
     border-top: 4px solid var(--card-border);
@@ -605,11 +587,11 @@ body {
 }
 
 .chat-input-bar textarea:focus {
-    border-color: var(--color-pink);
+    border-color: var(--color-red);
 }
 
 .chat-input-bar button {
-    background: var(--color-pink);
+    background: var(--color-red);
     border: 3px solid var(--card-border);
     color: #ffffff;
     width: 46px;
@@ -648,7 +630,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(50, 38, 30, 0.5); /* Heavy chocolate overlay */
+    background: rgba(30, 41, 59, 0.45);
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -688,7 +670,7 @@ body {
 }
 
 .modal-close:hover {
-    color: var(--color-pink);
+    color: var(--color-red);
 }
 
 .modal-title {
@@ -712,7 +694,7 @@ body {
 .form-group input,
 .form-group select {
     width: 100%;
-    background: #fff5eb;
+    background: #f8fafc;
     border: 3px solid var(--card-border);
     border-radius: 10px;
     padding: 10px 14px;
@@ -723,7 +705,7 @@ body {
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: var(--color-pink);
+    border-color: var(--color-red);
 }
 
 .field-hint {
@@ -740,7 +722,7 @@ body {
 }
 
 .key-guide a {
-    color: var(--color-pink);
+    color: var(--color-red);
     text-decoration: none;
     font-weight: 800;
 }
@@ -789,7 +771,7 @@ body {
 }
 
 .btn-primary {
-    background: var(--color-pink);
+    background: var(--color-red);
     border: 3px solid var(--card-border);
     color: #ffffff;
 }
@@ -808,7 +790,7 @@ body {
     }
     
     .sidebar {
-        display: none; /* Hide sidebar on mobile */
+        display: none;
     }
     
     .chat-container {

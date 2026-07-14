@@ -423,7 +423,8 @@ async function fetchGeminiResponse(userPrompt) {
         return text.trim();
     } catch (error) {
         console.error("Gemini API Error:", error);
-        return `ごめんね、ちょっとインターネットの接続か設定キーが不調みたい…💦 (${error.message})。キーを確認するか、ローカルモードに戻してみてね。`;
+        const localResponse = getLocalAffirmitativeResponse(userPrompt);
+        return `ごめんね、今ちょっとインターネット（AIサーバー）が混み合っているみたい…💦（サーバー一時混雑エラー）\n\nでも大丈夫、ココロンはあなたのそばにずっといるからね！代わりにローカルモードでお返事するよ。\n\n${localResponse}`;
     }
 }
 
