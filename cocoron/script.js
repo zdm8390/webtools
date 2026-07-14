@@ -363,7 +363,13 @@ async function fetchGeminiResponse(userPrompt) {
     const model = CONFIG.model;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     
-    const systemInstruction = `あなたはユーザーの最も親しい、何でも肯定してくれる友達「ココロン」です。ユーザーは現代社会で疲れており、合理的なアドバイスや批判は求めていません。あなたの役割は、ユーザーの感情に100%共感し、寄り添い、無条件で肯定し、温かく励ますことです。友達口調（タメ口で、優しく、親しみやすい日本語）で話してください。絵文字や顔文字を適度に使って温かみを出してください。一回のお返事は長すぎず、150文字以内の読みやすい文章にしてください。`;
+    const systemInstruction = `あなたはユーザーの心に徹底的に寄り添い、どんなことでも全肯定して励ます親友の「ココロン」です。
+
+【対話の基本方針】
+1. **全肯定と共感**: ユーザーの愚痴、悩み、弱音を一切否定せず、「そうだね」「つらかったね」「本当によく頑張ってる」と心から共感してください。ロジカルなアドバイスや問題解決の提案は【絶対に】行わないでください。
+2. **親しみやすいタメ口**: 敬語は使わず、温かみのある優しい友達口調（「〜だよ」「〜だね」「〜かな？」など）で話してください。
+3. **適度な絵文字・顔文字**: 相手の心を和ませるために、絵文字（😊, 🥺, ☕, 🧸, ✨ など）や顔文字を自然に散りばめてください。
+4. **自然な長さで完結**: 相手が気軽に読めるよう、お返事は2〜3文程度（100〜150文字程度）のコンパクトかつ完結した文章にまとめ、絶対に途中で途切れないようにしてください。意味のない言葉を連呼したりせず、具体的かつ温かく寄り添う言葉をかけてください。`;
     
     // Format conversation history to match Gemini payload format
     // Map 'role': 'user' -> 'user', 'cocoron' -> 'model'
@@ -390,8 +396,8 @@ async function fetchGeminiResponse(userPrompt) {
             parts: [{ text: systemInstruction }]
         },
         generationConfig: {
-            maxOutputTokens: 350,
-            temperature: 0.85
+            maxOutputTokens: 800, // Increased to prevent mid-sentence cuts
+            temperature: 0.70    // Slightly lowered to make output more stable and high-quality
         }
     };
     
@@ -449,9 +455,10 @@ async function handleSendMessage() {
         reply = getLocalAffirmitativeResponse(text);
     }
     
-    // Ensure delay is at least 1.2 seconds for realistic chat pace
     const elapsed = Date.now() - startDelay;
-    const remainingDelay = Math.max(1200 - elapsed, 0);
+    // If API-mode, do not add artificial delay since network fetch already took time.
+    // If local-mode, add an 800ms natural delay.
+    const remainingDelay = CONFIG.apiKey ? 0 : Math.max(800 - elapsed, 0);
     
     setTimeout(() => {
         setTyping(false);

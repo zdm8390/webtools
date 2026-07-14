@@ -1,30 +1,31 @@
 /* ==========================================================================
    COCORON - STYLE SHEETS
-   Theme: Cozy Light / Scandinavian Warm Sand / Healing Pastel
+   Theme: Pastel Pop / Happy Cozy Light / Cute Scandinavian
    ========================================================================== */
 
-/* Design Tokens - Eye-friendly Warm Light Theme (Not too bright) */
+/* Design Tokens - Happy & Bright Pastel Pop Colors */
 :root {
-    --bg-base: #f3f1eb; /* Soft Warm Sand Gray */
-    --bg-sidebar: rgba(235, 232, 224, 0.7); /* Creamy Off-white */
-    --bg-chat: rgba(255, 255, 255, 0.82); /* Warm Milk White */
+    --bg-base: #faf8f2; /* Creamy Custard White */
+    --bg-sidebar: #fff5eb; /* Soft Milky Peach */
+    --bg-chat: #ffffff; /* Clean Snow White */
     
-    --card-border: rgba(120, 110, 95, 0.12); /* Muted Brown-Gray Border */
-    --card-bg: rgba(255, 255, 255, 0.55);
+    --card-border: #f3dfcc; /* Warm Biscuit Orange-Gray Border */
+    --card-bg: rgba(255, 255, 255, 0.95);
     
-    --text-primary: #3c3835; /* Soft Charcoal Brown (Not pure black, easy on eyes) */
-    --text-muted: #78716c; /* Warm Stone Gray */
+    --text-primary: #3d2f25; /* Sweet Cocoa Brown (Softer than black, very cute) */
+    --text-muted: #8c786a; /* Creamy Cocoa Gray */
     
-    /* Healing Soft Pastel Colors */
-    --color-orange: #f97316; /* Soft Peach Orange */
-    --color-pink: #ec4899;   /* Soft Rose Pink */
-    --color-blue: #0284c7;   /* Clear Sky Blue */
-    --color-green: #059669;  /* Mint Green */
+    /* Pop Pastel Palette */
+    --color-orange: #ff9f43; /* Bright Melon Orange */
+    --color-pink: #ff6b81;   /* Happy Cherry Pink */
+    --color-blue: #10ac84;   /* Fresh Mint Green */
+    --color-sky: #54a0ff;    /* Sky Pop Blue */
+    --color-yellow: #feca57;  /* Sunny Yellow */
     
     /* Gradients */
-    --grad-avatar: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
-    --grad-bubble-bot: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); /* Soft Yellow Cream */
-    --grad-bubble-user: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); /* Soft Sky Blue */
+    --grad-avatar: linear-gradient(135deg, #ffd3b6 0%, #ffaaa5 100%);
+    --grad-bubble-bot: linear-gradient(135deg, #ffeef1 0%, #ffccd5 100%); /* Sweet Pink Cream */
+    --grad-bubble-user: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); /* Refreshing Sky Blue */
 
     --font-sans: 'Outfit', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -51,8 +52,8 @@ body {
 
 /* Custom Scrollbar Styles for PC */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -60,74 +61,74 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(120, 110, 95, 0.18);
-    border-radius: 3px;
+    background: #eed8c5;
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(120, 110, 95, 0.35);
+    background: var(--color-orange);
 }
 
-/* Ambient Glowing Background Blobs (Softened for light theme) */
+/* Ambient Glowing Background Blobs (Pop Pastel) */
 .glow-blob {
     position: absolute;
     border-radius: 50%;
-    filter: blur(140px);
+    filter: blur(120px);
     z-index: -1;
     pointer-events: none;
-    opacity: 0.25; /* Slightly higher opacity for soft contrast on light bg */
-    animation: floatBlob 25s infinite alternate ease-in-out;
+    opacity: 0.4; /* Slightly more visible for a fun pop vibe */
+    animation: floatBlob 20s infinite alternate ease-in-out;
 }
 
 .blob-orange {
-    background-color: #ffedd5;
-    width: 500px;
-    height: 500px;
-    top: -10%;
-    right: 10%;
+    background-color: #ffe8d6;
+    width: 450px;
+    height: 450px;
+    top: -5%;
+    right: 15%;
 }
 
 .blob-pink {
-    background-color: #fce7f3;
-    width: 600px;
-    height: 600px;
-    bottom: -15%;
-    left: 5%;
-    animation-delay: -8s;
+    background-color: #ffdeeb;
+    width: 500px;
+    height: 500px;
+    bottom: -10%;
+    left: 10%;
+    animation-delay: -6s;
 }
 
 @keyframes floatBlob {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(40px, 60px) scale(1.1); }
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    100% { transform: translate(50px, 50px) scale(1.15) rotate(15deg); }
 }
 
-/* App Wrapper Grid Layout */
+/* App Wrapper Grid Layout (Rounded & Pop Shadow) */
 .app-wrapper {
     display: flex;
     width: calc(100vw - 32px);
     height: calc(100vh - 32px);
     max-width: 1100px;
     max-height: 800px;
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid var(--card-border);
-    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 3px solid #eed8c5; /* Fun chunky borders */
+    border-radius: 28px;
     overflow: hidden;
-    box-shadow: 0 20px 50px -15px rgba(120, 110, 95, 0.15);
+    box-shadow: 0 15px 40px -10px rgba(214, 185, 160, 0.3);
 }
 
 /* ==========================================================================
-   Sidebar Styles (Streamlined to prevent scrollbars)
+   Sidebar Styles
    ========================================================================== */
 .sidebar {
     width: 290px;
-    border-right: 1px solid var(--card-border);
+    border-right: 3px solid #eed8c5;
     background: var(--bg-sidebar);
-    padding: 20px 16px;
+    padding: 24px 16px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     overflow-y: auto;
     flex-shrink: 0;
 }
@@ -142,7 +143,7 @@ body {
     color: var(--text-muted);
     text-decoration: none;
     font-size: 0.82rem;
-    font-weight: 600;
+    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -150,53 +151,54 @@ body {
 }
 
 .back-link:hover {
-    color: var(--text-primary);
+    color: var(--color-orange);
 }
 
 .back-link svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
 }
 
 .settings-trigger-btn {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid var(--card-border);
+    background: #ffffff;
+    border: 2px solid #eed8c5;
     color: var(--text-primary);
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 4px rgba(238, 216, 197, 0.2);
 }
 
 .settings-trigger-btn:hover {
     background: #fff;
-    border-color: var(--color-orange);
-    transform: rotate(30deg);
+    border-color: var(--color-pink);
+    transform: rotate(30deg) scale(1.08);
 }
 
 .settings-trigger-btn svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
 }
 
 /* Profile Widget Card */
 .profile-card {
     background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 14px;
-    padding: 16px 14px;
+    border: 2px solid #eed8c5;
+    border-radius: 20px;
+    padding: 20px 14px;
     text-align: center;
+    box-shadow: 0 4px 10px rgba(238, 216, 197, 0.15);
 }
 
 .avatar-container {
-    width: 76px;
-    height: 76px;
-    margin: 0 auto 10px auto;
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 12px auto;
     position: relative;
 }
 
@@ -205,43 +207,43 @@ body {
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #fff;
-    box-shadow: 0 4px 10px rgba(120, 110, 95, 0.15);
+    border: 4px solid #ffffff;
+    box-shadow: 0 6px 15px rgba(255, 107, 129, 0.25); /* Pink Pop Shadow */
     animation: avatarBreathe 4s infinite ease-in-out;
     display: block;
 }
 
 @keyframes avatarBreathe {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(0.96); }
+    50% { transform: scale(0.95); }
 }
 
 .status-indicator {
     position: absolute;
     bottom: 2px;
     right: 2px;
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    border: 2px solid #fff;
+    border: 3px solid #ffffff;
 }
 
 .status-indicator.online {
-    background-color: var(--color-green);
-    box-shadow: 0 0 6px var(--color-green);
+    background-color: var(--color-blue); /* Cute minty green */
+    box-shadow: 0 0 8px var(--color-blue);
 }
 
 .profile-card h2 {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 1.15rem;
+    font-weight: 800;
     margin-bottom: 2px;
     color: var(--text-primary);
 }
 
 .profile-card .tagline {
     font-size: 0.72rem;
-    color: var(--color-orange);
-    font-weight: 700;
+    color: var(--color-pink);
+    font-weight: 800;
     letter-spacing: 0.05em;
     margin-bottom: 8px;
 }
@@ -255,24 +257,25 @@ body {
 /* Relax Mixer Widget */
 .relax-mixer-card {
     background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 14px;
-    padding: 16px 14px;
+    border: 2px solid #eed8c5;
+    border-radius: 20px;
+    padding: 20px 14px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    box-shadow: 0 4px 10px rgba(238, 216, 197, 0.15);
 }
 
 .relax-mixer-card .card-title {
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: 0.85rem;
+    font-weight: 800;
     color: var(--text-primary);
 }
 
 .mixer-channels {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .mixer-channel {
@@ -288,76 +291,78 @@ body {
 }
 
 .channel-icon {
-    font-size: 0.95rem;
+    font-size: 1rem;
 }
 
 .channel-label {
     font-size: 0.75rem;
     color: var(--text-muted);
-    font-weight: 600;
+    font-weight: 700;
 }
 
-/* Range input styling */
+/* Range input styling (Pop style) */
 .volume-slider {
     -webkit-appearance: none;
     width: 100%;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(120, 110, 95, 0.15);
+    height: 6px;
+    border-radius: 3px;
+    background: #f0e2d5;
     outline: none;
 }
 
 .volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: var(--color-orange);
     cursor: pointer;
-    transition: transform 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: transform 0.15s, background-color 0.15s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .volume-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.25);
+    transform: scale(1.3);
+    background-color: var(--color-pink);
 }
 
 .bgm-play-btn {
     width: 100%;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid var(--card-border);
+    background: #ffffff;
+    border: 2px solid #eed8c5;
     color: var(--text-primary);
-    padding: 8px;
-    border-radius: 8px;
-    font-weight: 700;
+    padding: 10px;
+    border-radius: 12px;
+    font-weight: 800;
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.3s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .bgm-play-btn:hover {
-    background: #fff;
-    border-color: var(--color-orange);
+    background: var(--bg-sidebar);
+    border-color: var(--color-pink);
+    color: var(--color-pink);
 }
 
 .bgm-play-btn.playing {
-    background: rgba(249, 115, 22, 0.08);
-    border-color: var(--color-orange);
-    color: var(--color-orange);
+    background: rgba(255, 107, 129, 0.08);
+    border-color: var(--color-pink);
+    color: var(--color-pink);
     animation: buttonPulse 2s infinite ease-in-out;
 }
 
 @keyframes buttonPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.15); }
-    50% { box-shadow: 0 0 8px 1px rgba(249, 115, 22, 0.35); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 129, 0.2); }
+    50% { box-shadow: 0 0 10px 2px rgba(255, 107, 129, 0.4); }
 }
 
 /* API Status card */
 .api-status-card {
-    background: rgba(255, 255, 255, 0.45);
-    border: 1px solid var(--card-border);
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #eed8c5;
+    border-radius: 14px;
     padding: 12px;
     font-size: 0.74rem;
     color: var(--text-muted);
@@ -367,8 +372,8 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-weight: 700;
-    padding: 3px 8px;
+    font-weight: 800;
+    padding: 4px 10px;
     border-radius: 20px;
     margin-bottom: 6px;
     text-transform: uppercase;
@@ -376,20 +381,20 @@ body {
 }
 
 .api-status-badge.mock {
-    background: rgba(120, 110, 95, 0.08);
+    background: #f0e6dd;
     color: var(--text-muted);
-    border: 1px solid rgba(120, 110, 95, 0.15);
+    border: 1px solid #e2d2c4;
 }
 
 .api-status-badge.api {
-    background: rgba(5, 150, 105, 0.08);
-    color: var(--color-green);
-    border: 1px solid rgba(5, 150, 105, 0.18);
+    background: rgba(16, 172, 132, 0.08);
+    color: var(--color-blue);
+    border: 1px solid rgba(16, 172, 132, 0.2);
 }
 
 .status-dot {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background-color: currentColor;
 }
@@ -418,14 +423,14 @@ body {
 .chat-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     scroll-behavior: smooth;
 }
 
-/* Message Bubble styling */
+/* Message Bubble styling (Chunky & Cute Pop) */
 .message {
     display: flex;
     flex-direction: column;
@@ -441,31 +446,31 @@ body {
 }
 
 .message-bubble {
-    padding: 12px 16px;
-    border-radius: 18px;
-    font-size: 0.92rem;
-    line-height: 1.5;
+    padding: 14px 18px;
+    border-radius: 22px;
+    font-size: 0.95rem;
+    line-height: 1.55;
     word-break: break-word;
     white-space: pre-wrap;
-    box-shadow: 0 2px 8px rgba(120, 110, 95, 0.06);
+    box-shadow: 0 4px 12px rgba(238, 216, 197, 0.12); /* Soft shadow */
 }
 
 .message.cocoron .message-bubble {
     background: var(--grad-bubble-bot);
-    color: #451a03; /* Cozy Dark Orange-Brown text for readability */
+    color: #5c1d24; /* Deep Cherry Red-Brown for reading comfort */
     border-top-left-radius: 4px;
-    border: 1px solid rgba(251, 191, 36, 0.2);
+    border: 2px solid #ffccd5;
 }
 
 .message.user .message-bubble {
     background: var(--grad-bubble-user);
-    color: #0369a1; /* Cozy Dark Blue text */
+    color: #1b4f72; /* Deep Blue text */
     border-top-right-radius: 4px;
-    border: 1px solid rgba(56, 189, 248, 0.18);
+    border: 2px solid #bbdefb;
 }
 
 .message-time {
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     margin-top: 4px;
     padding: 0 4px;
@@ -484,19 +489,19 @@ body {
     align-self: flex-start;
     display: flex;
     align-items: center;
-    gap: 4px;
-    background: rgba(0,0,0,0.03);
-    border: 1px solid var(--card-border);
-    padding: 8px 14px;
+    gap: 5px;
+    background: #fdf2f4;
+    border: 2px solid #ffccd5;
+    padding: 10px 16px;
     border-radius: 20px;
-    margin-left: 20px;
-    margin-bottom: 8px;
+    margin-left: 24px;
+    margin-bottom: 12px;
 }
 
 .typing-indicator span {
-    width: 5px;
-    height: 5px;
-    background-color: var(--color-orange);
+    width: 6px;
+    height: 6px;
+    background-color: var(--color-pink);
     border-radius: 50%;
     animation: typingBounce 1.4s infinite ease-in-out;
 }
@@ -512,8 +517,8 @@ body {
 /* Quick Replies Chips */
 .quick-replies {
     display: flex;
-    gap: 6px;
-    padding: 0 20px 12px 20px;
+    gap: 8px;
+    padding: 0 24px 16px 24px;
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
@@ -524,41 +529,43 @@ body {
 }
 
 .quick-chip {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid var(--card-border);
+    background: #ffffff;
+    border: 2px solid #eed8c5;
     color: var(--text-muted);
-    padding: 6px 14px;
+    padding: 8px 16px;
     border-radius: 30px;
-    font-size: 0.76rem;
-    font-weight: 600;
+    font-size: 0.78rem;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(238, 216, 197, 0.1);
 }
 
 .quick-chip:hover {
-    background: #fff;
-    border-color: var(--color-orange);
-    color: var(--color-orange);
+    background: var(--bg-sidebar);
+    border-color: var(--color-pink);
+    color: var(--color-pink);
+    transform: translateY(-1px);
 }
 
 /* Input Bar Section */
 .chat-input-bar {
-    padding: 12px 20px 20px 20px;
-    border-top: 1px solid var(--card-border);
+    padding: 16px 24px 24px 24px;
+    border-top: 3px solid #eed8c5;
     display: flex;
-    gap: 10px;
+    gap: 12px;
     align-items: flex-end;
 }
 
 .chat-input-bar textarea {
     flex: 1;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid var(--card-border);
-    border-radius: 10px;
-    padding: 10px 14px;
+    background: #ffffff;
+    border: 2px solid #eed8c5;
+    border-radius: 14px;
+    padding: 12px 16px;
     color: var(--text-primary);
     font-family: var(--font-sans);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     resize: none;
     max-height: 100px;
     line-height: 1.4;
@@ -568,17 +575,17 @@ body {
 }
 
 .chat-input-bar textarea:focus {
-    border-color: var(--color-orange);
-    background: #fff;
+    border-color: var(--color-pink);
+    background: #ffffff;
 }
 
 .chat-input-bar button {
-    background: var(--color-orange);
+    background: var(--color-pink);
     border: none;
-    color: #fff;
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
+    color: #ffffff;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -588,17 +595,17 @@ body {
 }
 
 .chat-input-bar button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 10px rgba(249, 115, 22, 0.3);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 4px 12px rgba(255, 107, 129, 0.4);
 }
 
 .chat-input-bar button svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
 }
 
 /* ==========================================================================
-   Modal Dialog for API configuration (Cozy Light themed)
+   Modal Dialog for API configuration
    ========================================================================== */
 .modal-overlay {
     position: fixed;
@@ -606,7 +613,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(60, 56, 53, 0.45); /* Soft brownish-gray shadow overlay */
+    background: rgba(61, 47, 37, 0.4); /* Cozy chocolate shadow overlay */
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -616,13 +623,13 @@ body {
 }
 
 .modal-card {
-    background: #fbfbfa;
-    border: 1px solid var(--card-border);
-    border-radius: 16px;
+    background: #ffffff;
+    border: 3px solid #eed8c5;
+    border-radius: 24px;
     width: 100%;
     max-width: 440px;
-    padding: 24px;
-    box-shadow: 0 15px 40px rgba(120, 110, 95, 0.25);
+    padding: 28px;
+    box-shadow: 0 15px 40px rgba(136, 108, 86, 0.2);
     position: relative;
     color: var(--text-primary);
     animation: modalScaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -635,34 +642,34 @@ body {
 
 .modal-close {
     position: absolute;
-    top: 12px;
-    right: 16px;
+    top: 14px;
+    right: 18px;
     background: none;
     border: none;
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     color: var(--text-muted);
     cursor: pointer;
     transition: color 0.3s;
 }
 
 .modal-close:hover {
-    color: var(--text-primary);
+    color: var(--color-pink);
 }
 
 .modal-title {
-    font-size: 1.1rem;
-    margin-bottom: 16px;
-    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    font-weight: 800;
 }
 
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 }
 
 .form-group label {
     display: block;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 0.82rem;
+    font-weight: 700;
     color: var(--text-muted);
     margin-bottom: 6px;
 }
@@ -670,38 +677,38 @@ body {
 .form-group input,
 .form-group select {
     width: 100%;
-    background: #fff;
-    border: 1px solid var(--card-border);
-    border-radius: 6px;
-    padding: 8px 12px;
+    background: #fff5eb;
+    border: 2px solid #eed8c5;
+    border-radius: 10px;
+    padding: 10px 14px;
     color: var(--text-primary);
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     outline: none;
     box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
 }
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: var(--color-orange);
+    border-color: var(--color-pink);
 }
 
 .field-hint {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
     margin-top: 4px;
     line-height: 1.4;
 }
 
 .key-guide {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     color: var(--text-muted);
     line-height: 1.45;
 }
 
 .key-guide a {
-    color: var(--color-orange);
+    color: var(--color-pink);
     text-decoration: none;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .key-guide a:hover {
@@ -711,22 +718,22 @@ body {
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 12px;
+    margin-top: 24px;
 }
 
 .btn {
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 0.82rem;
-    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 800;
     cursor: pointer;
     transition: all 0.3s;
 }
 
 .btn-secondary {
     background: rgba(0, 0, 0, 0.04);
-    border: 1px solid var(--card-border);
+    border: 2px solid #eed8c5;
     color: var(--text-muted);
 }
 
@@ -737,14 +744,14 @@ body {
 }
 
 .btn-primary {
-    background: var(--color-orange);
+    background: var(--color-pink);
     border: none;
-    color: #fff;
+    color: #ffffff;
 }
 
 .btn-primary:hover {
     opacity: 0.9;
-    box-shadow: 0 3px 8px rgba(249, 115, 22, 0.25);
+    box-shadow: 0 4px 10px rgba(255, 107, 129, 0.3);
 }
 
 /* ==========================================================================
@@ -774,7 +781,7 @@ body {
         align-items: center;
         justify-content: space-between;
         padding: 14px 16px;
-        border-bottom: 1px solid var(--card-border);
+        border-bottom: 3px solid #eed8c5;
         background: var(--bg-sidebar);
     }
     
@@ -782,13 +789,13 @@ body {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-weight: 700;
+        font-weight: 800;
         font-size: 0.95rem;
     }
     
     .mobile-avatar-placeholder {
-        width: 22px;
-        height: 22px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         background: var(--grad-avatar);
         display: inline-block;
