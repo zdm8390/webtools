@@ -255,7 +255,7 @@ function getLocalAffirmitativeResponse(text) {
 // --- App & Configuration State ---
 const CONFIG = {
     apiKey: localStorage.getItem('cocoron_api_key') || '',
-    model: localStorage.getItem('cocoron_model') || 'gemini-2.5-flash',
+    model: localStorage.getItem('cocoron_model') || 'gemini-3.5-flash',
     chatHistory: JSON.parse(localStorage.getItem('cocoron_chat_history')) || []
 };
 
@@ -576,8 +576,14 @@ function bindEvents() {
     });
 }
 
-// Window Startup
+// Window Startup Initialization
 window.addEventListener('DOMContentLoaded', () => {
+    // Auto-migrate legacy retired models in localStorage to Gemini 3.5 Flash
+    const obsoleteModels = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash', 'gemini-2.0-pro'];
+    if (obsoleteModels.includes(CONFIG.model)) {
+        CONFIG.model = 'gemini-3.5-flash';
+        localStorage.setItem('cocoron_model', 'gemini-3.5-flash');
+    }
     updateConfigUI();
     loadChatHistory();
     bindEvents();
