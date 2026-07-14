@@ -25,6 +25,7 @@
             --color-teams: #6366f1;
             --color-cocoron: #fca5a5;
             --color-sambot: #ff4757;
+            --color-ndl: #1e3a8a;
         }
 
         * {
@@ -383,6 +384,13 @@
             --icon-bg: rgba(255, 71, 87, 0.06);
             --icon-border: rgba(255, 71, 87, 0.2);
         }
+
+        .theme-ndl {
+            --theme-color: var(--color-ndl);
+            --glow-color: rgba(30, 58, 138, 0.15);
+            --icon-bg: rgba(30, 58, 138, 0.06);
+            --icon-border: rgba(30, 58, 138, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -518,6 +526,30 @@
                 <div class="card-body">
                     <h2>サンボット (Sambot)</h2>
                     <p>すべてを「愛とロックの叫び」で全肯定するAI。サンボマスターのライブMC風の熱いパッションで、あなたの悩みや苦しみを全力で励まし、肯定してくれます。</p>
+                </div>
+                <div class="launch-indicator">
+                    LAUNCH TOOL
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
+            </a>
+
+            <!-- Card 6: NDL公開状況チェッカー -->
+            <a href="./ndl-checker/" class="portal-card theme-ndl">
+                <div class="card-header">
+                    <div class="icon-container" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                    </div>
+                    <span class="status-badge">Vanilla JS + NDL Search API</span>
+                </div>
+                <div class="card-body">
+                    <h2>NDL公開状況チェッカー</h2>
+                    <p>書籍や雑誌が「国立国会図書館デジタルコレクション」で電子化されているか、またその公開範囲（インターネット公開・個人送信・館内限定）を判定するツール。雑誌の巻号ごとの詳細な電子化状況も一目で分かります。</p>
                 </div>
                 <div class="launch-indicator">
                     LAUNCH TOOL

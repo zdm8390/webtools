@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="NDL（国立国会図書館デジタルコレクション）の電子化・公開範囲状況を簡単に判定・検索できるWebツール。インターネット公開、個人送信、館内限定などの種類や、雑誌の巻号ごとの電子化状況も一目で分かります。" />
+    <title>NDL電子公開状況チェッカー | Webtools</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+JP:wght@300;400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="back-link">
+                <a href="../index.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    DASHBOARD
+                </a>
+            </div>
+            <h1 class="logo-title">NDL Public Access Checker</h1>
+            <p class="subtitle">国立国会図書館デジタル化資料・公開範囲判定ツール</p>
+        </header>
+
+        <!-- Search Section -->
+        <section class="search-card">
+            <!-- Mode Switcher Tabs -->
+            <div class="search-mode-tabs">
+                <button class="search-mode-btn active" id="btn-mode-single">通常検索</button>
+                <button class="search-mode-btn" id="btn-mode-multi">複数一括検索 (最大10件)</button>
+            </div>
+
+            <div class="search-form" id="search-form-single">
+                <div class="input-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="input-search" placeholder="書名、雑誌名、著者名などを入力してください... (例：吾輩は猫である、太陽、山椒大夫)" autocomplete="off">
+                </div>
+                <button id="btn-search">検索する</button>
+            </div>
+
+            <div class="search-form-multi" id="search-form-multi" style="display: none;">
+                <div class="textarea-wrapper">
+                    <textarea id="input-search-multi" rows="5" placeholder="検索したいキーワードを1行に1つずつ入力してください（最大10件まで）。&#13;例：&#13;吾輩は猫である&#13;太陽&#13;山椒大夫"></textarea>
+                </div>
+                <div class="multi-search-action">
+                    <span class="warning-text">⚠️ サーバー負荷防止のため最大10行まで。各キーワード間には自動で約0.6秒のウェイトが入ります。</span>
+                    <button id="btn-search-multi">一括検索する</button>
+                </div>
+            </div>
+
+            <!-- Filter & Options Panel -->
+            <div class="filter-panel">
+                <div class="filter-group">
+                    <span class="filter-label">資料種別:</span>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chk-type-book" checked>
+                        <span>図書</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chk-type-journal" checked>
+                        <span>雑誌</span>
+                    </label>
+                </div>
+                
+                <div class="filter-group">
+                    <span class="filter-label">電子化状況:</span>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chk-only-digitized">
+                        <span>デジタル化資料のみ</span>
+                    </label>
+                </div>
+
+                <div class="filter-group">
+                    <span class="filter-label">公開範囲で絞り込み:</span>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chk-scope-internet">
+                        <span class="badge-dot internet"></span>
+                        <span>ネット公開のみ</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Legend / Guide Card (Explaining the NDL rights tiers) -->
+        <section class="legend-card">
+            <div class="legend-title">📚 国会図書館デジタルコレクションの公開範囲について</div>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <span class="access-badge internet">インターネット公開</span>
+                    <p class="legend-desc">著作権保護期間満了や許諾済み。個人登録や来館不要で、**誰でも自宅からブラウザで即座に読めます**。</p>
+                </div>
+                <div class="legend-item">
+                    <span class="access-badge personal">個人送信・送信参加館</span>
+                    <p class="legend-desc">著作権ありで入手困難。利用者登録（本登録）をすれば、**自宅のPC等からログインして読めます**（または参加図書館の館内で閲覧可能）。</p>
+                </div>
+                <div class="legend-item">
+                    <span class="access-badge library">館内限定公開</span>
+                    <p class="legend-desc">著作権保護中。インターネットや個人送信は非対応。**国立国会図書館（東京・関西・国際子ども図書館）に直接行く必要があります**。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading Indicator -->
+        <div class="loading-state" id="loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <p>NDLサーチ API からデータを取得中...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" id="error-state" style="display: none;">
+            <div class="error-icon">⚠️</div>
+            <h3>データの取得に失敗しました</h3>
+            <p id="error-message">接続タイムアウトか、CORSプロキシの不調の可能性があります。時間をおいて再度お試しください。</p>
+        </div>
+
+        <!-- Multiple Search Keyword Tabs -->
+        <div class="multi-results-tabs" id="multi-results-tabs" style="display: none;">
+            <!-- Keyword tabs will be generated here -->
+        </div>
+
+        <!-- Search Results Count -->
+        <div class="results-meta" id="results-meta" style="display: none;">
+            <span class="hit-count" id="text-hit-count">0件ヒットしました</span>
+            <span class="grouping-hint" id="text-grouping-hint">※同じ雑誌は自動で1つのカードにまとめて巻号リスト化しています</span>
+        </div>
+
+        <!-- Results Container -->
+        <main class="results-list" id="results-list">
+            <!-- Dynamic Result Cards will be generated here -->
+            <div class="welcome-placeholder">
+                <div class="placeholder-icon">📖</div>
+                <h3>検索を開始してください</h3>
+                <p>上の検索窓にタイトルを入力して検索ボタンを押すと、国会図書館（NDL Search API）から電子化および公開範囲のステータスを自動判定してリストアップします。</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <p>※本ツールは、国立国会図書館サーチの外部提供インタフェース (OpenSearch API) および、CORSプロキシ (allorigins) を利用してクライアントサイドで検索を行っています。</p>
+            <p>© 2026 NDL PUBLIC ACCESS CHECKER. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+</body>
+</html>
