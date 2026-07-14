@@ -796,8 +796,18 @@ function checkPassword(input) {
 }
 
 function handleLogin() {
-    const inputVal = els.inputLoginPassword.value;
+    const inputVal = els.inputLoginPassword.value.trim();
+    
+    // Output detailed debug logs to browser console for troubleshooting
+    console.log("=== NDL Login Debug ===");
+    console.log("Input text: '" + inputVal + "'");
+    console.log("Input length: " + inputVal.length);
+    console.log("Input char codes: ", [...inputVal].map(c => c.charCodeAt(0)));
+    console.log("Input XORed (with 42): ", [...inputVal].map(c => c.charCodeAt(0) ^ 42));
+    console.log("Expected OBFUSCATED_SECRET: ", OBFUSCATED_SECRET);
+    
     if (checkPassword(inputVal)) {
+        console.log("Login Status: SUCCESS");
         els.loginErrorMsg.textContent = '';
         els.loginOverlay.classList.add('hidden');
         sessionStorage.setItem('ndl_checker_logged_in', 'true');
@@ -807,7 +817,8 @@ function handleLogin() {
             if (els.inputSearch) els.inputSearch.focus();
         }, 400);
     } else {
-        els.loginErrorMsg.textContent = 'パスワードが正しくありません。';
+        console.log("Login Status: FAILED");
+        els.loginErrorMsg.textContent = 'パスワードが正しくありません。(F12のコンソールに詳細ログが出力されています)';
         els.inputLoginPassword.value = '';
         els.inputLoginPassword.focus();
     }
