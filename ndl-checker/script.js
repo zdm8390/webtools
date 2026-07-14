@@ -783,7 +783,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // --- Obfuscated Password & Simple Login Pipeline ---
 
 // Obfuscated representation of password "mie" (each character XORed with 42)
-const OBFUSCATED_SECRET = [67, 75, 79]; 
+const OBFUSCATED_SECRET = [71, 67, 79]; 
 
 function checkPassword(input) {
     if (input.length !== OBFUSCATED_SECRET.length) return false;
