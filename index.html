@@ -23,6 +23,7 @@
             --color-ccg: #ec4899;
             --color-chime: #06b6d4;
             --color-teams: #6366f1;
+            --color-cocoron: #fca5a5;
         }
 
         * {
@@ -367,6 +368,13 @@
             --icon-bg: rgba(99, 102, 241, 0.06);
             --icon-border: rgba(99, 102, 241, 0.2);
         }
+
+        .theme-cocoron {
+            --theme-color: var(--color-cocoron);
+            --glow-color: rgba(252, 165, 165, 0.15);
+            --icon-bg: rgba(252, 165, 165, 0.06);
+            --icon-border: rgba(252, 165, 165, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -453,6 +461,31 @@
                 <div class="card-body">
                     <h2>チーム戦メイカー</h2>
                     <p>メンバーの名前を入力し、公平かつランダムにチームを切り分け・シャッフルできるツール。ゲームのチーム分けやプロジェクトの編成などに幅広く活用できます。</p>
+                </div>
+                <div class="launch-indicator">
+                    LAUNCH TOOL
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
+            </a>
+
+            <!-- Card 4: ココロン -->
+            <a href="./cocoron/" class="portal-card theme-cocoron">
+                <div class="card-header">
+                    <div class="icon-container" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <circle cx="12" cy="11" r="3"></circle>
+                            <path d="M12 14c-2 0-3.5 1-3.5 1v.5h7v-.5s-1.5-1-3.5-1z"></path>
+                        </svg>
+                    </div>
+                    <span class="status-badge">Gemini API + Web Audio</span>
+                </div>
+                <div class="card-body">
+                    <h2>ココロン (Cocoron)</h2>
+                    <p>現代社会のストレスに寄り添う、全肯定型AIフレンド。悩みを否定せず、共感し励ましてくれます。雨音やたき火音などの癒やしBGMシンセサイザーも搭載。</p>
                 </div>
                 <div class="launch-indicator">
                     LAUNCH TOOL
