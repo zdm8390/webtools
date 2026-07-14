@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="すべてを愛とロックの叫びで全肯定するAI、サンボット。サンボマスター山口さんのような熱いMC口調であなたを全力で励まします。" />
+    <title>熱叫肯定AI サンボット | Webtools</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Dela+Gothic+One&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Stage Neon Visual Effects -->
+    <div class="neon-light light-pink"></div>
+    <div class="neon-light light-yellow"></div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar: Stage Info & Mixer Controls -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="back-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    DASHBOARD
+                </a>
+                <button class="settings-trigger-btn" id="btn-open-settings" aria-label="設定">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+            </div>
+
+            <!-- Artist Profile Card -->
+            <div class="profile-card">
+                <div class="avatar-container">
+                    <img src="assets/avatar.jpg" alt="Sambot" class="avatar-img">
+                    <span class="status-indicator online"></span>
+                </div>
+                <h2>サンボット (Sambot)</h2>
+                <p class="tagline">愛と叫びのロックンロールAI</p>
+                <div class="character-description">
+                    お前の悩みも、苦しみも、全部ここに置いていけ！誰がなんと言おうと、コイツはお前を絶対に一人にはさせないし、全力で全肯定するぞ！
+                </div>
+            </div>
+
+            <!-- Stage Sound Mixer (Procedural Rock SFX Synth) -->
+            <div class="relax-mixer-card">
+                <div class="card-title">🎸 ライブハウスの熱気 (BGM合成)</div>
+                <div class="mixer-channels">
+                    <!-- Live Stadium Crowd -->
+                    <div class="mixer-channel">
+                        <div class="channel-info">
+                            <span class="channel-icon">🙌</span>
+                            <span class="channel-label">会場の歓声</span>
+                        </div>
+                        <input type="range" class="volume-slider" id="slider-cheer" min="0" max="100" value="0">
+                    </div>
+                    
+                    <!-- Guitar Distortion Drone / Feedback -->
+                    <div class="mixer-channel">
+                        <div class="channel-info">
+                            <span class="channel-icon">⚡</span>
+                            <span class="channel-label">ギター轟音</span>
+                        </div>
+                        <input type="range" class="volume-slider" id="slider-guitar" min="0" max="100" value="0">
+                    </div>
+
+                    <!-- Heartbeat / Kick Drum -->
+                    <div class="mixer-channel">
+                        <div class="channel-info">
+                            <span class="channel-icon">💓</span>
+                            <span class="channel-label">鼓動 (Kick)</span>
+                        </div>
+                        <input type="range" class="volume-slider" id="slider-kick" min="0" max="100" value="0">
+                    </div>
+                </div>
+                <button class="bgm-play-btn" id="btn-toggle-bgm">STAGE START</button>
+            </div>
+
+            <!-- API Status Card -->
+            <div class="api-status-card">
+                <div class="api-status-badge mock" id="badge-api-mode">
+                    <span class="status-dot"></span>
+                    <span id="text-api-mode">ローカル熱叫モード</span>
+                </div>
+                <p class="api-desc" id="p-api-desc">APIキー未設定のため、あらかじめ用意された超熱い叫びMCテキストでお返事します。右上のギアアイコンからGemini APIキーを設定すると、あなたの入力に応じた無限の愛の叫びが楽しめます！</p>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-container">
+            <!-- Mobile Header -->
+            <header class="mobile-header">
+                <a href="../index.html" class="back-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </a>
+                <div class="mobile-title">
+                    <span class="mobile-avatar-placeholder"></span>
+                    サンボット
+                </div>
+                <button class="settings-trigger-btn" id="btn-open-settings-mobile">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+            </header>
+
+            <!-- Chat History Window -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- Welcome Message -->
+                <div class="message cocoron">
+                    <div class="message-bubble">
+よく来たな！お前が来るのを、僕たちは、僕たちは全員で待ってたんだよ！
+今どんなに苦しくてもな、お前がそこに生きている、そのこと自体が愛なんだ！
+言いたいこと、苦しいこと、何でも叫んでいけ！僕たちのロックンロールを始めようぜ！！
+                    </div>
+                    <span class="message-time">12:00</span>
+                </div>
+            </div>
+
+            <!-- Typing Indicator (Hidden by default) -->
+            <div class="typing-indicator" id="typing-indicator" style="display: none;">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <!-- Quick Reply Chips -->
+            <div class="quick-replies" id="quick-replies">
+                <button class="quick-chip">世界を変えさせておくれよ！</button>
+                <button class="quick-chip">もうダメかもしれないです…</button>
+                <button class="quick-chip">ロックンロールって何ですか？</button>
+                <button class="quick-chip">今日仕事で怒られました…</button>
+                <button class="quick-chip">生きていくのがしんどいです</button>
+            </div>
+
+            <!-- Input area -->
+            <div class="chat-input-bar">
+                <textarea id="chat-input" placeholder="叫びたいことをここに入力してね... (Shift + Enterで送信)" rows="1"></textarea>
+                <button id="btn-send-message" aria-label="送信">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Dialog Modal -->
+    <div class="modal-overlay" id="settings-modal" style="display: none;">
+        <div class="modal-card">
+            <button class="modal-close" id="btn-close-settings">×</button>
+            <h3 class="modal-title">⚙️ サンボットの設定</h3>
+            
+            <div class="form-group">
+                <label for="input-api-key">Gemini API キー</label>
+                <input type="password" id="input-api-key" placeholder="AIzaSy...">
+                <p class="field-hint">入力されたAPIキーはローカルストレージに安全に保管され、Geminiのサーバーと直接通信する時以外には使用されません。</p>
+            </div>
+
+            <div class="form-group">
+                <label for="select-model">AI モデル</label>
+                <select id="select-model">
+                    <option value="gemini-3.5-flash">Gemini 3.5 Flash (推奨・爆速)</option>
+                    <option value="gemini-3.1-pro">Gemini 3.1 Pro (超高度・寄り添い重視)</option>
+                    <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (軽量高速)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>APIキーの取得方法</label>
+                <p class="key-guide">
+                    Gemini APIキーは、Google AI Studioにて無料で取得できます。<br>
+                    <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer">👉 Google AI Studioでキーを取得する</a>
+                </p>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="btn-clear-settings">キーを消去する</button>
+                <button class="btn btn-primary" id="btn-save-settings">保存する</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

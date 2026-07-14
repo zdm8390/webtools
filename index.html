@@ -24,6 +24,7 @@
             --color-chime: #06b6d4;
             --color-teams: #6366f1;
             --color-cocoron: #fca5a5;
+            --color-sambot: #ff4757;
         }
 
         * {
@@ -375,6 +376,13 @@
             --icon-bg: rgba(252, 165, 165, 0.06);
             --icon-border: rgba(252, 165, 165, 0.2);
         }
+
+        .theme-sambot {
+            --theme-color: var(--color-sambot);
+            --glow-color: rgba(255, 71, 87, 0.15);
+            --icon-bg: rgba(255, 71, 87, 0.06);
+            --icon-border: rgba(255, 71, 87, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -486,6 +494,30 @@
                 <div class="card-body">
                     <h2>ココロン (Cocoron)</h2>
                     <p>現代社会のストレスに寄り添う、全肯定型AIフレンド。悩みを否定せず、共感し励ましてくれます。雨音やたき火音などの癒やしBGMシンセサイザーも搭載。</p>
+                </div>
+                <div class="launch-indicator">
+                    LAUNCH TOOL
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
+            </a>
+
+            <!-- Card 5: サンボット -->
+            <a href="./sambot/" class="portal-card theme-sambot">
+                <div class="card-header">
+                    <div class="icon-container" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20"></path>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <span class="status-badge">Gemini API + Web Audio</span>
+                </div>
+                <div class="card-body">
+                    <h2>サンボット (Sambot)</h2>
+                    <p>すべてを「愛とロックの叫び」で全肯定するAI。サンボマスターのライブMC風の熱いパッションで、あなたの悩みや苦しみを全力で励まし、肯定してくれます。</p>
                 </div>
                 <div class="launch-indicator">
                     LAUNCH TOOL
