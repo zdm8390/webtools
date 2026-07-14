@@ -1,112 +1,9 @@
 /* ==========================================================================
    NDL PUBLIC ACCESS CHECKER - JAVASCRIPT
-   Features: NDL Search OpenSearch API parser, CORS proxy fetch,
+   Features: Japan Search API direct integration (CORS-friendly JSON API),
              access rights determination, journal issue grouping logic,
              and multiple simultaneous query batch processing with tabs.
    ========================================================================== */
-
-// --- XML Parser Namespace Helpers ---
-function getXmlVal(element, localName) {
-    const nsList = [
-        'http://purl.org/dc/elements/1.1/',      // dc
-        'http://purl.org/dc/terms/',             // dcterms
-        'http://ndl.go.jp/dcndl/terms/',         // dcndl
-        'http://www.w3.org/2000/01/rdf-schema#'  // rdfs
-    ];
-    
-    for (let ns of nsList) {
-        const els = element.getElementsByTagNameNS(ns, localName);
-        if (els && els.length > 0) {
-            return els[0].textContent;
-        }
-    }
-    
-    const fallback = element.getElementsByTagName('dc:' + localName)[0] || 
-                     element.getElementsByTagName('dcterms:' + localName)[0] ||
-                     element.getElementsByTagName('dcndl:' + localName)[0] ||
-                     element.getElementsByTagName('rdfs:' + localName)[0] ||
-                     element.getElementsByTagName(localName)[0];
-                     
-    return fallback ? fallback.textContent : '';
-}
-
-// Find Digital Collection Direct Links (dl.ndl.go.jp PID)
-function findNdlDlLink(itemEl) {
-    const seeAlsoEls = itemEl.getElementsByTagName('rdfs:seeAlso') || itemEl.getElementsByTagName('seeAlso');
-    for (let s of seeAlsoEls) {
-        const resource = s.getAttribute('rdf:resource') || s.getAttribute('resource');
-        if (resource && resource.includes('dl.ndl.go.jp')) {
-            return resource;
-        }
-    }
-    
-    const idEls = itemEl.getElementsByTagName('dc:identifier') || itemEl.getElementsByTagName('identifier');
-    for (let id of idEls) {
-        const txt = id.textContent;
-        if (txt) {
-            if (txt.includes('dl.ndl.go.jp')) {
-                return txt;
-            }
-            if (txt.startsWith('info:ndljp/pid/')) {
-                return 'https://dl.ndl.go.jp/' + txt.replace('info:ndljp/', '');
-            }
-        }
-    }
-
-    const linkEl = itemEl.getElementsByTagName('link')[0];
-    if (linkEl && linkEl.textContent.includes('dl.ndl.go.jp')) {
-        return linkEl.textContent;
-    }
-    
-    return null;
-}
-
-// Determine Digitization Rights tier from XML fields
-function determineAccessScope(itemEl, dlLink) {
-    if (!dlLink) {
-        return 'none'; // Not digitized
-    }
-    
-    const textSources = [];
-    const addText = (localName) => {
-        const txt = getXmlVal(itemEl, localName);
-        if (txt) textSources.push(txt.toLowerCase());
-    };
-    
-    addText('rights');
-    addText('accessRights');
-    addText('description');
-    
-    const fullText = textSources.join(' ');
-    
-    if (fullText.includes('インターネット公開') || 
-        fullText.includes('インターネットで公開') || 
-        fullText.includes('オープンアクセス') || 
-        fullText.includes('internet access') || 
-        fullText.includes('open access')) {
-        return 'internet';
-    }
-    
-    if (fullText.includes('送信サービス') || 
-        fullText.includes('個人送信') || 
-        fullText.includes('図書館送信') || 
-        fullText.includes('送信参加館') || 
-        fullText.includes('available to registered users') ||
-        fullText.includes('digitized partner libraries')) {
-        return 'personal';
-    }
-    
-    if (fullText.includes('館内限定') || 
-        fullText.includes('国立国会図書館内') || 
-        fullText.includes('館内のみ') || 
-        fullText.includes('ndl online only') || 
-        fullText.includes('national diet library only')) {
-        return 'library';
-    }
-    
-    return 'library';
-}
-
 
 // --- Core Application State ---
 const STATE = {
@@ -142,37 +39,160 @@ const els = {
     chkJournal: document.getElementById('chk-type-journal'),
     chkOnlyDigitized: document.getElementById('chk-only-digitized'),
     chkScopeInternet: document.getElementById('chk-scope-internet'),
+    chkDirectConnect: document.getElementById('chk-direct-connect'),
+    inputCustomProxy: document.getElementById('input-custom-proxy'),
     
     // Display elements
     loadingState: document.getElementById('loading-state'),
     errorState: document.getElementById('error-state'),
     errorMessage: document.getElementById('error-message'),
+    debugLog: document.getElementById('debug-log'),
     multiResultsTabs: document.getElementById('multi-results-tabs'),
     resultsMeta: document.getElementById('results-meta'),
     textHitCount: document.getElementById('text-hit-count'),
-    resultsList: document.getElementById('results-list')
+    resultsList: document.getElementById('results-list'),
+    
+    // Login elements
+    loginOverlay: document.getElementById('login-overlay'),
+    inputLoginPassword: document.getElementById('input-login-password'),
+    btnLoginSubmit: document.getElementById('btn-login-submit'),
+    loginErrorMsg: document.getElementById('login-error-msg')
 };
 
-// --- API Helpers ---
+// Global Debug Log Accumulator
+let debugLogs = [];
 
-// Base raw fetcher
-async function fetchNDLRaw(keyword) {
-    let queryUrl = `https://ndlsearch.ndl.go.jp/api/opensearch?any=${encodeURIComponent(keyword)}&cnt=100`;
-    if (els.chkOnlyDigitized.checked) {
-        queryUrl += `&dpid=ndl-dl`;
-    }
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(queryUrl)}`;
-    
-    const response = await fetch(proxyUrl);
-    if (!response.ok) {
-        throw new Error(`HTTP status ${response.status}`);
-    }
-    
-    const resData = await response.json();
-    return resData.contents;
+function logDebug(message) {
+    const timestamp = new Date().toISOString().substring(11, 19);
+    const msg = `[${timestamp}] ${message}`;
+    console.log(msg);
+    debugLogs.push(msg);
 }
 
-// XML parser to raw items objects
+// --- API Helpers (Using CORS-friendly Japan Search API) ---
+
+// Base JSON fetcher from Japan Search API
+async function fetchNDLRaw(keyword) {
+    let dbParam = '';
+    // If "only digitized" is checked, restrict database search to 'dignl' (NDL Digital Collection)
+    if (els.chkOnlyDigitized.checked) {
+        dbParam = '&f-db=dignl';
+    }
+    
+    // We check if the user is using the Direct NDL API override (requires CORS extensions)
+    if (els.chkDirectConnect.checked) {
+        logDebug(`Direct Connect: Attempting direct fetch to NDL (OpenSearch XML) for "${keyword}"`);
+        const queryUrl = `https://ndlsearch.ndl.go.jp/api/opensearch?any=${encodeURIComponent(keyword)}&cnt=100${els.chkOnlyDigitized.checked ? '&dpid=ndl-dl' : ''}`;
+        try {
+            const response = await fetch(queryUrl);
+            if (response.ok) {
+                const xmlText = await response.text();
+                if (xmlText && xmlText.trim().length > 0) {
+                    logDebug(`Direct Connect: Fetch succeeded! (Returned XML)`);
+                    return { format: 'xml', data: xmlText };
+                }
+            }
+            throw new Error(`Direct connection returned HTTP status ${response.status}`);
+        } catch (errDirect) {
+            logDebug(`Direct Connect Error: ${errDirect.message}`);
+            throw new Error(`直接接続での通信に失敗しました。(${errDirect.message})`);
+        }
+    }
+    
+    // --- Default Mode: Query Japan Search API (CORS-friendly, returns JSON natively!) ---
+    // This completely bypasses third-party public CORS proxies and timeouts.
+    const queryUrl = `https://jpsearch.go.jp/api/item/search/jps-cross?keyword=${encodeURIComponent(keyword)}&size=100${dbParam}`;
+    logDebug(`Querying Japan Search API: ${queryUrl}`);
+    
+    const response = await fetch(queryUrl);
+    if (!response.ok) {
+        throw new Error(`Japan Search API returned HTTP status ${response.status}`);
+    }
+    
+    const resJson = await response.json();
+    logDebug(`Japan Search API succeeded! Hit count: ${resJson.hit}`);
+    return { format: 'json', data: resJson };
+}
+
+// Parse Japan Search JSON response to uniform item objects
+function parseJsonItems(resData) {
+    const items = resData.list || [];
+    const results = [];
+    
+    for (let item of items) {
+        const common = item.common || {};
+        const title = common.title || 'タイトル不明';
+        
+        // Contributor list formatting
+        let author = '著者不明';
+        if (common.contributor) {
+            author = Array.isArray(common.contributor) ? common.contributor.join(', ') : common.contributor;
+        }
+        
+        // Extract publisher & issued year from source RDF block
+        let publisher = '出版社不明';
+        let issued = '出版年不明';
+        
+        const rdf = item['dignl-rdf:RDF']?.['dcndl:BibResource'] || 
+                    item['bibnl-rdf:RDF']?.['dcndl:BibResource'];
+                    
+        if (rdf) {
+            publisher = rdf['dcterms:publisher']?.['foaf:Agent']?.['foaf:name-s'] || 
+                        rdf['dcndl:digitizedPublisher-s'] || 
+                        '出版社不明';
+                        
+            issued = rdf['dcterms:issued-s'] || 
+                     rdf['dcterms:date-s'] || 
+                     (common.temporal ? (Array.isArray(common.temporal) ? common.temporal[0] : common.temporal) : '出版年不明');
+        }
+        
+        const database = common.database || '';
+        const isDigitized = database === 'dignl'; // NDL Digital Collection
+        
+        const link = common.linkUrl || `https://jpsearch.go.jp/item/${item.id || ''}`;
+        const dlLink = isDigitized ? common.linkUrl : null;
+        
+        // Determine Access Scope
+        let scope = 'none';
+        if (isDigitized) {
+            scope = 'library'; // Default fallback
+            
+            const accessRights = rdf?.['dcterms:accessRights-s'] || '';
+            const rights = rdf?.['dcterms:rights-s'] || '';
+            const rightsText = (Array.isArray(rights) ? rights.join(' ') : rights) + ' ' + accessRights;
+            
+            if (common.contentsAccess === 'internet') {
+                scope = 'internet';
+            } else if (rightsText.includes('送信') || rightsText.includes('個人') || rightsText.includes('参加館')) {
+                scope = 'personal';
+            }
+        }
+        
+        const category = common.category || [];
+        const isJournal = category.includes('periodical') || 
+                           category.includes('journal') || 
+                           category.includes('serial') ||
+                           title.includes('巻') || 
+                           title.includes('号') || 
+                           /;\d{4}\./.test(title) || 
+                           /\d{4}\(\d{1,2}\)/.test(title);
+                           
+        results.push({
+            title,
+            author,
+            publisher,
+            issued,
+            isJournal,
+            link,
+            dlLink,
+            scope
+        });
+    }
+    
+    return results;
+}
+
+// Fallback XML parser (used only if direct connect xml mode is selected)
 function parseXmlItems(xmlText) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, "text/xml");
@@ -186,17 +206,16 @@ function parseXmlItems(xmlText) {
     const results = [];
     
     for (let itemEl of items) {
-        const title = getXmlVal(itemEl, 'title') || '';
-        const author = getXmlVal(itemEl, 'author') || getXmlVal(itemEl, 'creator') || '著者不明';
-        const publisher = getXmlVal(itemEl, 'publisher') || '出版社不明';
-        const issued = getXmlVal(itemEl, 'issued') || getXmlVal(itemEl, 'date') || '出版年不明';
-        const category = getXmlVal(itemEl, 'category') || '';
-        const link = getXmlVal(itemEl, 'link') || '';
+        const title = xmlGetVal(itemEl, 'title') || '';
+        const author = xmlGetVal(itemEl, 'author') || xmlGetVal(itemEl, 'creator') || '著者不明';
+        const publisher = xmlGetVal(itemEl, 'publisher') || '出版社不明';
+        const issued = xmlGetVal(itemEl, 'issued') || xmlGetVal(itemEl, 'date') || '出版年不明';
+        const category = xmlGetVal(itemEl, 'category') || '';
         
-        const dlLink = findNdlDlLink(itemEl);
-        const scope = determineAccessScope(itemEl, dlLink);
+        const link = xmlFindItemLink(itemEl);
+        const dlLink = xmlFindNdlDlLink(itemEl);
+        const scope = xmlDetermineAccessScope(itemEl, dlLink);
         
-        // Deduce item material type (Book vs Journal)
         const isJournal = category.includes('雑誌') || 
                            category.includes('journal') || 
                            category.includes('serial') || 
@@ -219,6 +238,79 @@ function parseXmlItems(xmlText) {
     return results;
 }
 
+// XML Parsing Sub-Helpers (Strictly for fallback Direct mode)
+function xmlGetVal(element, localName) {
+    const nsList = ['http://purl.org/dc/elements/1.1/', 'http://purl.org/dc/terms/', 'http://ndl.go.jp/dcndl/terms/', 'http://www.w3.org/2000/01/rdf-schema#'];
+    for (let ns of nsList) {
+        const els = element.getElementsByTagNameNS(ns, localName);
+        if (els && els.length > 0) return els[0].textContent;
+    }
+    const fallback = element.getElementsByTagName('dc:' + localName)[0] || 
+                     element.getElementsByTagName('dcterms:' + localName)[0] ||
+                     element.getElementsByTagName('dcndl:' + localName)[0] ||
+                     element.getElementsByTagName('rdfs:' + localName)[0] ||
+                     element.getElementsByTagName(localName)[0];
+    return fallback ? fallback.textContent : '';
+}
+
+function xmlFindNdlDlLink(itemEl) {
+    const seeAlsoEls = itemEl.getElementsByTagName('rdfs:seeAlso') || itemEl.getElementsByTagName('seeAlso');
+    for (let s of seeAlsoEls) {
+        const resource = s.getAttribute('rdf:resource') || s.getAttribute('resource');
+        if (resource && resource.includes('dl.ndl.go.jp')) return resource;
+    }
+    const idEls = itemEl.getElementsByTagName('dc:identifier') || itemEl.getElementsByTagName('identifier');
+    for (let id of idEls) {
+        const txt = id.textContent;
+        if (txt) {
+            if (txt.includes('dl.ndl.go.jp')) return txt;
+            if (txt.startsWith('info:ndljp/pid/')) return 'https://dl.ndl.go.jp/' + txt.replace('info:ndljp/', '');
+        }
+    }
+    const linkEl = itemEl.getElementsByTagName('link')[0];
+    if (linkEl && linkEl.textContent.includes('dl.ndl.go.jp')) return linkEl.textContent;
+    return null;
+}
+
+function xmlFindItemLink(itemEl) {
+    const linkEl = itemEl.getElementsByTagName('link')[0];
+    if (linkEl) {
+        const url = linkEl.textContent || linkEl.innerHTML || '';
+        if (url.trim().length > 0) return url.trim();
+    }
+    const seeAlsoEls = itemEl.getElementsByTagName('rdfs:seeAlso') || itemEl.getElementsByTagName('seeAlso');
+    for (let s of seeAlsoEls) {
+        const resource = s.getAttribute('rdf:resource') || s.getAttribute('resource');
+        if (resource) return resource;
+    }
+    const guidEl = itemEl.getElementsByTagName('guid')[0];
+    if (guidEl) {
+        const guidText = guidEl.textContent || '';
+        if (guidText.startsWith('http')) return guidText.trim();
+    }
+    return '';
+}
+
+function xmlDetermineAccessScope(itemEl, dlLink) {
+    if (!dlLink) return 'none';
+    const textSources = [];
+    const addText = (localName) => {
+        const txt = xmlGetVal(itemEl, localName);
+        if (txt) textSources.push(txt.toLowerCase());
+    };
+    addText('rights'); addText('accessRights'); addText('description');
+    const fullText = textSources.join(' ');
+    
+    if (fullText.includes('インターネット公開') || fullText.includes('インターネットで公開') || fullText.includes('オープンアクセス')) {
+        return 'internet';
+    }
+    if (fullText.includes('送信サービス') || fullText.includes('個人送信') || fullText.includes('図書館送信') || fullText.includes('送信参加館')) {
+        return 'personal';
+    }
+    return 'library';
+}
+
+
 // --- Pipelines ---
 
 // 1. Single Query Pipeline
@@ -229,8 +321,10 @@ async function searchNDL() {
         return;
     }
     
+    debugLogs = [];
+    
     els.loadingState.style.display = 'flex';
-    els.loadingState.querySelector('p').textContent = "NDLサーチ API からデータを取得中...";
+    els.loadingState.querySelector('p').textContent = "API からデータを取得中...";
     els.errorState.style.display = 'none';
     els.resultsMeta.style.display = 'none';
     els.multiResultsTabs.style.display = 'none';
@@ -242,15 +336,22 @@ async function searchNDL() {
     STATE.searchMode = 'single';
     
     try {
-        const xmlText = await fetchNDLRaw(query);
-        if (!xmlText) {
-            throw new Error("CORSプロキシから空のデータが返されました。");
+        const responseData = await fetchNDLRaw(query);
+        if (!responseData || !responseData.data) {
+            throw new Error("APIからデータが返されませんでした。");
         }
-        STATE.results = parseXmlItems(xmlText);
+        
+        if (responseData.format === 'json') {
+            STATE.results = parseJsonItems(responseData.data);
+        } else {
+            STATE.results = parseXmlItems(responseData.data);
+        }
+        
         processAndRenderResults();
     } catch (err) {
         console.error("NDL Checker Error:", err);
-        els.errorMessage.textContent = `接続エラーが発生しました: ${err.message} (CORSプロキシの接続不良やタイムアウトの可能性があります。時間をおいて再試行してください。)`;
+        els.errorMessage.textContent = `接続エラーが発生しました: NDLへの接続タイムアウトか、CORS接続不良の可能性があります。`;
+        els.debugLog.textContent = debugLogs.join('\n');
         els.errorState.style.display = 'block';
     } finally {
         els.loadingState.style.display = 'none';
@@ -270,7 +371,8 @@ async function searchNDLMulti() {
         return;
     }
     
-    // Rate limit validation: Maximum 10 queries
+    debugLogs = [];
+    
     if (keywords.length > 10) {
         alert(`同時に検索できるのは最大10件までです。最初の10件のみ検索を実行します。`);
         keywords = keywords.slice(0, 10);
@@ -294,23 +396,24 @@ async function searchNDLMulti() {
     try {
         for (let i = 0; i < keywords.length; i++) {
             const kw = keywords[i];
-            
-            // Render detailed loading text per keyword
             els.loadingState.querySelector('p').textContent = `「${kw}」を検索中... (${i + 1}/${keywords.length}件目)`;
             
             try {
-                const xmlText = await fetchNDLRaw(kw);
-                if (xmlText) {
-                    STATE.multiResults[kw] = parseXmlItems(xmlText);
+                const responseData = await fetchNDLRaw(kw);
+                if (responseData && responseData.data) {
+                    if (responseData.format === 'json') {
+                        STATE.multiResults[kw] = parseJsonItems(responseData.data);
+                    } else {
+                        STATE.multiResults[kw] = parseXmlItems(responseData.data);
+                    }
                 } else {
                     STATE.multiResults[kw] = [];
                 }
             } catch (err) {
-                console.error(`Error searching for "${kw}":`, err);
-                STATE.multiResults[kw] = []; // Fail gracefully, keep tab empty
+                logDebug(`Error searching for "${kw}": ${err.message}`);
+                STATE.multiResults[kw] = [];
             }
             
-            // Introduce a 600ms delay between consecutive requests to prevent API rate limiting / DDoS
             if (i < keywords.length - 1) {
                 await delay(600);
             }
@@ -321,7 +424,8 @@ async function searchNDLMulti() {
         
     } catch (err) {
         console.error("NDL Multi-Checker Error:", err);
-        els.errorMessage.textContent = `エラーが発生しました: ${err.message}`;
+        els.errorMessage.textContent = `一括検索中にエラーが発生しました。`;
+        els.debugLog.textContent = debugLogs.join('\n');
         els.errorState.style.display = 'block';
     } finally {
         els.loadingState.style.display = 'none';
@@ -336,7 +440,6 @@ function renderMultiSearchTabs() {
     STATE.multiKeywords.forEach(kw => {
         const rawResults = STATE.multiResults[kw] || [];
         
-        // Calculate filtered/grouped counts for tab badges
         const tempFiltered = rawResults.filter(item => {
             if (item.isJournal && !els.chkJournal.checked) return false;
             if (!item.isJournal && !els.chkBook.checked) return false;
@@ -403,7 +506,6 @@ function groupIssues(resultsArray) {
     
     resultsArray.forEach(item => {
         if (item.isJournal) {
-            // Regex to isolate volume numbers, date stamps, and semicolon suffixes at end of title
             const match = item.title.match(/^(.*?)\s+([\d().・\-\/;:；：巻号年月?？]+)$/);
             let parentTitle = item.title;
             let issueName = '巻号情報なし';
@@ -604,7 +706,6 @@ function bindEvents() {
         els.formSingle.style.display = 'flex';
         els.formMulti.style.display = 'none';
         
-        // Reset multi state display
         els.multiResultsTabs.style.display = 'none';
         els.resultsMeta.style.display = 'none';
         els.resultsList.innerHTML = `
@@ -623,7 +724,6 @@ function bindEvents() {
         els.formMulti.style.display = 'flex';
         els.formSingle.style.display = 'none';
         
-        // Reset single state display
         els.multiResultsTabs.style.display = 'none';
         els.resultsMeta.style.display = 'none';
         els.resultsList.innerHTML = `
@@ -667,4 +767,69 @@ function bindEvents() {
 // Window Startup
 window.addEventListener('DOMContentLoaded', () => {
     bindEvents();
+    
+    // Set default personal proxy URL, or restore from localStorage if overridden
+    const defaultProxy = 'https://script.google.com/macros/s/AKfycbwnN5_AE6-ph1tiPdhUX9pdDGu9WJp8vArP5KqBhrBmeGsDtInfJNWgH55Tl7ySL4LvKA/exec';
+    const savedProxy = localStorage.getItem('ndl_checker_custom_proxy');
+    
+    if (els.inputCustomProxy) {
+        els.inputCustomProxy.value = savedProxy !== null ? savedProxy : defaultProxy;
+    }
+    
+    // Initialize simple login
+    initLogin();
 });
+
+// --- Obfuscated Password & Simple Login Pipeline ---
+
+// Obfuscated representation of password "mie" (each character XORed with 42)
+const OBFUSCATED_SECRET = [67, 75, 79]; 
+
+function checkPassword(input) {
+    if (input.length !== OBFUSCATED_SECRET.length) return false;
+    for (let i = 0; i < input.length; i++) {
+        if ((input.charCodeAt(i) ^ 0x2A) !== OBFUSCATED_SECRET[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function handleLogin() {
+    const inputVal = els.inputLoginPassword.value;
+    if (checkPassword(inputVal)) {
+        els.loginErrorMsg.textContent = '';
+        els.loginOverlay.classList.add('hidden');
+        sessionStorage.setItem('ndl_checker_logged_in', 'true');
+        
+        // Focus on search input for immediate query
+        setTimeout(() => {
+            if (els.inputSearch) els.inputSearch.focus();
+        }, 400);
+    } else {
+        els.loginErrorMsg.textContent = 'パスワードが正しくありません。';
+        els.inputLoginPassword.value = '';
+        els.inputLoginPassword.focus();
+    }
+}
+
+function initLogin() {
+    // Check session storage
+    if (sessionStorage.getItem('ndl_checker_logged_in') === 'true') {
+        els.loginOverlay.classList.add('hidden');
+        return;
+    }
+    
+    // Bind login event triggers
+    els.btnLoginSubmit.addEventListener('click', handleLogin);
+    els.inputLoginPassword.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleLogin();
+        }
+    });
+    
+    // Auto-focus on login input
+    setTimeout(() => {
+        if (els.inputLoginPassword) els.inputLoginPassword.focus();
+    }, 100);
+}

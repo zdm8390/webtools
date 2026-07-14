@@ -45,3 +45,56 @@
 * **行数制限（最大10件）**：一度に同時入力・検索できるキーワード数は最大10件に制限されています。10件を超えた場合は、最初の10件のみが実行対象となります。
 * **逐次実行とウェイト（遅延）の挿入**：複数のリクエストを並列で一気に送信するのではなく、1キーワードずつ順番に処理を行い、各APIリクエストの間に**「約0.6秒（600ms）のウェイト（待機時間）」**を自動で挿入しています。
 * 連続して一括検索を行う場合は、過剰な負荷を避けるため、一定の間隔をあけてご利用いただきますようご協力をお願いいたします。
+
+---
+
+## 6. カスタムCORSプロキシ（Google Apps Script）の設定方法
+国会図書館（NDL）本体のAPIはブラウザからの直接アクセス（CORS）を拒否しているため、外部のプロキシサーバーを経由する必要があります。しかし、パブリックな無料プロキシ（Alloriginsなど）は海外IPからのアクセスのため、NDL側のセキュリティファイアウォール（WAF）にブロックされてタイムアウトや接続エラー（403/408）になりがちです。
+
+本ツールでは、自分専用の **Google Apps Script (GAS) CORSプロキシ** を設置して利用することができます。Googleの安定した日本国内サーバーを経由するため、NDLにブロックされることなく安全・爆速（0.1秒以下）で通信可能です。
+
+### 🛠️ GASプロキシの設置手順（所要時間3分）
+
+1. **Google Apps Scriptエディタを開く**
+   * [Google ドライブ](https://drive.google.com/) にアクセスし、左上の「新規」 ＞ 「その他」 ＞ 「Google Apps Script」 をクリックします。
+   * プロジェクト名（画面左上）を「NDL-CORS-Proxy」など分かりやすい名前に変更します。
+
+2. **コードを貼り付ける**
+   * 最初から入っている `myFunction` の記述をすべて消去し、以下のコードをそのままコピー＆ペーストします。
+
+   ```javascript
+   function doGet(e) {
+     var targetUrl = e.parameter.url;
+     if (!targetUrl) {
+       return ContentService.createTextOutput("Error: Missing url parameter").setMimeType(ContentService.MimeType.TEXT);
+     }
+     try {
+       // 指定されたNDLのURLにアクセスしてデータを取得
+       var response = UrlFetchApp.fetch(targetUrl, { muteHttpExceptions: true });
+       var text = response.getContentText("UTF-8");
+       
+       // CORS（ブラウザ直接アクセス）を許可するヘッダーを付与して返す
+       return ContentService.createTextOutput(text)
+         .setMimeType(ContentService.MimeType.TEXT)
+         .setHeader("Access-Control-Allow-Origin", "*");
+     } catch(err) {
+       return ContentService.createTextOutput("Error: " + err.toString())
+         .setMimeType(ContentService.MimeType.TEXT)
+         .setHeader("Access-Control-Allow-Origin", "*");
+     }
+   }
+   ```
+
+3. **ウェブアプリとしてデプロイする**
+   * 画面右上の青い「**デプロイ**」ボタン ＞ 「**新しいデプロイ**」 をクリックします。
+   * 左上の歯車アイコン（種類の選択）をクリックし、「**ウェブアプリ**」 を選択します。
+   * 設定項目を以下のように指定します：
+     * **次のユーザーとして実行**: `自分`
+     * **アクセスできるユーザー**: `全員`
+   * 下部の「**デプロイ**」ボタンをクリックします。
+   * 必要に応じて「アクセスを承認」を求められた場合は、アカウントを選択して許可してください。
+
+4. **URLのコピーとツールへの設定**
+   * デプロイ完了画面に表示される「**ウェブアプリのURL**」（`https://script.google.com/macros/s/xxxx/exec`）をコピーします。
+   * 本ツールの画面上部にある「**カスタムプロキシ**」入力欄に貼り付けます。
+   * ※入力したURLはブラウザ（localStorage）に自動保存され、次回起動時も自動的にセットされます。

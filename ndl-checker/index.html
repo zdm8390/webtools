@@ -15,6 +15,19 @@
 </head>
 <body>
 
+    <!-- Simple Login Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-box">
+            <div class="login-logo">🔒 NDL公開状況チェッカー</div>
+            <p class="login-instruction">このアプリを利用するにはパスワードを入力してください。</p>
+            <div class="login-input-group">
+                <input type="password" id="input-login-password" placeholder="パスワードを入力してください..." autofocus autocomplete="current-password">
+                <button id="btn-login-submit">ログイン</button>
+            </div>
+            <div id="login-error-msg" class="login-error-msg"></div>
+        </div>
+    </div>
+
     <div class="app-container">
         <!-- Header -->
         <header>
@@ -84,6 +97,19 @@
                         <span>ネット公開のみ</span>
                     </label>
                 </div>
+
+                <div class="filter-group">
+                    <span class="filter-label">接続:</span>
+                    <label class="checkbox-label" title="Chrome拡張機能等でCORS制限を解除している場合、プロキシを通さず直接爆速で接続できます">
+                        <input type="checkbox" id="chk-direct-connect">
+                        <span>プロキシなし(要拡張機能)</span>
+                    </label>
+                </div>
+
+                <div class="filter-group custom-proxy-group">
+                    <span class="filter-label">カスタムプロキシ:</span>
+                    <input type="text" id="input-custom-proxy" placeholder="Google Apps Script(GAS)等のURLを入力..." autocomplete="off">
+                </div>
             </div>
         </section>
 
@@ -115,8 +141,22 @@
         <!-- Error State -->
         <div class="error-state" id="error-state" style="display: none;">
             <div class="error-icon">⚠️</div>
-            <h3>データの取得に失敗しました</h3>
-            <p id="error-message">接続タイムアウトか、CORSプロキシの不調の可能性があります。時間をおいて再度お試しください。</p>
+            <h3>接続エラーが発生しました</h3>
+            <p id="error-message">CORSプロキシの接続不良やタイムアウトの可能性があります。</p>
+            <div class="error-advice">
+                <h4>💡 解決・回避方法</h4>
+                <ul>
+                    <li><strong>少し時間をおいて再度お試しください</strong>: 外部プロキシの一時的な高負荷や、国会図書館側の一時的なレートリミットの可能性があります。</li>
+                    <li><strong>「プロキシなし」モードの使用 (推奨・最も確実)</strong>: 
+                        ブラウザにCORS解除用の拡張機能（例：「<strong>Allow CORS: Access-Control-Allow-Origin</strong>」など）をインストールして有効化し、上部の「<strong>プロキシなし(要拡張機能)</strong>」にチェックを入れて再度検索してください。
+                        中継サーバーを一切挟まず、日本国内の回線から直接NDLに通信するため、<strong>制限を回避して一瞬で確実に検索できるようになります</strong>。
+                    </li>
+                </ul>
+            </div>
+            <div class="debug-log-container">
+                <h4>📋 詳細デバッグログ:</h4>
+                <pre id="debug-log"></pre>
+            </div>
         </div>
 
         <!-- Multiple Search Keyword Tabs -->

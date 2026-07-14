@@ -819,3 +819,197 @@ footer {
     padding: 2px 6px;
     min-width: 20px;
 }
+
+/* Error Advice & Debug Styling */
+.error-advice {
+    text-align: left;
+    margin: 20px 0;
+    padding: 16px;
+    background: #ffffff;
+    border: 1px solid #fecdd3;
+    border-radius: 10px;
+}
+
+.error-advice h4 {
+    font-size: 0.95rem;
+    color: #9f1239;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.error-advice ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.error-advice li {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 8px;
+    color: #4b5563;
+}
+
+.debug-log-container {
+    text-align: left;
+    margin-top: 16px;
+    border-top: 1px dashed #fecdd3;
+    padding-top: 14px;
+}
+
+.debug-log-container h4 {
+    font-size: 0.85rem;
+    color: #9f1239;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.debug-log-container pre {
+    background: #1e293b;
+    color: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    overflow-x: auto;
+    max-height: 150px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Custom Proxy Input Style */
+.custom-proxy-group {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#input-custom-proxy {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    outline: none;
+    transition: all 0.3s;
+}
+
+#input-custom-proxy:focus {
+    border-color: var(--color-primary-light);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+}
+
+/* Login Overlay Styles */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.4s ease, visibility 0.4s;
+    visibility: visible;
+}
+
+.login-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.login-box {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transform: scale(1);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-overlay.hidden .login-box {
+    transform: scale(0.92);
+}
+
+.login-logo {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+}
+
+.login-instruction {
+    font-size: 0.88rem;
+    color: #64748b;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.login-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#input-login-password {
+    padding: 12px 16px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s;
+    text-align: center;
+    background: #f8fafc;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+}
+
+#input-login-password:focus {
+    border-color: var(--color-primary-light);
+    background: #ffffff;
+    box-shadow: 0 0 0 3.5px rgba(29, 78, 216, 0.1);
+}
+
+#btn-login-submit {
+    padding: 12px;
+    background: var(--color-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#btn-login-submit:hover {
+    background: var(--color-primary-light);
+    transform: translateY(-1px);
+}
+
+#btn-login-submit:active {
+    transform: translateY(0);
+}
+
+.login-error-msg {
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 14px;
+    min-height: 1.2em;
+    font-weight: 600;
+}

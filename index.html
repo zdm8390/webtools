@@ -3,29 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="zdm8390/webtools - Web便利ツールポータル。不穏空気検知システム、クレイジーコミット生成、チーム戦分けツールなどのダッシュボード。" />
+    <meta name="description" content="zdm8390/webtools - Web便利ツールポータル。白ベースのスタイリッシュなダッシュボード。" />
     <title>Webtools Portal | zdm8390</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
     <style>
-        /* Modern Reset and Design Tokens */
+        /* Modern Reset and Design Tokens (Premium Light Theme) */
         :root {
-            --bg-color: #06070a;
-            --text-color: #f1f5f9;
-            --text-muted: #94a3b8;
-            --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --bg-color: #f8fafc; /* Ultra-light slate blue/gray */
+            --text-color: #0f172a; /* Dark slate blue */
+            --text-muted: #475569; /* Slate gray */
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-border: rgba(226, 232, 240, 0.8);
+            --font-sans: 'Outfit', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --font-mono: 'Share Tech Mono', monospace;
             
-            --color-ccg: #ec4899;
-            --color-chime: #06b6d4;
-            --color-teams: #6366f1;
-            --color-cocoron: #fca5a5;
-            --color-sambot: #ff4757;
-            --color-ndl: #1e3a8a;
+            --color-ccg: #db2777; /* Deep pink */
+            --color-chime: #0891b2; /* Deep cyan */
+            --color-teams: #4f46e5; /* Indigo */
+            --color-cocoron: #f87171; /* Pastel red */
+            --color-sambot: #ef4444; /* Vivid red */
+            --color-ndl: #1e3a8a; /* Deep Navy */
         }
 
         * {
@@ -45,42 +47,42 @@
             position: relative;
         }
 
-        /* Ambient Glowing Blobs */
+        /* Ambient Pastel Aurora Blobs (Light Mode) */
         .ambient-blob {
             position: absolute;
             border-radius: 50%;
-            filter: blur(150px);
+            filter: blur(120px);
             z-index: 1;
             pointer-events: none;
-            opacity: 0.12;
-            animation: float 20s infinite alternate ease-in-out;
+            opacity: 0.35;
+            animation: float 25s infinite alternate ease-in-out;
         }
 
         .blob-1 {
-            background-color: var(--color-ccg);
-            width: 450px;
-            height: 450px;
+            background-color: #fae8ff; /* Soft purple */
+            width: 500px;
+            height: 500px;
             top: -10%;
-            left: 10%;
+            left: 5%;
         }
 
         .blob-2 {
-            background-color: var(--color-chime);
-            width: 500px;
-            height: 500px;
+            background-color: #e0f2fe; /* Soft cyan */
+            width: 600px;
+            height: 600px;
             bottom: 5%;
-            right: 15%;
-            animation-delay: -5s;
+            right: 10%;
+            animation-delay: -6s;
         }
 
         .blob-3 {
-            background-color: var(--color-teams);
-            width: 400px;
-            height: 400px;
-            top: 40%;
-            left: 50%;
+            background-color: #ffe4e6; /* Soft rose */
+            width: 450px;
+            height: 450px;
+            top: 35%;
+            left: 45%;
             transform: translate(-50%, -50%);
-            animation-delay: -10s;
+            animation-delay: -12s;
         }
 
         @keyframes float {
@@ -88,30 +90,24 @@
                 transform: translate(0, 0) scale(1);
             }
             100% {
-                transform: translate(80px, 50px) scale(1.15);
+                transform: translate(60px, 40px) scale(1.1);
             }
         }
 
-        /* Scanline scan effect */
-        .scanlines {
+        /* Subtle diagonal grid pattern overlay */
+        .grid-pattern {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(
-                rgba(18, 16, 16, 0) 50%, 
-                rgba(0, 0, 0, 0.25) 50%
-            ), linear-gradient(
-                90deg,
-                rgba(255, 0, 0, 0.06),
-                rgba(0, 255, 0, 0.02),
-                rgba(0, 0, 255, 0.06)
-            );
-            background-size: 100% 4px, 6px 100%;
+            background-image: 
+                radial-gradient(rgba(148, 163, 184, 0.05) 1.5px, transparent 1.5px), 
+                radial-gradient(rgba(148, 163, 184, 0.05) 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
             z-index: 2;
             pointer-events: none;
-            opacity: 0.45;
         }
 
         /* Main Container */
@@ -119,7 +115,7 @@
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 40px 24px;
+            padding: 50px 24px;
             z-index: 10;
             flex: 1;
             display: flex;
@@ -130,7 +126,7 @@
         /* Header Styles */
         header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 50px;
         }
 
         header .repo-badge {
@@ -139,59 +135,120 @@
             gap: 8px;
             padding: 6px 14px;
             border-radius: 30px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(226, 232, 240, 0.9);
             font-family: var(--font-mono);
             font-size: 0.75rem;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.12em;
             color: var(--text-muted);
             text-transform: uppercase;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 6px -1px rgba(148, 163, 184, 0.05);
         }
 
         header h1 {
-            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-size: clamp(2.3rem, 5.5vw, 3.6rem);
             font-weight: 800;
-            letter-spacing: -0.04em;
-            background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #1e3a8a 20%, #4f46e5 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 16px;
         }
 
         header p {
-            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            font-size: clamp(0.92rem, 1.8vw, 1.1rem);
             color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto;
+            max-width: 620px;
+            margin: 0 auto 6px auto;
             line-height: 1.6;
+        }
+
+        /* Notice Board Card */
+        .info-board {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.08);
+            line-height: 1.5;
+        }
+
+        .info-board-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
         }
 
         /* Portal Dashboard Grid */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
             gap: 28px;
             margin-bottom: 40px;
         }
 
-        /* Portal Card Styles */
-        .portal-card {
-            background: rgba(10, 11, 18, 0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 36px 30px;
+        /* Card Wrapper (Allows absolute positioning of Notice badge) */
+        .card-wrapper {
+            position: relative;
             display: flex;
             flex-direction: column;
-            justify-content: justify-between;
+        }
+
+        /* Custom Notice Badge */
+        .notice-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 30;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4.5px 10px;
+            border-radius: 20px;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 1);
+            font-family: var(--font-sans);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(148, 163, 184, 0.08);
+            transition: all 0.25s ease;
+        }
+
+        .notice-badge:hover {
+            color: var(--theme-color);
+            border-color: var(--theme-color);
+            background: #ffffff;
+            transform: translateY(-1.5px);
+            box-shadow: 0 4px 8px rgba(148, 163, 184, 0.15);
+        }
+
+        /* Portal Card Styles (Light Glassmorphism) */
+        .portal-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 34px 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             position: relative;
             overflow: hidden;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             text-decoration: none;
             color: var(--text-color);
-            box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px -15px rgba(148, 163, 184, 0.2);
+            flex: 1;
         }
 
         .portal-card::before {
@@ -200,37 +257,37 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 3px;
-            background: var(--theme-color, #fff);
-            opacity: 0.7;
-            transform: scaleX(0.4);
+            height: 3.5px;
+            background: var(--theme-color, #4f46e5);
+            opacity: 0.8;
+            transform: scaleX(0.2);
             transform-origin: left;
-            transition: transform 0.4s ease;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .portal-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-6px);
+            border-color: var(--theme-color);
             box-shadow: 
-                0 20px 40px -15px rgba(0, 0, 0, 0.5),
-                0 0 25px -5px var(--glow-color);
+                0 20px 40px -15px rgba(148, 163, 184, 0.35),
+                0 0 20px -2px var(--glow-color);
         }
 
         .portal-card:hover::before {
             transform: scaleX(1);
         }
 
-        /* Card Content Layout */
+        /* Card Header */
         .card-header {
             display: flex;
-            justify-content: justify-between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
         }
 
         .icon-container {
-            width: 54px;
-            height: 54px;
+            width: 50px;
+            height: 50px;
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -241,37 +298,41 @@
         }
 
         .portal-card:hover .icon-container {
-            transform: rotate(-5deg) scale(1.08);
+            transform: rotate(-4deg) scale(1.06);
         }
 
         .icon-container svg {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             color: var(--theme-color);
         }
 
         .status-badge {
             font-family: var(--font-mono);
             font-size: 0.65rem;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             color: var(--theme-color);
             background: var(--icon-bg);
             border: 1px solid var(--icon-border);
             padding: 4px 10px;
             border-radius: 6px;
             text-transform: uppercase;
+            font-weight: 700;
+            margin-right: 75px; /* Prevent overlap with Notice badge */
         }
 
+        /* Card Body */
         .card-body {
             flex: 1;
-            margin-bottom: 30px;
+            margin-bottom: 26px;
         }
 
         .card-body h2 {
-            font-size: 1.45rem;
+            font-size: 1.38rem;
             font-weight: 700;
             margin-bottom: 12px;
             letter-spacing: -0.02em;
+            color: #1e293b;
             transition: color 0.3s ease;
         }
 
@@ -281,22 +342,27 @@
 
         .card-body p {
             color: var(--text-muted);
-            font-size: 0.92rem;
+            font-size: 0.9rem;
             line-height: 1.6;
         }
 
-        /* Launch Button Indicator inside Card */
+        /* Launch Indicator */
         .launch-indicator {
             display: inline-flex;
             align-items: center;
             gap: 10px;
             font-family: var(--font-mono);
             font-size: 0.78rem;
-            letter-spacing: 0.15em;
-            font-weight: 600;
-            color: var(--text-color);
+            letter-spacing: 0.12em;
+            font-weight: 700;
+            color: var(--text-muted);
             margin-top: auto;
             align-self: flex-start;
+            transition: color 0.3s;
+        }
+
+        .portal-card:hover .launch-indicator {
+            color: var(--theme-color);
         }
 
         .launch-indicator svg {
@@ -306,19 +372,19 @@
         }
 
         .portal-card:hover .launch-indicator svg {
-            transform: translateX(5px);
+            transform: translateX(4px);
         }
 
-        /* Footer */
+        /* Footer Styles */
         footer {
             text-align: center;
-            padding: 40px 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 45px 24px;
+            border-top: 1px solid rgba(226, 232, 240, 0.6);
             z-index: 10;
             font-family: var(--font-mono);
             font-size: 0.7rem;
             color: var(--text-muted);
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -326,22 +392,23 @@
         }
 
         footer a {
-            color: var(--text-color);
+            color: var(--text-muted);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             padding: 6px 12px;
             border-radius: 6px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
             transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(148, 163, 184, 0.03);
         }
 
         footer a:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            background: #f8fafc;
+            border-color: rgba(203, 213, 225, 0.8);
         }
 
         footer a svg {
@@ -349,54 +416,54 @@
             height: 14px;
         }
 
-        /* Individual Themes */
+        /* Individual Card Themes (Light-mode adjustments) */
         .theme-ccg {
             --theme-color: var(--color-ccg);
-            --glow-color: rgba(236, 72, 153, 0.15);
-            --icon-bg: rgba(236, 72, 153, 0.06);
-            --icon-border: rgba(236, 72, 153, 0.2);
+            --glow-color: rgba(219, 39, 119, 0.06);
+            --icon-bg: rgba(219, 39, 119, 0.04);
+            --icon-border: rgba(219, 39, 119, 0.15);
         }
 
         .theme-chime {
             --theme-color: var(--color-chime);
-            --glow-color: rgba(6, 182, 212, 0.15);
-            --icon-bg: rgba(6, 182, 212, 0.06);
-            --icon-border: rgba(6, 182, 212, 0.2);
+            --glow-color: rgba(8, 145, 178, 0.06);
+            --icon-bg: rgba(8, 145, 178, 0.04);
+            --icon-border: rgba(8, 145, 178, 0.15);
         }
 
         .theme-teams {
             --theme-color: var(--color-teams);
-            --glow-color: rgba(99, 102, 241, 0.15);
-            --icon-bg: rgba(99, 102, 241, 0.06);
-            --icon-border: rgba(99, 102, 241, 0.2);
+            --glow-color: rgba(79, 70, 229, 0.06);
+            --icon-bg: rgba(79, 70, 229, 0.04);
+            --icon-border: rgba(79, 70, 229, 0.15);
         }
 
         .theme-cocoron {
             --theme-color: var(--color-cocoron);
-            --glow-color: rgba(252, 165, 165, 0.15);
-            --icon-bg: rgba(252, 165, 165, 0.06);
-            --icon-border: rgba(252, 165, 165, 0.2);
+            --glow-color: rgba(248, 113, 113, 0.06);
+            --icon-bg: rgba(248, 113, 113, 0.04);
+            --icon-border: rgba(248, 113, 113, 0.15);
         }
 
         .theme-sambot {
             --theme-color: var(--color-sambot);
-            --glow-color: rgba(255, 71, 87, 0.15);
-            --icon-bg: rgba(255, 71, 87, 0.06);
-            --icon-border: rgba(255, 71, 87, 0.2);
+            --glow-color: rgba(239, 68, 68, 0.06);
+            --icon-bg: rgba(239, 68, 68, 0.04);
+            --icon-border: rgba(239, 68, 68, 0.15);
         }
 
         .theme-ndl {
             --theme-color: var(--color-ndl);
-            --glow-color: rgba(30, 58, 138, 0.15);
-            --icon-bg: rgba(30, 58, 138, 0.06);
-            --icon-border: rgba(30, 58, 138, 0.2);
+            --glow-color: rgba(30, 58, 138, 0.06);
+            --icon-bg: rgba(30, 58, 138, 0.04);
+            --icon-border: rgba(30, 58, 138, 0.15);
         }
     </style>
 </head>
 <body>
 
     <!-- Visual Overlays -->
-    <div class="scanlines"></div>
+    <div class="grid-pattern"></div>
     <div class="ambient-blob blob-1"></div>
     <div class="ambient-blob blob-2"></div>
     <div class="ambient-blob blob-3"></div>
@@ -404,172 +471,209 @@
     <div class="container">
         <header>
             <div class="repo-badge">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -2px; margin-right: 4px;"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -2px; margin-right: 4px;"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
                 zdm8390 / webtools
             </div>
             <h1>Webtools Dashboard</h1>
-            <p>暇つぶしにつくったのWebツール・コレクション。</p>
-            <p>開発効率化、不穏検知、チーム分けなど不毛なツールのエントランス。</p>
-            <p>問い合わせ・不具合はspeed.and.knives🍖gmailまで。</p>
+            <p>日常開発に少しのユーモアと便利さを添える、Web便利ツールポータル。</p>
+            <p>不具合連絡・問い合わせはspeed.and.knives🍖gmailまで</p>
         </header>
+
+        <!-- Dynamic Overall Info Board explaining Notice.md links -->
+        <div class="info-board">
+            <span class="info-board-icon">💡</span>
+            <div>
+                各アプリケーションの詳細な動作仕様、利用手順、およびAPIキー等の事前設定方法**については、各カードの右上に配置されている「📖 Notice」リンクからドキュメント（MDファイル）をいつでも閲覧できます。
+            </div>
+        </div>
 
         <nav class="dashboard-grid" aria-label="便利ツールポータル">
             <!-- Card 1: CrazyCommit.js -->
-            <a href="./CCG/" class="portal-card theme-ccg">
-                <div class="card-header">
-                    <div class="icon-container" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="4 17 10 11 4 5"></polyline>
-                            <line x1="12" y1="19" x2="20" y2="19"></line>
+            <div class="card-wrapper theme-ccg">
+                <a href="./CCG/NOTICE.md" class="notice-badge" target="_blank" title="CrazyCommit.jsの仕様・注意事項を読む">
+                    📖 Notice
+                </a>
+                <a href="./CCG/" class="portal-card">
+                    <div class="card-header">
+                        <div class="icon-container" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="4 17 10 11 4 5"></polyline>
+                                <line x1="12" y1="19" x2="20" y2="19"></line>
+                            </svg>
+                        </div>
+                        <span class="status-badge">React + AI</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>CrazyCommit.js</h2>
+                        <p>真面目なコミットメッセージを、ネットミーム・村上春樹・パプリカ・サンボマスターなどのクレイジーなテキストに面白おかしく変換するコミットジェネレーター。</p>
+                    </div>
+                    <div class="launch-indicator">
+                        LAUNCH TOOL
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
                         </svg>
                     </div>
-                    <span class="status-badge">React + AI</span>
-                </div>
-                <div class="card-body">
-                    <h2>CrazyCommit.js</h2>
-                    <p>真面目なコミットメッセージを、ネットミーム・村上春樹・パプリカ・サンボマスターなどのクレイジーなテキストに面白おかしく変換する、ユーモア溢れるコミットメッセージジェネレーター。</p>
-                </div>
-                <div class="launch-indicator">
-                    LAUNCH TOOL
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </div>
-            </a>
+                </a>
+            </div>
 
             <!-- Card 2: Chime-Out Radar -->
-            <a href="./ChimeOut/" class="portal-card theme-chime">
-                <div class="card-header">
-                    <div class="icon-container" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <circle cx="12" cy="12" r="6"></circle>
-                            <circle cx="12" cy="12" r="2"></circle>
+            <div class="card-wrapper theme-chime">
+                <a href="./ChimeOut/NOTICE.md" class="notice-badge" target="_blank" title="Chime-Out Radarの仕様・注意事項を読む">
+                    📖 Notice
+                </a>
+                <a href="./ChimeOut/" class="portal-card">
+                    <div class="card-header">
+                        <div class="icon-container" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="6"></circle>
+                                <circle cx="12" cy="12" r="2"></circle>
+                            </svg>
+                        </div>
+                        <span class="status-badge">Vite + React</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>Chime-Out Radar</h2>
+                        <p>不穏な空気や定時退勤の気配を警告アラートでお知らせする、ユーモラスな不穏検知システム。グラフィカルなインジケーターで退勤タイミングを支援します。</p>
+                    </div>
+                    <div class="launch-indicator">
+                        LAUNCH TOOL
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
                         </svg>
                     </div>
-                    <span class="status-badge">Vite + React</span>
-                </div>
-                <div class="card-body">
-                    <h2>Chime-Out Radar</h2>
-                    <p>不穏な空気や定時退勤の気配を警告で知らせる、ユーモラスな不穏空気検知システム。チャイム音やグラフィカルなインジケーターで退勤をさりげなくサポートします。</p>
-                </div>
-                <div class="launch-indicator">
-                    LAUNCH TOOL
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </div>
-            </a>
+                </a>
+            </div>
 
             <!-- Card 3: チーム戦メイカー -->
-            <a href="./teams/" class="portal-card theme-teams">
-                <div class="card-header">
-                    <div class="icon-container" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            <div class="card-wrapper theme-teams">
+                <a href="./teams/NOTICE.md" class="notice-badge" target="_blank" title="チーム戦メイカーの仕様・注意事項を読む">
+                    📖 Notice
+                </a>
+                <a href="./teams/" class="portal-card">
+                    <div class="card-header">
+                        <div class="icon-container" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <span class="status-badge">Vanilla JS</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>チーム戦メイカー</h2>
+                        <p>メンバーの名前リストから、偏りなくランダムに公平なチーム切り分けを行うシャッフルツール。ゲームの編成やタスク割り振りに活用できます。</p>
+                    </div>
+                    <div class="launch-indicator">
+                        LAUNCH TOOL
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
                         </svg>
                     </div>
-                    <span class="status-badge">Vanilla JS</span>
-                </div>
-                <div class="card-body">
-                    <h2>チーム戦メイカー</h2>
-                    <p>メンバーの名前を入力し、公平かつランダムにチームを切り分け・シャッフルできるツール。ゲームのチーム分けやプロジェクトの編成などに幅広く活用できます。</p>
-                </div>
-                <div class="launch-indicator">
-                    LAUNCH TOOL
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </div>
-            </a>
+                </a>
+            </div>
 
             <!-- Card 4: ココロン -->
-            <a href="./cocoron/" class="portal-card theme-cocoron">
-                <div class="card-header">
-                    <div class="icon-container" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                            <circle cx="12" cy="11" r="3"></circle>
-                            <path d="M12 14c-2 0-3.5 1-3.5 1v.5h7v-.5s-1.5-1-3.5-1z"></path>
+            <div class="card-wrapper theme-cocoron">
+                <a href="./cocoron/NOTICE.md" class="notice-badge" target="_blank" title="ココロンの仕様・注意事項を読む">
+                    📖 Notice
+                </a>
+                <a href="./cocoron/" class="portal-card">
+                    <div class="card-header">
+                        <div class="icon-container" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                <circle cx="12" cy="11" r="3"></circle>
+                                <path d="M12 14c-2 0-3.5 1-3.5 1v.5h7v-.5s-1.5-1-3.5-1z"></path>
+                            </svg>
+                        </div>
+                        <span class="status-badge">Gemini + Synth</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>ココロン (Cocoron)</h2>
+                        <p>現代社会のストレスに寄り添う、全肯定型AIフレンド。悩みを優しく受け止め肯定します。雨音やたき火音などの癒やしBGM波形シンセサイザーも内蔵。</p>
+                    </div>
+                    <div class="launch-indicator">
+                        LAUNCH TOOL
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
                         </svg>
                     </div>
-                    <span class="status-badge">Gemini API + Web Audio</span>
-                </div>
-                <div class="card-body">
-                    <h2>ココロン (Cocoron)</h2>
-                    <p>現代社会のストレスに寄り添う、全肯定型AIフレンド。悩みを否定せず、共感し励ましてくれます。雨音やたき火音などの癒やしBGMシンセサイザーも搭載。</p>
-                </div>
-                <div class="launch-indicator">
-                    LAUNCH TOOL
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </div>
-            </a>
+                </a>
+            </div>
 
             <!-- Card 5: サンボット -->
-            <a href="./sambot/" class="portal-card theme-sambot">
-                <div class="card-header">
-                    <div class="icon-container" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 2v20"></path>
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            <div class="card-wrapper theme-sambot">
+                <a href="./sambot/NOTICE.md" class="notice-badge" target="_blank" title="サンボットの仕様・注意事項を読む">
+                    📖 Notice
+                </a>
+                <a href="./sambot/" class="portal-card">
+                    <div class="card-header">
+                        <div class="icon-container" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v20"></path>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                        </div>
+                        <span class="status-badge">Gemini + Distortion</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>サンボット (Sambot)</h2>
+                        <p>すべてを「愛とロックの叫び」で肯定するAI。サンボマスターのライブMC風の熱狂的パッションで、悩みを蹴散らし、全力で魂を揺さぶります。</p>
+                    </div>
+                    <div class="launch-indicator">
+                        LAUNCH TOOL
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
                         </svg>
                     </div>
-                    <span class="status-badge">Gemini API + Web Audio</span>
-                </div>
-                <div class="card-body">
-                    <h2>サンボット (Sambot)</h2>
-                    <p>すべてを「愛とロックの叫び」で全肯定するAI。サンボマスターのライブMC風の熱いパッションで、あなたの悩みや苦しみを全力で励まし、肯定してくれます。</p>
-                </div>
-                <div class="launch-indicator">
-                    LAUNCH TOOL
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </div>
-            </a>
+                </a>
+            </div>
 
             <!-- Card 6: NDL公開状況チェッカー -->
-            <a href="./ndl-checker/" class="portal-card theme-ndl">
-                <div class="card-header">
-                    <div class="icon-container" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            <div class="card-wrapper theme-ndl">
+                <a href="./ndl-checker/NOTICE.md" class="notice-badge" target="_blank" title="NDL公開状況チェッカーの仕様・注意事項を読む">
+                    📖 Notice
+                </a>
+                <a href="./ndl-checker/" class="portal-card">
+                    <div class="card-header">
+                        <div class="icon-container" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                        </div>
+                        <span class="status-badge">Japan Search API</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>NDL公開状況チェッカー</h2>
+                        <p>書籍・雑誌が「国立国会図書館デジタルコレクション」で電子化されているか、またその公開範囲（ネット公開・個人送信・館内限定）を即座に判定・確認します。</p>
+                    </div>
+                    <div class="launch-indicator">
+                        LAUNCH TOOL
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
                         </svg>
                     </div>
-                    <span class="status-badge">Vanilla JS + NDL Search API</span>
-                </div>
-                <div class="card-body">
-                    <h2>NDL公開状況チェッカー</h2>
-                    <p>書籍や雑誌が「国立国会図書館デジタルコレクション」で電子化されているか、またその公開範囲（インターネット公開・個人送信・館内限定）を判定するツール。雑誌の巻号ごとの詳細な電子化状況も一目で分かります。</p>
-                </div>
-                <div class="launch-indicator">
-                    LAUNCH TOOL
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </div>
-            </a>
+                </a>
+            </div>
         </nav>
     </div>
 
     <footer>
         <a href="https://github.com/zdm8390/webtools" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
             zdm8390/webtools GitHub Repository
         </a>
-        <div style="margin-top: 8px;">© 2026 WEBTOOLS PORTAL DIRECTORY</div>
+        <div style="margin-top: 10px;">© 2026 WEBTOOLS PORTAL DIRECTORY</div>
     </footer>
 
 </body>
