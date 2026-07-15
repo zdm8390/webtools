@@ -1,7 +1,7 @@
 // アプリケーションの状態管理
 const state = {
     results: [],       // 検索結果の全データ { ncid, status, title, creator, publisher, date, owner_count, owners, has_mie_univ, mie_opac_url, detail_url, message }
-    ncidList: [],      // 検索対象のNCIDリスト
+    ncidList: [],      // 検索対象 of NCIDリスト
     csvData: null,     // ロードされたCSVデータ（二次元配列）
     csvFileName: '',   // ロードされたCSVファイル名
     isRunning: false,  // 検索が実行中かどうか
@@ -10,8 +10,8 @@ const state = {
     currentIndex: 0    // 現在処理中のインデックス
 };
 
-// 一度の検索における最大件数制限
-const MAX_SEARCH_LIMIT = 200;
+// 一度の検索における最大件数制限 (設定画面で変更可能)
+let MAX_SEARCH_LIMIT = 200;
 
 // DOM要素の取得
 const dom = {
@@ -75,7 +75,12 @@ const dom = {
 
     // ツールチップ
     globalTooltip: document.getElementById('global-tooltip'),
-    tooltipList: document.getElementById('tooltip-list')
+    tooltipList: document.getElementById('tooltip-list'),
+
+    // 設定画面要素
+    settingMaxLimit: document.getElementById('setting-max-limit'),
+    btnRunDiagnostic: document.getElementById('btn-run-diagnostic'),
+    diagnosticStatus: document.getElementById('diagnostic-status')
 };
 
 // ----------------------------------------------------
@@ -92,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSearchControls();
     initTableFilters();
     initTooltipAndModal();
+    initSettings();
     
     // pywebviewのロード確認
     window.addEventListener('pywebviewready', () => {
@@ -156,6 +162,84 @@ function initTabs() {
             document.getElementById(tabId).classList.add('active');
         });
     });
+}
+
+// ----------------------------------------------------
+// 設定および診断ツール制御
+// ----------------------------------------------------
+function initSettings() {
+    // 上限件数の設定変更監視
+    if (dom.settingMaxLimit) {
+        dom.settingMaxLimit.addEventListener('change', (e) => {
+            let val = parseInt(e.target.value, 10);
+            if (isNaN(val) || val < 10) {
+                val = 10;
+                dom.settingMaxLimit.value = "10";
+            } else if (val > 1000) {
+                val = 1000;
+                dom.settingMaxLimit.value = "1000";
+            }
+            MAX_SEARCH_LIMIT = val;
+        });
+    }
+
+    // 接続診断の実行処理
+    if (dom.btnRunDiagnostic) {
+        dom.btnRunDiagnostic.addEventListener('click', async () => {
+            dom.btnRunDiagnostic.disabled = true;
+            dom.btnRunDiagnostic.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i><span>診断実行中...</span>';
+            lucide.createIcons();
+
+            dom.diagnosticStatus.classList.remove('hidden');
+            dom.diagnosticStatus.style.borderColor = 'var(--border-color)';
+            dom.diagnosticStatus.innerHTML = '<span style="color:var(--text-secondary);"><i data-lucide="info" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>診断テスト（DNS、プロキシ、ソケット通信、HTTP接続）を実行しています。しばらくお待ちください...</span>';
+            lucide.createIcons();
+
+            try {
+                let res;
+                if (state.apiReady) {
+                    // Python 診断メソッドの呼び出し
+                    res = await window.pywebview.api.run_network_diagnostic();
+                } else {
+                    // ダミー（ブラウザ開発用フォールバック）
+                    await new Promise(r => setTimeout(r, 1500));
+                    res = { 
+                        status: "success", 
+                        log_path: "C:\\Users\\hana\\Documents\\GitHub\\webtools\\cinii-checker\\cinii_checker_diagnostic.log", 
+                        message: "診断テストが完了しました。" 
+                    };
+                }
+
+                if (res.status === 'success') {
+                    dom.diagnosticStatus.style.borderColor = 'var(--success)';
+                    dom.diagnosticStatus.innerHTML = `
+                        <div style="color:var(--success);font-weight:bold;margin-bottom:6px;"><i data-lucide="check-circle" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>診断完了</div>
+                        <p style="margin-bottom:8px;">ネットワークの各診断テストを実行し、診断ログファイルを正常に出力しました。</p>
+                        <div style="background:#f1f5f9; padding:8px 12px; border-radius:6px; font-family:monospace; word-break:break-all; border:1px solid #cbd5e1; user-select:all;">
+                            ${escapeHtml(res.log_path)}
+                        </div>
+                        <p style="margin-top:8px; font-size:0.8rem; color:var(--text-secondary);">※タイムアウト問題の原因調査のため、上記のファイルを開発担当者に提供してください。</p>
+                    `;
+                } else {
+                    dom.diagnosticStatus.style.borderColor = 'var(--danger)';
+                    dom.diagnosticStatus.innerHTML = `
+                        <div style="color:var(--danger);font-weight:bold;margin-bottom:6px;"><i data-lucide="alert-triangle" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>エラー</div>
+                        <p>${escapeHtml(res.message)}</p>
+                    `;
+                }
+            } catch (err) {
+                dom.diagnosticStatus.style.borderColor = 'var(--danger)';
+                dom.diagnosticStatus.innerHTML = `
+                    <div style="color:var(--danger);font-weight:bold;margin-bottom:6px;"><i data-lucide="alert-triangle" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>診断システムエラー</div>
+                    <p>接続テスト実行中にシステムエラーが発生しました: ${escapeHtml(err.message)}</p>
+                `;
+            } finally {
+                dom.btnRunDiagnostic.disabled = false;
+                dom.btnRunDiagnostic.innerHTML = '<i data-lucide="activity"></i><span>接続テスト・診断レポートの出力</span>';
+                lucide.createIcons();
+            }
+        });
+    }
 }
 
 // ----------------------------------------------------
@@ -260,7 +344,6 @@ function initSearchControls() {
     dom.btnExportResults.addEventListener('click', exportCSV);
 }
 
-// 書誌IDの抽出とバリデーション・上限設定
 function getNcidsToSearch() {
     const activeTab = document.querySelector('.tab-button.active').getAttribute('data-tab');
     let ids = [];
@@ -282,13 +365,9 @@ function getNcidsToSearch() {
         }).filter(id => id.length > 0);
     }
 
-    // 重複の排除（効率化のため）
     ids = [...new Set(ids)];
-
-    // 記号などの余計な文字を除去
     ids = ids.map(id => id.replace(/["']/g, ''));
 
-    // 大量検索に関する制御：件数上限チェック
     if (ids.length > MAX_SEARCH_LIMIT) {
         alert(`一度に検索できる最大件数は ${MAX_SEARCH_LIMIT} 件に制限されています。\n入力された ${ids.length} 件のうち、最初の ${MAX_SEARCH_LIMIT} 件のみを検索します。`);
         ids = ids.slice(0, MAX_SEARCH_LIMIT);
@@ -297,9 +376,7 @@ function getNcidsToSearch() {
     return ids;
 }
 
-// NCID の簡易バリデーション (インジェクション対策および無駄なAPI通信の防止)
 function isValidNcid(ncid) {
-    // CiNiiのNCIDは通常、英数字（BA, BD, BC, AAなどから始まる8〜12桁の文字列）
     const ncidRegex = /^[A-Z0-9]{3,12}$/i;
     return ncidRegex.test(ncid);
 }
@@ -319,7 +396,6 @@ async function startSearch() {
     state.cancelRequested = false;
     state.currentIndex = 0;
 
-    // UI初期化
     dom.btnStartSearch.disabled = true;
     dom.btnCancelSearch.disabled = false;
     dom.btnExportResults.disabled = true;
@@ -331,7 +407,6 @@ async function startSearch() {
     updateStatsUI(0, 0, 0, 0, list.length);
     updateProgressUI(0, list.length, '処理を開始しています...');
 
-    // ウェイトの最低値を0.2秒に制限（CiNiiサーバーへの負荷低減）
     let delay = parseFloat(dom.requestDelay.value) * 1000;
     if (isNaN(delay) || delay < 200) {
         delay = 200;
@@ -351,7 +426,6 @@ async function startSearch() {
         
         let result;
 
-        // 入力値バリデーションチェック
         if (!isValidNcid(ncid)) {
             result = {
                 ncid: ncid,
@@ -360,13 +434,11 @@ async function startSearch() {
             };
         } else if (state.apiReady) {
             try {
-                // Python API呼び出し
                 result = await window.pywebview.api.check_ncid(ncid);
             } catch (err) {
                 result = { ncid, status: 'error', message: '通信処理でエラーが発生しました' };
             }
         } else {
-            // ダミーデータ (ブラウザ単体テスト用)
             result = getDummyData(ncid);
             await new Promise(r => setTimeout(r, 200)); 
         }
@@ -409,7 +481,6 @@ function updateProgressUI(current, total, message) {
     const percent = total > 0 ? Math.round((current / total) * 100) : 0;
     dom.progressBar.style.width = `${percent}%`;
     dom.progressPercent.textContent = `${percent}%`;
-    // メッセージもエスケープして表示
     dom.progressLabel.innerHTML = escapeHtml(message);
 }
 
@@ -440,7 +511,6 @@ function appendResultToTable(result, index) {
         statusBadge = `<span class="badge badge-danger">エラー</span>`;
     }
 
-    // セキュリティ: すべての表示テキストを HTML エスケープする
     const escTitle = escapeHtml(result.title);
     const escMsg = escapeHtml(result.message);
     const titleText = result.status === 'success' ? escTitle : `<span class="text-light">${escMsg || 'データなし'}</span>`;
@@ -451,11 +521,9 @@ function appendResultToTable(result, index) {
     const escDate = escapeHtml(result.date);
     const escNcid = escapeHtml(result.ncid);
     
-    // 三重大所蔵セルの組み立て
     let mieCell = '-';
     if (result.status === 'success') {
         if (result.has_mie_univ) {
-            // hrefはサニタイズされた文字列として組み立てる
             const escMieUrl = escapeHtml(result.mie_opac_url);
             mieCell = `<a href="${escMieUrl || '#'}" target="_blank" class="badge badge-success" style="text-decoration:none; display:inline-flex; align-items:center; gap:2px;"><i data-lucide="external-link" style="width:10px;height:10px;"></i>あり</a>`;
         } else {
@@ -538,7 +606,7 @@ function initTooltipAndModal() {
         const limitOwners = result.owners.slice(0, 3);
         limitOwners.forEach(owner => {
             const li = document.createElement('li');
-            li.textContent = owner.name || '不明な図書館'; // テキストコンテンツ代入のため安全
+            li.textContent = owner.name || '不明な図書館';
             dom.tooltipList.appendChild(li);
         });
 
@@ -612,7 +680,6 @@ function positionTooltip(e) {
 }
 
 function showDetailModal(result) {
-    // セキュリティ: 動的データの代入時は textContent を使用するか適切にエスケープする
     dom.mTitle.textContent = result.title || 'データなし';
     dom.mNcid.textContent = result.ncid;
     dom.mCreator.textContent = result.creator || '-';
@@ -620,7 +687,6 @@ function showDetailModal(result) {
     dom.mDate.textContent = result.date || '-';
     dom.mOwnerCount.textContent = `${result.owner_count || 0} 館`;
 
-    // 三重大所蔵ステータス
     if (result.status === 'success') {
         if (result.has_mie_univ) {
             const escMieUrl = escapeHtml(result.mie_opac_url);
@@ -659,7 +725,6 @@ function showDetailModal(result) {
     
     lucide.createIcons();
 
-    // CiNiiリンク
     const escDetailUrl = escapeHtml(result.detail_url);
     dom.btnCiniiLink.href = escDetailUrl || `https://ci.nii.ac.jp/ncid/${escapeHtml(result.ncid)}`;
     dom.detailModal.classList.add('active');

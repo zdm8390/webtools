@@ -42,7 +42,7 @@
             </nav>
             
             <div class="sidebar-footer">
-                <p>v1.1.0</p>
+                <p>v1.2.0</p>
                 <p>CiNii Books API 連携</p>
             </div>
         </aside>
@@ -214,8 +214,8 @@
                     <div class="card-header">
                         <h3>履歴一覧</h3>
                     </div>
-                    <div class="card-body">
-                        <p class="empty-text">履歴機能は現在準備中です。</p>
+                    <div class="card-body" style="padding: 20px;">
+                        <p class="empty-text" style="color: var(--text-secondary); font-size: 0.9rem;">履歴機能は現在準備中です。</p>
                     </div>
                 </div>
             </section>
@@ -223,15 +223,46 @@
             <!-- 設定画面 -->
             <section id="section-settings" class="content-section">
                 <header class="section-header">
-                    <h2>アプリケーション設定</h2>
-                    <p>アプリの動作設定を変更します。</p>
+                    <h2>設定とツール</h2>
+                    <p>アプリケーションの環境確認やネットワーク診断を行います。</p>
                 </header>
-                <div class="card">
-                    <div class="card-header">
-                        <h3>一般設定</h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <!-- 一般設定カード -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i data-lucide="sliders" class="card-icon"></i>
+                            <h3>一般設定</h3>
+                        </div>
+                        <div class="card-body" style="padding: 20px;">
+                            <div class="setting-item" style="margin-bottom: 16px;">
+                                <label for="setting-max-limit" style="font-weight:600; display:block; margin-bottom:4px; font-size:0.9rem;">検索上限件数</label>
+                                <input type="number" id="setting-max-limit" value="200" min="10" max="1000" style="padding:6px 10px; border:1px solid var(--border-color); border-radius:6px; width:120px; outline:none; font-size:0.9rem;">
+                                <span class="help-text" style="display:block; margin-top:4px; font-size:0.75rem; color:var(--text-light);">一度に検索できる最大件数を指定します（推奨: 200件）</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <p class="empty-text">設定機能は現在準備中です。</p>
+                    
+                    <!-- ネットワーク診断カード -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i data-lucide="shield-alert" class="card-icon"></i>
+                            <h3>ネットワーク接続診断</h3>
+                        </div>
+                        <div class="card-body" style="padding: 20px;">
+                            <p style="font-size:0.9rem; margin-bottom:16px; color:var(--text-secondary); line-height: 1.6;">
+                                有線LANなど一部のネットワーク環境において、CiNii Booksへの接続が「接続タイムアウト」や「プロキシエラー」になる場合、環境変数、DNSの設定、またはネットワーク上のファイアウォール制限が原因の可能性があります。<br>
+                                以下のボタンを押すと接続テストを実行し、エラーの原因調査に必要な詳細ログファイル（<code>cinii_checker_diagnostic.log</code>）をアプリの実行フォルダ内に生成します。
+                            </p>
+                            <button id="btn-run-diagnostic" class="btn btn-primary">
+                                <i data-lucide="activity"></i>
+                                <span>接続テスト・診断レポートの出力</span>
+                            </button>
+                            
+                            <div id="diagnostic-status" class="hidden" style="margin-top: 16px; padding: 14px; border-radius:8px; font-size:0.85rem; line-height: 1.5; border: 1px solid var(--border-color); background-color: var(--bg-primary);">
+                                <!-- 診断状況・結果 -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

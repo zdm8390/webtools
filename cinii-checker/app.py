@@ -4,12 +4,13 @@ import sys
 import os
 import traceback
 import urllib3
+import socket
+import urllib.request
+import platform
 
 # SSL証明書エラーの警告を抑制
 # 学内・社内等のプロキシ環境下（SSL復号化プロキシ）でSSL証明書検証エラーになる現象に対応するため、
 # やむを得ず verify=False でリクエストを処理しています。
-# 一般公開される本番環境では、不正な中間者攻撃を防ぐために verify=True (SSL検証有効) が推奨されますが、
-# クライアント環境の多様なネットワーク形態下での動作安定性を最優先するためのトレードオフ設計です。
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Api:
@@ -27,8 +28,6 @@ class Api:
         if not ncid:
             return {"ncid": ncid, "status": "error", "message": "書誌IDが空です"}
         
-        # 安全性: URLに予期せぬインジェクションが発生しないようIDをサニタイズ（念のため英数字に制限）
-        # フロントエンド側でもバリデーションしていますが、バックエンド側でも検証します
         if not ncid.isalnum():
             return {"ncid": ncid, "status": "error", "message": "不正な書誌ID形式です"}
             
@@ -39,7 +38,6 @@ class Api:
         }
 
         try:
-            # OS/環境変数プロキシを自動利用し、timeoutは20秒、証明書検証はスルー
             response = requests.get(url, headers=headers, verify=False, timeout=20)
             
             if response.status_code == 404:
@@ -129,9 +127,6 @@ class Api:
             if isinstance(owners_raw, dict):
                 owners_raw = [owners_raw]
             
-            # 三重大学の所蔵判定用フラグとOPACリンク
-            # 三重大学附属図書館: FA002564
-            # 三重大学医学部図書館: FA002575
             has_mie_univ = False
             mie_opac_url = ""
 
@@ -182,14 +177,112 @@ class Api:
                 "message": "接続エラー（通信環境を確認してください）"
             }
         except Exception as e:
-            # セキュリティ: 内部システム情報（ファイルパス等）がユーザーに漏洩しないよう
-            # 詳細な例外トレースはコンソール（標準エラー）にのみ出力し、フロントには汎用エラーを返す
             print(f"Error checking NCID {ncid}:", file=sys.stderr)
             traceback.print_exc()
             return {
                 "ncid": ncid,
                 "status": "error",
                 "message": "情報の取得に失敗しました"
+            }
+
+    def run_network_diagnostic(self):
+        """
+        有線LAN環境などで発生するタイムアウト等の接続エラーの原因を特定するための
+        診断ログファイルを生成し、結果を返します。
+        """
+        log_path = os.path.join(os.path.abspath("."), "cinii_checker_diagnostic.log")
+        
+        try:
+            with open(log_path, "w", encoding="utf-8") as f:
+                f.write("===================================================\n")
+                f.write("  CiNii 所蔵館チェッカー ネットワーク診断レポート\n")
+                f.write("===================================================\n\n")
+                
+                # 1. 基本システム情報
+                f.write("[1. システム情報]\n")
+                f.write(f"OS: {platform.platform()}\n")
+                f.write(f"Python Version: {sys.version}\n")
+                f.write(f"App version: 1.2.0 (Diagnostic Mode)\n\n")
+                
+                # 2. 環境変数プロキシ設定
+                f.write("[2. 環境変数プロキシ設定]\n")
+                proxy_envs = ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY", "http_proxy", "https_proxy"]
+                found_env = False
+                for env in proxy_envs:
+                    val = os.environ.get(env)
+                    if val:
+                        f.write(f"{env}: {val}\n")
+                        found_env = True
+                if not found_env:
+                    f.write("プロキシ関連の環境変数は設定されていません。\n")
+                f.write("\n")
+                
+                # 3. システムプロキシ自動検出結果
+                f.write("[3. システムプロキシ自動検出 (urllib.request)]\n")
+                try:
+                    system_proxies = urllib.request.getproxies()
+                    if system_proxies:
+                        for k, v in system_proxies.items():
+                            f.write(f"{k}: {v}\n")
+                    else:
+                        f.write("検出されたシステムプロキシはありません（直接接続モード）。\n")
+                except Exception as ex:
+                    f.write(f"プロキシ検出エラー: {str(ex)}\n")
+                f.write("\n")
+                
+                # 4. DNS解決テスト (ci.nii.ac.jp)
+                f.write("[4. DNS名前解決テスト (ci.nii.ac.jp)]\n")
+                target_host = "ci.nii.ac.jp"
+                try:
+                    ip = socket.gethostbyname(target_host)
+                    f.write(f"{target_host} のIPアドレス: {ip}\n")
+                except Exception as ex:
+                    f.write(f"名前解決エラー (DNSが解決できない、または有線側で名前解決がブロックされている可能性があります):\n{str(ex)}\n")
+                f.write("\n")
+                
+                # 5. TCP接続テスト (ポート443)
+                f.write("[5. TCPソケット接続テスト (ci.nii.ac.jp:443)]\n")
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.settimeout(5.0)  # 5秒タイムアウト
+                    s.connect((target_host, 443))
+                    f.write(f"ポート 443 (HTTPS) への直接TCP接続に成功しました。\n")
+                    s.close()
+                except Exception as ex:
+                    f.write(f"TCP接続エラー (ファイアウォールによる外部接続の遮断、またはポート443の不通の可能性があります):\n{str(ex)}\n")
+                f.write("\n")
+                
+                # 6. HTTPリクエストテスト
+                f.write("[6. HTTPリクエストテスト (requests)]\n")
+                test_url = "https://ci.nii.ac.jp/ncid/BD18195266.json"
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                }
+                try:
+                    f.write(f"テストURL: {test_url}\n")
+                    f.write("リクエスト送信中 (verify=False, timeout=10)... \n")
+                    res = requests.get(test_url, headers=headers, verify=False, timeout=10)
+                    f.write(f"HTTPステータスコード: {res.status_code}\n")
+                    f.write(f"レスポンスサイズ: {len(res.text)} bytes\n")
+                    f.write("リクエストの送受信に成功しました。\n")
+                except Exception as ex:
+                    f.write("HTTPリクエストエラーが発生しました:\n")
+                    traceback.print_exc(file=f)
+                f.write("\n")
+                
+                f.write("================ End of Report ================\n")
+                
+            return {
+                "status": "success",
+                "log_path": log_path,
+                "message": "診断テストが完了しました。"
+            }
+        except Exception as e:
+            print("Failed to run network diagnostic:", file=sys.stderr)
+            traceback.print_exc()
+            return {
+                "status": "error",
+                "message": f"診断レポートの生成中に内部エラーが発生しました: {str(e)}"
             }
 
 def get_resource_path(relative_path):
@@ -202,7 +295,6 @@ def load_html_with_assets():
     """
     ui/index.html を読み込み、同じ階層にある style.css と script.js を
     HTML 内にインラインで埋め込んで単一の HTML 文字列を生成します。
-    これにより、WebView がローカルファイルをロードする際の 404 エラーを完全に防ぎます。
     """
     ui_dir = get_resource_path("ui")
     
@@ -226,7 +318,6 @@ def load_html_with_assets():
         with open(js_path, "r", encoding="utf-8") as f:
             js = f.read()
             
-        # HTML 内のスタイルシートとスクリプト読み込みタグをインラインの中身に置換
         html = html.replace('<link rel="stylesheet" href="style.css">', f'<style>\n{css}\n</style>')
         html = html.replace('<script src="script.js"></script>', f'<script>\n{js}\n</script>')
         return html
@@ -237,13 +328,11 @@ def load_html_with_assets():
 
 def main():
     api = Api()
-    
-    # HTMLとCSS/JSを合体させた単一HTMLデータをロード
     html_content = load_html_with_assets()
 
     window = webview.create_window(
         title="CiNii 所蔵館チェッカー",
-        html=html_content,  # urlの代わりにhtmlデータを直接渡す（404問題を完全回避）
+        html=html_content,
         js_api=api,
         width=1150,
         height=800,
@@ -251,9 +340,6 @@ def main():
         resizable=True
     )
     api.set_window(window)
-    
-    # 本番ビルド時は debug=False に設定することを想定
-    # 配布時に開発ツール（F12）が露出するのを防ぐため、製品版としては通常 debug=False が推奨されます
     webview.start(debug=False)
 
 if __name__ == '__main__':
