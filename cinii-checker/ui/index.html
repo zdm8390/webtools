@@ -42,7 +42,7 @@
             </nav>
             
             <div class="sidebar-footer">
-                <p>v1.2.0</p>
+                <p>v1.3.0</p>
                 <p>CiNii Books API 連携</p>
             </div>
         </aside>
@@ -224,7 +224,7 @@
             <section id="section-settings" class="content-section">
                 <header class="section-header">
                     <h2>設定とツール</h2>
-                    <p>アプリケーションの環境確認やネットワーク診断を行います。</p>
+                    <p>アプリケーションの動作設定や環境確認を行います。</p>
                 </header>
                 
                 <div style="display: flex; flex-direction: column; gap: 24px;">
@@ -235,11 +235,58 @@
                             <h3>一般設定</h3>
                         </div>
                         <div class="card-body" style="padding: 20px;">
-                            <div class="setting-item" style="margin-bottom: 16px;">
+                            <div class="setting-item">
                                 <label for="setting-max-limit" style="font-weight:600; display:block; margin-bottom:4px; font-size:0.9rem;">検索上限件数</label>
                                 <input type="number" id="setting-max-limit" value="200" min="10" max="1000" style="padding:6px 10px; border:1px solid var(--border-color); border-radius:6px; width:120px; outline:none; font-size:0.9rem;">
                                 <span class="help-text" style="display:block; margin-top:4px; font-size:0.75rem; color:var(--text-light);">一度に検索できる最大件数を指定します（推奨: 200件）</span>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- プロキシ設定カード -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i data-lucide="globe" class="card-icon"></i>
+                            <h3>プロキシ設定（有線LANなどの接続障害対策）</h3>
+                        </div>
+                        <div class="card-body" style="padding: 20px;">
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer;">
+                                    <input type="checkbox" id="setting-use-proxy" style="width:16px; height:16px; cursor: pointer;">
+                                    <span>手動プロキシ設定を使用する</span>
+                                </label>
+                            </div>
+                            
+                            <div id="proxy-fields" class="hidden" style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px; padding-left: 20px; border-left: 2px solid var(--border-color);">
+                                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                                    <div style="flex: 2; min-width: 250px;">
+                                        <label for="setting-proxy-host" style="font-size:0.8rem; display:block; margin-bottom:4px; font-weight:500;">プロキシサーバーのホスト名 / IPアドレス</label>
+                                        <input type="text" id="setting-proxy-host" placeholder="例: proxy.example.com" style="width:100%; padding:6px 10px; border:1px solid var(--border-color); border-radius:6px; outline:none; font-size:0.9rem;">
+                                    </div>
+                                    <div style="flex: 1; min-width: 100px;">
+                                        <label for="setting-proxy-port" style="font-size:0.8rem; display:block; margin-bottom:4px; font-weight:500;">ポート番号</label>
+                                        <input type="text" id="setting-proxy-port" placeholder="例: 8080" style="width:100%; padding:6px 10px; border:1px solid var(--border-color); border-radius:6px; outline:none; font-size:0.9rem;">
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <label for="setting-proxy-user" style="font-size:0.8rem; display:block; margin-bottom:4px; font-weight:500;">ユーザー名 (必要な場合)</label>
+                                        <input type="text" id="setting-proxy-user" placeholder="ユーザー名" style="width:100%; padding:6px 10px; border:1px solid var(--border-color); border-radius:6px; outline:none; font-size:0.9rem;">
+                                    </div>
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <label for="setting-proxy-pass" style="font-size:0.8rem; display:block; margin-bottom:4px; font-weight:500;">パスワード (必要な場合)</label>
+                                        <input type="password" id="setting-proxy-pass" placeholder="パスワード" style="width:100%; padding:6px 10px; border:1px solid var(--border-color); border-radius:6px; outline:none; font-size:0.9rem;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer" style="justify-content: flex-end; gap: 12px;">
+                            <span id="settings-save-status" style="font-size: 0.85rem; display: none;"></span>
+                            <button id="btn-save-settings" class="btn btn-success">
+                                <i data-lucide="save"></i>
+                                <span>設定を保存</span>
+                            </button>
                         </div>
                     </div>
                     

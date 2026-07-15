@@ -1,7 +1,7 @@
 // アプリケーションの状態管理
 const state = {
     results: [],       // 検索結果の全データ { ncid, status, title, creator, publisher, date, owner_count, owners, has_mie_univ, mie_opac_url, detail_url, message }
-    ncidList: [],      // 検索対象 of NCIDリスト
+    ncidList: [],      // 検索対象のNCIDリスト
     csvData: null,     // ロードされたCSVデータ（二次元配列）
     csvFileName: '',   // ロードされたCSVファイル名
     isRunning: false,  // 検索が実行中かどうか
@@ -10,7 +10,7 @@ const state = {
     currentIndex: 0    // 現在処理中のインデックス
 };
 
-// 一度の検索における最大件数制限 (設定画面で変更可能)
+// 一度の検索における最大件数制限 (設定から自動ロード・更新)
 let MAX_SEARCH_LIMIT = 200;
 
 // DOM要素の取得
@@ -79,6 +79,14 @@ const dom = {
 
     // 設定画面要素
     settingMaxLimit: document.getElementById('setting-max-limit'),
+    settingUseProxy: document.getElementById('setting-use-proxy'),
+    proxyFields: document.getElementById('proxy-fields'),
+    settingProxyHost: document.getElementById('setting-proxy-host'),
+    settingProxyPort: document.getElementById('setting-proxy-port'),
+    settingProxyUser: document.getElementById('setting-proxy-user'),
+    settingProxyPass: document.getElementById('setting-proxy-pass'),
+    btnSaveSettings: document.getElementById('btn-save-settings'),
+    settingsSaveStatus: document.getElementById('settings-save-status'),
     btnRunDiagnostic: document.getElementById('btn-run-diagnostic'),
     diagnosticStatus: document.getElementById('diagnostic-status')
 };
@@ -87,10 +95,8 @@ const dom = {
 // 初期化処理
 // ----------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-    // Lucideアイコンの初期化
     lucide.createIcons();
     
-    // イベントリスナーの登録
     initNavigation();
     initTabs();
     initFileUpload();
@@ -103,10 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pywebviewready', () => {
         state.apiReady = true;
         console.log('pywebview is ready');
+        // Python APIがロードされたら設定を読み込む
+        loadSettingsFromBackend();
     });
     
     if (window.pywebview && window.pywebview.api) {
         state.apiReady = true;
+        loadSettingsFromBackend();
     }
 });
 
@@ -167,19 +176,87 @@ function initTabs() {
 // ----------------------------------------------------
 // 設定および診断ツール制御
 // ----------------------------------------------------
+async function loadSettingsFromBackend() {
+    if (!state.apiReady) return;
+    try {
+        const settings = await window.pywebview.api.get_settings();
+        
+        // UIに値をセット
+        if (dom.settingMaxLimit) dom.settingMaxLimit.value = settings.max_limit;
+        MAX_SEARCH_LIMIT = settings.max_limit || 200;
+        
+        if (dom.settingUseProxy) {
+            dom.settingUseProxy.checked = settings.use_proxy;
+            toggleProxyFields(settings.use_proxy);
+        }
+        
+        if (dom.settingProxyHost) dom.settingProxyHost.value = settings.proxy_host || '';
+        if (dom.settingProxyPort) dom.settingProxyPort.value = settings.proxy_port || '';
+        if (dom.settingProxyUser) dom.settingProxyUser.value = settings.proxy_user || '';
+        if (dom.settingProxyPass) dom.settingProxyPass.value = settings.proxy_pass || '';
+        
+    } catch (e) {
+        console.error("Failed to load settings:", e);
+    }
+}
+
+function toggleProxyFields(show) {
+    if (show) {
+        dom.proxyFields.classList.remove('hidden');
+    } else {
+        dom.proxyFields.classList.add('hidden');
+    }
+}
+
 function initSettings() {
-    // 上限件数の設定変更監視
-    if (dom.settingMaxLimit) {
-        dom.settingMaxLimit.addEventListener('change', (e) => {
-            let val = parseInt(e.target.value, 10);
-            if (isNaN(val) || val < 10) {
-                val = 10;
-                dom.settingMaxLimit.value = "10";
-            } else if (val > 1000) {
-                val = 1000;
-                dom.settingMaxLimit.value = "1000";
+    // プロキシチェックボックスの切り替えイベント
+    if (dom.settingUseProxy) {
+        dom.settingUseProxy.addEventListener('change', (e) => {
+            toggleProxyFields(e.target.checked);
+        });
+    }
+
+    // 設定保存処理
+    if (dom.btnSaveSettings) {
+        dom.btnSaveSettings.addEventListener('click', async () => {
+            dom.btnSaveSettings.disabled = true;
+            
+            const limitVal = parseInt(dom.settingMaxLimit.value, 10) || 200;
+            const settings = {
+                max_limit: limitVal,
+                use_proxy: dom.settingUseProxy.checked,
+                proxy_host: dom.settingProxyHost.value.trim(),
+                proxy_port: dom.settingProxyPort.value.trim(),
+                proxy_user: dom.settingProxyUser.value.trim(),
+                proxy_pass: dom.settingProxyPass.value.trim()
+            };
+
+            MAX_SEARCH_LIMIT = limitVal;
+
+            try {
+                let res;
+                if (state.apiReady) {
+                    res = await window.pywebview.api.save_settings(settings);
+                } else {
+                    res = { status: "success", message: "設定を保存しました(デモ)" };
+                }
+
+                if (res.status === 'success') {
+                    dom.settingsSaveStatus.style.display = 'inline';
+                    dom.settingsSaveStatus.style.color = 'var(--success)';
+                    dom.settingsSaveStatus.textContent = '設定を保存しました。';
+                    
+                    setTimeout(() => {
+                        dom.settingsSaveStatus.style.display = 'none';
+                    }, 3000);
+                } else {
+                    alert(`設定の保存に失敗しました: ${res.message}`);
+                }
+            } catch (err) {
+                alert(`システムエラーが発生しました: ${err.message}`);
+            } finally {
+                dom.btnSaveSettings.disabled = false;
             }
-            MAX_SEARCH_LIMIT = val;
         });
     }
 
@@ -198,10 +275,8 @@ function initSettings() {
             try {
                 let res;
                 if (state.apiReady) {
-                    // Python 診断メソッドの呼び出し
                     res = await window.pywebview.api.run_network_diagnostic();
                 } else {
-                    // ダミー（ブラウザ開発用フォールバック）
                     await new Promise(r => setTimeout(r, 1500));
                     res = { 
                         status: "success", 

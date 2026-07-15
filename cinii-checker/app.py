@@ -7,11 +7,12 @@ import urllib3
 import socket
 import urllib.request
 import platform
+import json
 
 # SSL証明書エラーの警告を抑制
-# 学内・社内等のプロキシ環境下（SSL復号化プロキシ）でSSL証明書検証エラーになる現象に対応するため、
-# やむを得ず verify=False でリクエストを処理しています。
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+SETTINGS_FILE = "cinii_checker_settings.json"
 
 class Api:
     def __init__(self):
@@ -19,6 +20,83 @@ class Api:
 
     def set_window(self, window):
         self._window = window
+
+    def get_settings(self):
+        """
+        設定ファイルから設定をロードします。ファイルが存在しない場合はデフォルト値を返します。
+        """
+        default_settings = {
+            "max_limit": 200,
+            "use_proxy": False,
+            "proxy_host": "",
+            "proxy_port": "",
+            "proxy_user": "",
+            "proxy_pass": ""
+        }
+        
+        # 実行ファイルと同じディレクトリに設定ファイルを配置
+        settings_path = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), SETTINGS_FILE)
+        
+        # 開発中のためのフォールバック
+        if not os.path.exists(settings_path):
+            settings_path = os.path.join(os.path.abspath("."), SETTINGS_FILE)
+            
+        if os.path.exists(settings_path):
+            try:
+                with open(settings_path, "r", encoding="utf-8") as f:
+                    user_settings = json.load(f)
+                    # デフォルト値で補完
+                    for k, v in default_settings.items():
+                        if k not in user_settings:
+                            user_settings[k] = v
+                    return user_settings
+            except Exception as e:
+                print(f"Failed to load settings: {e}", file=sys.stderr)
+                
+        return default_settings
+
+    def save_settings(self, settings):
+        """
+        設定をファイルに保存します。
+        """
+        settings_path = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), SETTINGS_FILE)
+        
+        # 開発用のフォールバック
+        if not os.path.exists(os.path.dirname(settings_path)):
+            settings_path = os.path.join(os.path.abspath("."), SETTINGS_FILE)
+            
+        try:
+            with open(settings_path, "w", encoding="utf-8") as f:
+                json.dump(settings, f, indent=4, ensure_ascii=False)
+            return {"status": "success", "message": "設定を保存しました。"}
+        except Exception as e:
+            print(f"Failed to save settings: {e}", file=sys.stderr)
+            return {"status": "error", "message": f"設定の保存に失敗しました: {str(e)}"}
+
+    def _get_proxies(self):
+        """
+        保存された設定に基づいて、requests 用のプロキシ辞書を生成します。
+        """
+        settings = self.get_settings()
+        if settings.get("use_proxy"):
+            host = settings.get("proxy_host", "").strip()
+            port = settings.get("proxy_port", "").strip()
+            user = settings.get("proxy_user", "").strip()
+            password = settings.get("proxy_pass", "").strip()
+            
+            if host and port:
+                if user and password:
+                    # 認証ありプロキシ
+                    proxy_url = f"http://{user}:{password}@{host}:{port}"
+                else:
+                    # 認証なしプロキシ
+                    proxy_url = f"http://{host}:{port}"
+                
+                return {
+                    "http": proxy_url,
+                    "https": proxy_url
+                }
+        return None
 
     def check_ncid(self, ncid):
         """
@@ -37,8 +115,12 @@ class Api:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
 
+        # 設定された手動プロキシを取得
+        proxies = self._get_proxies()
+
         try:
-            response = requests.get(url, headers=headers, verify=False, timeout=20)
+            # プロキシ設定がある場合は適用し、無い場合は requests がOSのプロキシ設定を自動利用します
+            response = requests.get(url, headers=headers, verify=False, timeout=20, proxies=proxies)
             
             if response.status_code == 404:
                 return {
@@ -75,7 +157,6 @@ class Api:
                     "message": "書誌情報が見つかりませんでした"
                 }
 
-            # タイトルの抽出
             title = book_info.get("dc:title", [])
             title_str = "不明なタイトル"
             if isinstance(title, list):
@@ -90,12 +171,10 @@ class Api:
             else:
                 title_str = title
             
-            # 著者の抽出
             creator = book_info.get("dc:creator", "")
             if isinstance(creator, list):
                 creator = ", ".join(creator)
 
-            # 出版社の抽出
             publisher = book_info.get("dc:publisher", [])
             publisher_str = ""
             if isinstance(publisher, list):
@@ -111,17 +190,13 @@ class Api:
             else:
                 publisher_str = publisher
 
-            # 出版年
             date = book_info.get("dc:date", "")
-
-            # 所蔵館数
             owner_count_str = book_info.get("cinii:ownerCount", "0")
             try:
                 owner_count = int(owner_count_str)
             except ValueError:
                 owner_count = 0
 
-            # 所蔵館リスト
             owners_raw = book_info.get("bibo:owner", [])
             owners = []
             if isinstance(owners_raw, dict):
@@ -190,8 +265,12 @@ class Api:
         有線LAN環境などで発生するタイムアウト等の接続エラーの原因を特定するための
         診断ログファイルを生成し、結果を返します。
         """
-        log_path = os.path.join(os.path.abspath("."), "cinii_checker_diagnostic.log")
+        log_path = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), "cinii_checker_diagnostic.log")
         
+        # 開発用のフォールバック
+        if not os.path.exists(os.path.dirname(log_path)):
+            log_path = os.path.join(os.path.abspath("."), "cinii_checker_diagnostic.log")
+            
         try:
             with open(log_path, "w", encoding="utf-8") as f:
                 f.write("===================================================\n")
@@ -202,7 +281,7 @@ class Api:
                 f.write("[1. システム情報]\n")
                 f.write(f"OS: {platform.platform()}\n")
                 f.write(f"Python Version: {sys.version}\n")
-                f.write(f"App version: 1.2.0 (Diagnostic Mode)\n\n")
+                f.write(f"App version: 1.3.0 (Proxy Support & Diagnostics)\n\n")
                 
                 # 2. 環境変数プロキシ設定
                 f.write("[2. 環境変数プロキシ設定]\n")
@@ -230,6 +309,15 @@ class Api:
                     f.write(f"プロキシ検出エラー: {str(ex)}\n")
                 f.write("\n")
                 
+                # 手動設定されたプロキシの確認
+                settings = self.get_settings()
+                f.write("[3.5 手動プロキシ設定の登録状態]\n")
+                f.write(f"手動プロキシを使用: {settings.get('use_proxy')}\n")
+                f.write(f"ホスト: {settings.get('proxy_host')}\n")
+                f.write(f"ポート: {settings.get('proxy_port')}\n")
+                f.write(f"ユーザー指定: {'あり' if settings.get('proxy_user') else 'なし'}\n")
+                f.write("\n")
+                
                 # 4. DNS解決テスト (ci.nii.ac.jp)
                 f.write("[4. DNS名前解決テスト (ci.nii.ac.jp)]\n")
                 target_host = "ci.nii.ac.jp"
@@ -237,14 +325,14 @@ class Api:
                     ip = socket.gethostbyname(target_host)
                     f.write(f"{target_host} のIPアドレス: {ip}\n")
                 except Exception as ex:
-                    f.write(f"名前解決エラー (DNSが解決できない、または有線側で名前解決がブロックされている可能性があります):\n{str(ex)}\n")
+                    f.write(f"名前解決エラー:\n{str(ex)}\n")
                 f.write("\n")
                 
                 # 5. TCP接続テスト (ポート443)
                 f.write("[5. TCPソケット接続テスト (ci.nii.ac.jp:443)]\n")
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    s.settimeout(5.0)  # 5秒タイムアウト
+                    s.settimeout(5.0)
                     s.connect((target_host, 443))
                     f.write(f"ポート 443 (HTTPS) への直接TCP接続に成功しました。\n")
                     s.close()
@@ -258,10 +346,12 @@ class Api:
                 headers = {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                 }
+                proxies = self._get_proxies()
                 try:
                     f.write(f"テストURL: {test_url}\n")
+                    f.write(f"適用プロキシ: {proxies}\n")
                     f.write("リクエスト送信中 (verify=False, timeout=10)... \n")
-                    res = requests.get(test_url, headers=headers, verify=False, timeout=10)
+                    res = requests.get(test_url, headers=headers, verify=False, timeout=10, proxies=proxies)
                     f.write(f"HTTPステータスコード: {res.status_code}\n")
                     f.write(f"レスポンスサイズ: {len(res.text)} bytes\n")
                     f.write("リクエストの送受信に成功しました。\n")
