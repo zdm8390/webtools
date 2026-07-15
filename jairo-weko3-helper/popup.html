@@ -10,7 +10,6 @@
     :root {
       --primary-grad: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
       --secondary-grad: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      --coffee-grad: linear-gradient(135deg, #ffdd00 0%, #f7b731 100%);
       --bg-dark: #0f172a;
       --bg-card: rgba(255, 255, 255, 0.08);
       --bg-input: rgba(15, 23, 42, 0.6);
@@ -376,55 +375,7 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
 
-    /* コーヒー応援導線 */
-    .donation-area {
-      display: none;
-      margin-top: 10px;
-      padding: 12px;
-      background: linear-gradient(135deg, rgba(255, 221, 0, 0.08) 0%, rgba(247, 183, 49, 0.08) 100%);
-      border: 1px dashed rgba(247, 183, 49, 0.4);
-      border-radius: 12px;
-      font-size: 0.8rem;
-      line-height: 1.5;
-      text-align: center;
-      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
 
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    .donation-text {
-      color: #f7b731;
-      font-weight: 500;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    .coffee-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--coffee-grad);
-      color: #1e1b4b;
-      font-weight: 700;
-      text-decoration: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      margin-top: 4px;
-      box-shadow: 0 4px 10px rgba(247, 183, 49, 0.3);
-      transition: var(--transition);
-      font-size: 0.75rem;
-    }
-
-    .coffee-link:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(247, 183, 49, 0.5);
-    }
 
     /* エラー表示 */
     .error-container {
@@ -602,19 +553,7 @@
       </div>
     </div>
 
-    <!-- Buy Me a Coffee エモーショナル導線 -->
-    <div id="coffee-donation" class="donation-area">
-      <div class="donation-text">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
-        業務はスピード解決しましたか？
-      </div>
-      <p style="color: var(--text-sub); font-size: 0.75rem; margin-bottom: 8px;">
-        お役に立ちましたら、コーヒーを1杯奢っていただけると嬉しいです ☕
-      </p>
-      <a href="https://www.buymeacoffee.com/yourusername" target="_blank" class="coffee-link">
-        Buy Me a Coffeeで応援する
-      </a>
-    </div>
+
   </main>
 
   <!-- フッター -->

@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const errorBox = document.getElementById('error-box');
   const loader = document.getElementById('loader');
   const metadataSection = document.getElementById('metadata-section');
-  const coffeeDonation = document.getElementById('coffee-donation');
 
   // メタデータ入力フィールド
   const fieldTitle = document.getElementById('field-title');
@@ -188,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     loader.style.display = 'flex';
     metadataSection.style.display = 'none';
-    coffeeDonation.style.display = 'none';
 
     // politeプール適用のためにダミー連絡先を含める
     const email = "academic-micro-saas-dev@example.jp";
@@ -388,10 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 100);
-
-    // 応援導線を表示
-    coffeeDonation.style.display = 'block';
-    coffeeDonation.scrollIntoView({ behavior: 'smooth' });
   }
 
   /**
