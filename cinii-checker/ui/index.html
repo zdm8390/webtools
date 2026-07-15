@@ -42,7 +42,7 @@
             </nav>
             
             <div class="sidebar-footer">
-                <p>v1.0.0</p>
+                <p>v1.1.0</p>
                 <p>CiNii Books API 連携</p>
             </div>
         </aside>
@@ -180,19 +180,20 @@
                         <table id="results-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 60px;">No.</th>
-                                    <th style="width: 140px;">書誌ID (NCID)</th>
+                                    <th style="width: 50px;">No.</th>
+                                    <th style="width: 130px;">書誌ID (NCID)</th>
                                     <th>タイトル</th>
-                                    <th style="width: 180px;">著者 / 出版社</th>
-                                    <th style="width: 100px;">出版年</th>
-                                    <th style="width: 120px;">所蔵館数</th>
-                                    <th style="width: 100px;">ステータス</th>
+                                    <th style="width: 170px;">著者 / 出版社</th>
+                                    <th style="width: 90px;">出版年</th>
+                                    <th style="width: 110px;">三重大所蔵</th>
+                                    <th style="width: 100px;">所蔵館数</th>
+                                    <th style="width: 90px;">ステータス</th>
                                     <th style="width: 80px;">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="results-tbody">
                                 <tr>
-                                    <td colspan="8" class="empty-state">
+                                    <td colspan="9" class="empty-state">
                                         <i data-lucide="inbox"></i>
                                         <p>データがありません。上のフォームから検索を開始してください。</p>
                                     </td>
@@ -265,6 +266,10 @@
                     <div class="detail-item">
                         <span class="detail-label">出版年</span>
                         <span class="detail-val" id="m-date">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">三重大学所蔵</span>
+                        <span class="detail-val" id="m-mie-status">-</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">所蔵館数</span>

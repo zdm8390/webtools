@@ -1,6 +1,6 @@
 // アプリケーションの状態管理
 const state = {
-    results: [],       // 検索結果の全データ { ncid, status, title, creator, publisher, date, owner_count, owners, detail_url, message }
+    results: [],       // 検索結果の全データ { ncid, status, title, creator, publisher, date, owner_count, owners, has_mie_univ, mie_opac_url, detail_url, message }
     ncidList: [],      // 検索対象のNCIDリスト
     csvData: null,     // ロードされたCSVデータ（二次元配列）
     csvFileName: '',   // ロードされたCSVファイル名
@@ -9,6 +9,9 @@ const state = {
     apiReady: false,   // pywebview.api が使用可能か
     currentIndex: 0    // 現在処理中のインデックス
 };
+
+// 一度の検索における最大件数制限
+const MAX_SEARCH_LIMIT = 200;
 
 // DOM要素の取得
 const dom = {
@@ -63,6 +66,7 @@ const dom = {
     mCreator: document.getElementById('m-creator'),
     mPublisher: document.getElementById('m-publisher'),
     mDate: document.getElementById('m-date'),
+    mMieStatus: document.getElementById('m-mie-status'),
     mOwnerCount: document.getElementById('m-owner-count'),
     mHoldingsList: document.getElementById('m-holdings-list'),
     btnCiniiLink: document.getElementById('btn-cinii-link'),
@@ -95,11 +99,23 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('pywebview is ready');
     });
     
-    // もしすでにロードされている場合
     if (window.pywebview && window.pywebview.api) {
         state.apiReady = true;
     }
 });
+
+// ----------------------------------------------------
+// セキュリティ: HTMLエスケープ処理 (XSS対策)
+// ----------------------------------------------------
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 // ----------------------------------------------------
 // ナビゲーションとタブ切り替え
@@ -114,11 +130,9 @@ function initNavigation() {
     menus.forEach(item => {
         if (item.btn) {
             item.btn.addEventListener('click', () => {
-                // ナビゲーションボタンのアクティブ切り替え
                 dom.navItems.forEach(nav => nav.classList.remove('active'));
                 item.btn.classList.add('active');
 
-                // セクションの切り替え
                 dom.sections.forEach(sec => {
                     if (sec.id === item.sectionId) {
                         sec.classList.add('active');
@@ -148,7 +162,6 @@ function initTabs() {
 // CSVファイル読み込み処理
 // ----------------------------------------------------
 function initFileUpload() {
-    // ファイルダイアログを開く
     dom.btnSelectFile.addEventListener('click', (e) => {
         e.stopPropagation();
         dom.csvFileInput.click();
@@ -160,7 +173,6 @@ function initFileUpload() {
         }
     });
 
-    // ドラッグ＆ドロップ
     dom.dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         dom.dropZone.classList.add('dragover');
@@ -178,7 +190,6 @@ function initFileUpload() {
         }
     });
 
-    // 選択ファイルをクリア
     dom.btnClearFile.addEventListener('click', (e) => {
         e.stopPropagation();
         clearFileSelection();
@@ -198,7 +209,6 @@ function handleFile(file) {
         const text = e.target.result;
         state.csvData = parseCSV(text);
         
-        // UI表示の更新
         dom.fileName.textContent = file.name;
         dom.selectedFileInfo.classList.remove('hidden');
         dom.btnSelectFile.classList.add('hidden');
@@ -219,7 +229,6 @@ function clearFileSelection() {
     dom.dropZone.querySelector('span').classList.remove('hidden');
 }
 
-// 簡易CSVパース
 function parseCSV(text) {
     const lines = text.split(/\r?\n/);
     return lines.map(line => {
@@ -251,17 +260,15 @@ function initSearchControls() {
     dom.btnExportResults.addEventListener('click', exportCSV);
 }
 
-// 書誌IDの抽出
+// 書誌IDの抽出とバリデーション・上限設定
 function getNcidsToSearch() {
     const activeTab = document.querySelector('.tab-button.active').getAttribute('data-tab');
     let ids = [];
 
     if (activeTab === 'tab-text') {
         const text = dom.ncidInput.value;
-        // 改行やカンマ、スペース区切りで分割
         ids = text.split(/[\n,\s]+/).map(id => id.trim()).filter(id => id.length > 0);
     } else {
-        // CSVからの抽出
         if (!state.csvData) {
             alert('CSVファイルが読み込まれていません。');
             return null;
@@ -275,12 +282,26 @@ function getNcidsToSearch() {
         }).filter(id => id.length > 0);
     }
 
-    // 書誌ID（NCID）は通常 B または A、C 等で始まる英数字。簡易バリデーション
-    // CiNiiのID体系: 通常は10桁（例: BA89617462, BD18195266）
-    return ids.map(id => {
-        // 余計な記号やパスワードなどを除去
-        return id.replace(/["']/g, '');
-    });
+    // 重複の排除（効率化のため）
+    ids = [...new Set(ids)];
+
+    // 記号などの余計な文字を除去
+    ids = ids.map(id => id.replace(/["']/g, ''));
+
+    // 大量検索に関する制御：件数上限チェック
+    if (ids.length > MAX_SEARCH_LIMIT) {
+        alert(`一度に検索できる最大件数は ${MAX_SEARCH_LIMIT} 件に制限されています。\n入力された ${ids.length} 件のうち、最初の ${MAX_SEARCH_LIMIT} 件のみを検索します。`);
+        ids = ids.slice(0, MAX_SEARCH_LIMIT);
+    }
+
+    return ids;
+}
+
+// NCID の簡易バリデーション (インジェクション対策および無駄なAPI通信の防止)
+function isValidNcid(ncid) {
+    // CiNiiのNCIDは通常、英数字（BA, BD, BC, AAなどから始まる8〜12桁の文字列）
+    const ncidRegex = /^[A-Z0-9]{3,12}$/i;
+    return ncidRegex.test(ncid);
 }
 
 async function startSearch() {
@@ -305,13 +326,17 @@ async function startSearch() {
     dom.btnCancelSearch.innerHTML = '<i data-lucide="square"></i><span>一時停止</span>';
     lucide.createIcons();
     
-    // テーブルの初期化
     dom.resultsTbody.innerHTML = '';
     
     updateStatsUI(0, 0, 0, 0, list.length);
     updateProgressUI(0, list.length, '処理を開始しています...');
 
-    const delay = parseFloat(dom.requestDelay.value) * 1000 || 200;
+    // ウェイトの最低値を0.2秒に制限（CiNiiサーバーへの負荷低減）
+    let delay = parseFloat(dom.requestDelay.value) * 1000;
+    if (isNaN(delay) || delay < 200) {
+        delay = 200;
+        dom.requestDelay.value = "0.2";
+    }
 
     for (let i = 0; i < list.length; i++) {
         if (state.cancelRequested) {
@@ -322,18 +347,26 @@ async function startSearch() {
         state.currentIndex = i;
         const ncid = list[i];
         
-        updateProgressUI(i, list.length, `検索中: ${ncid} (${i + 1}/${list.length})`);
+        updateProgressUI(i, list.length, `検索中: ${escapeHtml(ncid)} (${i + 1}/${list.length})`);
         
         let result;
-        if (state.apiReady) {
+
+        // 入力値バリデーションチェック
+        if (!isValidNcid(ncid)) {
+            result = {
+                ncid: ncid,
+                status: 'error',
+                message: '不正な書誌ID形式です'
+            };
+        } else if (state.apiReady) {
             try {
                 // Python API呼び出し
                 result = await window.pywebview.api.check_ncid(ncid);
             } catch (err) {
-                result = { ncid, status: 'error', message: `システムエラー: ${err.message}` };
+                result = { ncid, status: 'error', message: '通信処理でエラーが発生しました' };
             }
         } else {
-            // テストダミーデータ (APIがロードされていないブラウザでの確認用)
+            // ダミーデータ (ブラウザ単体テスト用)
             result = getDummyData(ncid);
             await new Promise(r => setTimeout(r, 200)); 
         }
@@ -341,19 +374,16 @@ async function startSearch() {
         state.results.push(result);
         appendResultToTable(result, i + 1);
         
-        // 統計情報の更新
         const successCount = state.results.filter(r => r.status === 'success').length;
         const notfoundCount = state.results.filter(r => r.status === 'not_found').length;
         const errorCount = state.results.filter(r => r.status === 'error').length;
         updateStatsUI(successCount, notfoundCount, errorCount, i + 1, list.length);
 
-        // ディレイ（最後の要素以外）
         if (i < list.length - 1) {
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
 
-    // 検索完了
     state.isRunning = false;
     dom.btnStartSearch.disabled = false;
     dom.btnCancelSearch.disabled = true;
@@ -379,7 +409,8 @@ function updateProgressUI(current, total, message) {
     const percent = total > 0 ? Math.round((current / total) * 100) : 0;
     dom.progressBar.style.width = `${percent}%`;
     dom.progressPercent.textContent = `${percent}%`;
-    dom.progressLabel.textContent = message;
+    // メッセージもエスケープして表示
+    dom.progressLabel.innerHTML = escapeHtml(message);
 }
 
 function updateStatsUI(success, notfound, error, processed, total) {
@@ -390,7 +421,6 @@ function updateStatsUI(success, notfound, error, processed, total) {
 }
 
 function appendResultToTable(result, index) {
-    // 空白状態の行があれば削除
     const emptyRow = dom.resultsTbody.querySelector('.empty-state');
     if (emptyRow) {
         dom.resultsTbody.innerHTML = '';
@@ -398,7 +428,7 @@ function appendResultToTable(result, index) {
 
     const tr = document.createElement('tr');
     tr.dataset.ncid = result.ncid;
-    tr.dataset.index = index - 1; // メモリ内インデックス
+    tr.dataset.index = index - 1;
     tr.dataset.status = result.status;
 
     let statusBadge = '';
@@ -410,20 +440,41 @@ function appendResultToTable(result, index) {
         statusBadge = `<span class="badge badge-danger">エラー</span>`;
     }
 
-    const titleText = result.title || `<span class="text-light">${result.message || 'データなし'}</span>`;
-    const creatorText = result.creator || result.publisher ? `${result.creator || ''} / ${result.publisher || ''}` : '-';
+    // セキュリティ: すべての表示テキストを HTML エスケープする
+    const escTitle = escapeHtml(result.title);
+    const escMsg = escapeHtml(result.message);
+    const titleText = result.status === 'success' ? escTitle : `<span class="text-light">${escMsg || 'データなし'}</span>`;
     
+    const escCreator = escapeHtml(result.creator);
+    const escPublisher = escapeHtml(result.publisher);
+    const creatorText = result.creator || result.publisher ? `${escCreator} / ${escPublisher}` : '-';
+    const escDate = escapeHtml(result.date);
+    const escNcid = escapeHtml(result.ncid);
+    
+    // 三重大所蔵セルの組み立て
+    let mieCell = '-';
+    if (result.status === 'success') {
+        if (result.has_mie_univ) {
+            // hrefはサニタイズされた文字列として組み立てる
+            const escMieUrl = escapeHtml(result.mie_opac_url);
+            mieCell = `<a href="${escMieUrl || '#'}" target="_blank" class="badge badge-success" style="text-decoration:none; display:inline-flex; align-items:center; gap:2px;"><i data-lucide="external-link" style="width:10px;height:10px;"></i>あり</a>`;
+        } else {
+            mieCell = `<span class="badge" style="background-color:#e2e8f0;color:#64748b;">なし</span>`;
+        }
+    }
+
     let ownerCell = '-';
     if (result.status === 'success') {
-        ownerCell = `<span class="holding-count" data-ncid="${result.ncid}">${result.owner_count} 館</span>`;
+        ownerCell = `<span class="holding-count" data-ncid="${escNcid}">${result.owner_count} 館</span>`;
     }
 
     tr.innerHTML = `
         <td>${index}</td>
-        <td class="code-font">${result.ncid}</td>
-        <td title="${result.title || ''}">${titleText}</td>
+        <td class="code-font">${escNcid}</td>
+        <td title="${escTitle}">${titleText}</td>
         <td title="${creatorText}">${creatorText}</td>
-        <td>${result.date || '-'}</td>
+        <td>${escDate || '-'}</td>
+        <td>${mieCell}</td>
         <td>${ownerCell}</td>
         <td>${statusBadge}</td>
         <td>
@@ -432,7 +483,14 @@ function appendResultToTable(result, index) {
     `;
 
     dom.resultsTbody.appendChild(tr);
-    // スクロールを最下部に移動（処理の追跡をしやすくする）
+    
+    lucide.createIcons({
+        attrs: {
+            class: ["lucide"]
+        },
+        nameAttr: "data-lucide"
+    });
+    
     dom.resultsTbody.parentElement.scrollTop = dom.resultsTbody.parentElement.scrollHeight;
 }
 
@@ -468,7 +526,6 @@ function filterTable() {
 // ツールチップ & モーダル制御
 // ----------------------------------------------------
 function initTooltipAndModal() {
-    // ツールチップのホバー制御（イベントデリゲーションを使用）
     dom.resultsTable.addEventListener('mouseover', (e) => {
         const target = e.target.closest('.holding-count');
         if (!target) return;
@@ -477,12 +534,11 @@ function initTooltipAndModal() {
         const result = state.results.find(r => r.ncid === ncid);
         if (!result || !result.owners || result.owners.length === 0) return;
 
-        // ツールチップの中身を構築
         dom.tooltipList.innerHTML = '';
-        const limitOwners = result.owners.slice(0, 3); // 上位3館
+        const limitOwners = result.owners.slice(0, 3);
         limitOwners.forEach(owner => {
             const li = document.createElement('li');
-            li.textContent = owner.name || '不明な図書館';
+            li.textContent = owner.name || '不明な図書館'; // テキストコンテンツ代入のため安全
             dom.tooltipList.appendChild(li);
         });
 
@@ -494,7 +550,6 @@ function initTooltipAndModal() {
             dom.tooltipList.appendChild(li);
         }
 
-        // 表示
         dom.globalTooltip.style.display = 'block';
         positionTooltip(e);
     });
@@ -512,7 +567,6 @@ function initTooltipAndModal() {
         }
     });
 
-    // 詳細ボタン・所蔵館クリックでモーダルを開く
     dom.resultsTable.addEventListener('click', (e) => {
         const detailBtn = e.target.closest('.btn-show-detail');
         const countLink = e.target.closest('.holding-count');
@@ -527,12 +581,10 @@ function initTooltipAndModal() {
         }
     });
 
-    // モーダルを閉じる
     const closeActions = [dom.btnCloseModal, dom.btnCloseModalFoot, dom.detailModal];
     closeActions.forEach(element => {
         if (element) {
             element.addEventListener('click', (e) => {
-                // 背景クリックか、閉じるボタンの場合のみ閉じる
                 if (e.target === element || e.target.closest('.btn-close') || e.target.id === 'btn-close-modal-foot') {
                     dom.detailModal.classList.remove('active');
                 }
@@ -545,7 +597,6 @@ function positionTooltip(e) {
     const tooltipWidth = dom.globalTooltip.offsetWidth;
     const tooltipHeight = dom.globalTooltip.offsetHeight;
     
-    // マウスカーソルの右下付近に配置（画面外にはみ出さないように調整）
     let x = e.pageX + 15;
     let y = e.pageY + 15;
 
@@ -561,6 +612,7 @@ function positionTooltip(e) {
 }
 
 function showDetailModal(result) {
+    // セキュリティ: 動的データの代入時は textContent を使用するか適切にエスケープする
     dom.mTitle.textContent = result.title || 'データなし';
     dom.mNcid.textContent = result.ncid;
     dom.mCreator.textContent = result.creator || '-';
@@ -568,7 +620,18 @@ function showDetailModal(result) {
     dom.mDate.textContent = result.date || '-';
     dom.mOwnerCount.textContent = `${result.owner_count || 0} 館`;
 
-    // 所蔵館リストのクリアと構築
+    // 三重大所蔵ステータス
+    if (result.status === 'success') {
+        if (result.has_mie_univ) {
+            const escMieUrl = escapeHtml(result.mie_opac_url);
+            dom.mMieStatus.innerHTML = `<span class="badge badge-success">あり</span>${escMieUrl ? ` <a href="${escMieUrl}" target="_blank" style="font-size:0.85rem;margin-left:8px;display:inline-flex;align-items:center;gap:4px;"><i data-lucide="external-link" style="width:14px;height:14px;"></i>OPACリンク</a>` : ''}`;
+        } else {
+            dom.mMieStatus.innerHTML = `<span class="badge" style="background-color:#e2e8f0;color:#64748b;">なし</span>`;
+        }
+    } else {
+        dom.mMieStatus.textContent = '-';
+    }
+
     dom.mHoldingsList.innerHTML = '';
     
     if (result.status !== 'success') {
@@ -584,19 +647,21 @@ function showDetailModal(result) {
     } else {
         result.owners.forEach(owner => {
             const li = document.createElement('li');
+            const escOwnerName = escapeHtml(owner.name);
+            const escOwnerUrl = escapeHtml(owner.url);
             li.innerHTML = `
-                <span>${owner.name}</span>
-                ${owner.url ? `<a href="${owner.url}" target="_blank"><i data-lucide="external-link" style="width:14px;height:14px;"></i>OPAC</a>` : ''}
+                <span>${escOwnerName}</span>
+                ${owner.url ? `<a href="${escOwnerUrl}" target="_blank"><i data-lucide="external-link" style="width:14px;height:14px;"></i>OPAC</a>` : ''}
             `;
             dom.mHoldingsList.appendChild(li);
         });
-        lucide.createIcons();
     }
+    
+    lucide.createIcons();
 
-    // CiNiiリンクの更新
-    dom.btnCiniiLink.href = result.detail_url || `https://ci.nii.ac.jp/ncid/${result.ncid}`;
-
-    // モーダル表示
+    // CiNiiリンク
+    const escDetailUrl = escapeHtml(result.detail_url);
+    dom.btnCiniiLink.href = escDetailUrl || `https://ci.nii.ac.jp/ncid/${escapeHtml(result.ncid)}`;
     dom.detailModal.classList.add('active');
 }
 
@@ -606,10 +671,8 @@ function showDetailModal(result) {
 function exportCSV() {
     if (state.results.length === 0) return;
 
-    let csvContent = '\uFEFF'; // BOM (UTF-8) でExcelでの文字化けを防ぐ
-    
-    // ヘッダー行
-    csvContent += 'No.,書誌ID(NCID),タイトル,著者/出版社,出版年,所蔵館数,ステータス,メッセージ\n';
+    let csvContent = '\uFEFF'; // BOM
+    csvContent += 'No.,書誌ID(NCID),タイトル,著者/出版社,出版年,三重大所蔵,所蔵館数,ステータス,メッセージ\n';
 
     state.results.forEach((r, idx) => {
         const no = idx + 1;
@@ -617,11 +680,12 @@ function exportCSV() {
         const title = escapeCSVField(r.title || '');
         const creatorAndPub = escapeCSVField(`${r.creator || ''} / ${r.publisher || ''}`);
         const date = escapeCSVField(r.date || '');
+        const mieUniv = r.status === 'success' ? (r.has_mie_univ ? 'あり' : 'なし') : '';
         const count = r.status === 'success' ? r.owner_count : '';
         const status = r.status === 'success' ? '成功' : (r.status === 'not_found' ? '該当なし' : 'エラー');
         const msg = escapeCSVField(r.message || '');
 
-        csvContent += `${no},${ncid},${title},${creatorAndPub},${date},${count},${status},${msg}\n`;
+        csvContent += `${no},${ncid},${title},${creatorAndPub},${date},${mieUniv},${count},${status},${msg}\n`;
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -640,7 +704,6 @@ function exportCSV() {
 function escapeCSVField(field) {
     if (field === null || field === undefined) return '';
     let stringField = String(field);
-    // ダブルクォーテーションが含まれる場合はエスケープし、全体をダブルクォーテーションで囲む
     if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n') || stringField.includes('\r')) {
         stringField = stringField.replace(/"/g, '""');
         return `"${stringField}"`;
@@ -663,7 +726,7 @@ function getDummyData(ncid) {
     const publishers = ["白揚社", "東京大学出版会", "O'Reilly", "岩波書店", "技術評論社"];
     
     const hash = ncid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const success = hash % 7 !== 0; // 7の倍数ならエラーか該当なし
+    const success = hash % 7 !== 0;
     const found = hash % 5 !== 0;
 
     if (!success) {
@@ -685,16 +748,23 @@ function getDummyData(ncid) {
     const titleIdx = hash % titles.length;
     const count = (hash % 85) + 1;
     
-    // 偽の所蔵館リスト
     const schools = ["東京大学", "京都大学", "大阪大学", "東北大学", "名古屋大学", "九州大学", "北海道大学", "早稲田大学", "慶應義塾大学", "筑波大学"];
+    
+    const hasMie = hash % 3 === 0;
+    const mieOpac = hasMie ? `https://opac.example.ac.jp/record/mie/${ncid}` : '';
+
     const owners = [];
+    if (hasMie) {
+        owners.push({
+            name: "三重大学 附属図書館",
+            url: mieOpac
+        });
+    }
+
     for (let i = 0; i < count; i++) {
         const sch = schools[(hash + i) % schools.length];
         const lib = (i % 2 === 0) ? "附属図書館" : "総合図書館";
-        owners.append ? owners.push({
-            name: `${sch} ${lib}`,
-            url: `https://opac.example.ac.jp/record/${ncid}`
-        }) : owners.push({
+        owners.push({
             name: `${sch} ${lib}`,
             url: `https://opac.example.ac.jp/record/${ncid}`
         });
@@ -707,8 +777,10 @@ function getDummyData(ncid) {
         creator: creators[titleIdx],
         publisher: publishers[titleIdx],
         date: String(2000 + (hash % 27)),
-        owner_count: count,
+        owner_count: count + (hasMie ? 1 : 0),
         owners: owners,
+        has_mie_univ: hasMie,
+        mie_opac_url: mieOpac,
         detail_url: `https://ci.nii.ac.jp/ncid/${ncid}`
     };
 }
