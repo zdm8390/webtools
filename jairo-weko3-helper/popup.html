@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>WEKO3 Importer Helper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-grad: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      --secondary-grad: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      --coffee-grad: linear-gradient(135deg, #ffdd00 0%, #f7b731 100%);
+      --bg-dark: #0f172a;
+      --bg-card: rgba(255, 255, 255, 0.08);
+      --bg-input: rgba(15, 23, 42, 0.6);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.12);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+      width: 480px;
+      min-height: 560px;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* 背景の装飾的なボケ */
+    .bg-glow {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.15);
+      filter: blur(50px);
+      z-index: -1;
+      pointer-events: none;
+    }
+    .glow-1 { top: -20px; left: -20px; }
+    .glow-2 { bottom: 100px; right: -20px; background: rgba(167, 139, 250, 0.15); }
+
+    /* ヘッダー */
+    header {
+      background: var(--primary-grad);
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .header-title-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, #e2e8f0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+    }
+
+    header p {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: 2px;
+    }
+
+    .version-badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+    }
+
+    /* メインコンテンツ */
+    main {
+      padding: 20px 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 1;
+    }
+
+    /* カード・コンテナスタイル */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* DOIスキャンセクション */
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .status-indicator {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-detected {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-missing {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .input-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    input[type="text"], textarea {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-primary {
+      background: var(--primary-grad);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* ローディングインジケーター */
+    .loader-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 0;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-left-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* メタデータプレビューフォーム */
+    .metadata-form {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    .form-group label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-sub);
+    }
+
+    /* ポリシー判定セクション */
+    .policy-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .policy-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .policy-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    .policy-green {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .policy-yellow {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .policy-red {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .policy-description {
+      font-size: 0.8rem;
+      line-height: 1.4;
+      color: var(--text-sub);
+    }
+
+    .policy-links {
+      display: flex;
+      gap: 12px;
+      font-size: 0.75rem;
+      margin-top: 4px;
+    }
+
+    .policy-links a {
+      color: #818cf8;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: var(--transition);
+    }
+
+    .policy-links a:hover {
+      color: #a5b4fc;
+      text-decoration: underline;
+    }
+
+    /* ダウンロードアクション */
+    .download-action-area {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .format-selector {
+      display: flex;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 2px;
+    }
+
+    .format-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-sub);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .format-btn.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    /* コーヒー応援導線 */
+    .donation-area {
+      display: none;
+      margin-top: 10px;
+      padding: 12px;
+      background: linear-gradient(135deg, rgba(255, 221, 0, 0.08) 0%, rgba(247, 183, 49, 0.08) 100%);
+      border: 1px dashed rgba(247, 183, 49, 0.4);
+      border-radius: 12px;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      text-align: center;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .donation-text {
+      color: #f7b731;
+      font-weight: 500;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .coffee-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--coffee-grad);
+      color: #1e1b4b;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      margin-top: 4px;
+      box-shadow: 0 4px 10px rgba(247, 183, 49, 0.3);
+      transition: var(--transition);
+      font-size: 0.75rem;
+    }
+
+    .coffee-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(247, 183, 49, 0.5);
+    }
+
+    /* エラー表示 */
+    .error-container {
+      display: none;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #f87171;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      margin-top: 10px;
+    }
+
+    /* フッター */
+    footer {
+      padding: 12px 24px 20px 24px;
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--text-sub);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.8);
+    }
+  </style>
+</head>
+<body>
+  <!-- 背景のGlow効果 -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <!-- ヘッダー -->
+  <header>
+    <div class="header-title-container">
+      <!-- WEKO3アイコンを模したSVG -->
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #ffffff;">
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+        <path d="M6 6h10"/>
+        <path d="M6 10h10"/>
+        <path d="M12 14h4"/>
+      </svg>
+      <div>
+        <h1>JAIRO-Cloud / WEKO3</h1>
+        <p>リポジトリ登録支援・インポートCSV生成</p>
+      </div>
+    </div>
+    <span class="version-badge">v1.0.0</span>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main>
+    <!-- DOI入力・自動検出エリア -->
+    <div class="card">
+      <div class="section-title">
+        <span>DOI の検出・入力</span>
+        <span id="doi-status-badge" class="status-indicator status-missing">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          未検出
+        </span>
+      </div>
+      
+      <p id="doi-desc" style="font-size: 0.75rem; color: var(--text-sub); margin-bottom: 8px;">
+        現在開いているタブからDOIをスキャンします。選択中のテキストが優先されます。
+      </p>
+
+      <div class="input-group">
+        <input type="text" id="doi-input" placeholder="例: 10.1109/5.771073" title="DOIを入力してください">
+        <button id="btn-scan" class="btn-secondary" title="ページからDOIを再スキャンします">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          スキャン
+        </button>
+      </div>
+
+      <button id="btn-fetch" class="btn-primary" style="width: 100%; margin-top: 12px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Crossrefから書誌メタデータを取得
+      </button>
+
+      <!-- エラー表示領域 -->
+      <div id="error-box" class="error-container"></div>
+    </div>
+
+    <!-- ローディング表示 -->
+    <div id="loader" class="loader-container">
+      <div class="spinner"></div>
+      <p style="font-size: 0.85rem; color: var(--text-sub);">Crossref API 連携中...</p>
+    </div>
+
+    <!-- メタデータプレビュー/編集/ダウンロード（取得成功時に表示） -->
+    <div id="metadata-section" class="card metadata-form">
+      <div class="section-title">書誌メタデータ（編集可能）</div>
+      
+      <!-- フォーム項目 -->
+      <div class="form-group full-width">
+        <label for="field-title">タイトル (Title)</label>
+        <input type="text" id="field-title">
+      </div>
+
+      <div class="form-group full-width">
+        <label for="field-author">著者名 (Creators) ※複数人はパイプ | 区切り</label>
+        <input type="text" id="field-author" placeholder="山田, 太郎|鈴木, 一郎">
+      </div>
+
+      <div class="form-group full-width">
+        <label for="field-journal">雑誌名・ジャーナル名 (Source Title)</label>
+        <input type="text" id="field-journal">
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="field-volume">巻 (Volume)</label>
+          <input type="text" id="field-volume">
+        </div>
+        <div class="form-group">
+          <label for="field-issue">号 (Issue)</label>
+          <input type="text" id="field-issue">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="field-pagestart">開始ページ (Start Page)</label>
+          <input type="text" id="field-pagestart">
+        </div>
+        <div class="form-group">
+          <label for="field-pageend">終了ページ (End Page)</label>
+          <input type="text" id="field-pageend">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="field-pubdate">発行年 (Publication Year)</label>
+          <input type="text" id="field-pubdate" placeholder="YYYY">
+        </div>
+        <div class="form-group">
+          <label for="field-issn">ISSN</label>
+          <input type="text" id="field-issn">
+        </div>
+      </div>
+
+      <!-- オープンアクセスポリシーの簡易案内 -->
+      <div class="policy-container">
+        <div class="policy-header">
+          <span style="font-size: 0.8rem; font-weight: 600;">セルフアーカイブ・ポリシー判定</span>
+          <span id="policy-badge" class="policy-badge policy-yellow">要確認</span>
+        </div>
+        <p id="policy-text" class="policy-description">
+          ISSNを用いて著作権ポリシーを確認してください。機関リポジトリ登録条件（査読後原稿のみなど）が設定されている場合があります。
+        </p>
+        <div class="policy-links">
+          <a id="link-scpj" href="#" target="_blank">
+            <span>SCPJで検索</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+          <a id="link-sherpa" href="#" target="_blank">
+            <span>Sherpa Romeoで検索</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- アクションとフォーマット選択 -->
+      <div class="download-action-area">
+        <div class="format-selector">
+          <button type="button" id="format-csv" class="format-btn active">CSV (BOM)</button>
+          <button type="button" id="format-tsv" class="format-btn">TSV (BOM)</button>
+        </div>
+        <button id="btn-download" class="btn-primary" style="flex: 1;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          インポート用データ出力
+        </button>
+      </div>
+    </div>
+
+    <!-- Buy Me a Coffee エモーショナル導線 -->
+    <div id="coffee-donation" class="donation-area">
+      <div class="donation-text">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
+        業務はスピード解決しましたか？
+      </div>
+      <p style="color: var(--text-sub); font-size: 0.75rem; margin-bottom: 8px;">
+        お役に立ちましたら、コーヒーを1杯奢っていただけると嬉しいです ☕
+      </p>
+      <a href="https://www.buymeacoffee.com/yourusername" target="_blank" class="coffee-link">
+        Buy Me a Coffeeで応援する
+      </a>
+    </div>
+  </main>
+
+  <!-- フッター -->
+  <footer>
+    <span>機関リポジトリ登録支援ツール</span>
+    <span style="font-weight: 300;">Academic Micro SaaS Dev</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "JAIRO-Cloud / WEKO3 リポジトリ登録支援ツール",
+  "version": "1.0.0",
+  "description": "DOIから論文メタデータを自動取得し、WEKO3/JPCOARインポート用CSVを生成します。SCPJポリシーの簡易確認機能付き。",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
