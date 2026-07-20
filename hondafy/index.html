@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ストリートファイターのエドモンド本田がモチーフ！入力テキストの音節をどすこい・百裂張り手・ホンダ語（ホンダホンダホダ ﾎﾝﾀﾞ ﾎﾝﾀﾞ!? ﾎｰﾝﾀﾞ&quot;!!）に変換するE. HONDAFY超次元相撲アタッチメント。">
-  <meta name="keywords" content="エドモンド本田, E.HONDA, ストリートファイター, どすこい, 百裂張り手, スーパー頭突き, ホンダ変換">
-  <title>E. HONDAFY - ストリートファイター エドモンド本田 どすこい変換器</title>
+  <meta name="description" content="ストリートファイターのエドモンド本田がモチーフ！各種「ホンダ」と「ドスコーイ」「百貫落としじゃーい」「百裂張り手じゃい！」などの名フレーズに変換するE. HONDAFY超次元相撲アタッチメント。">
+  <meta name="keywords" content="エドモンド本田, E.HONDA, ストリートファイター, ドスコイ, 百裂張り手, スーパー頭突き, ホンダ変換">
+  <title>E. HONDAFY - ストリートファイター エドモンド本田 変換器</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✋</text></svg>">
 </head>
@@ -21,7 +21,7 @@
       <div class="title-wrap">
         <h1 class="app-title">E. HONDAFY <span class="badge">STREET FIGHTER</span></h1>
       </div>
-      <p class="app-subtitle">「どすこい！わははは！相撲こそが世界一であることを証明して見せる！」</p>
+      <p class="app-subtitle">「ドスコイ！がーっはっはっはっは！世界は広いのう！」</p>
     </header>
 
     <!-- Main Workspace -->
@@ -29,7 +29,7 @@
       <!-- Input Panel -->
       <section class="panel" id="input-panel">
         <div class="panel-header">
-          <h2 class="panel-title"><span>01.</span> 原文挑戦 (INPUT)</h2>
+          <h2 class="panel-title"><span>01.</span> 原文入力 (INPUT)</h2>
           <span class="char-counter" id="char-count">0 文字</span>
         </div>
 
@@ -37,28 +37,17 @@
 
         <!-- Presets -->
         <div class="presets-wrap">
-          <button class="preset-btn" data-preset="こんにちは！今日も元気にどすこい！">挨拶</button>
+          <button class="preset-btn" data-preset="こんにちは！今日も元気に頑張りましょう！">挨拶</button>
           <button class="preset-btn" data-preset="勝負だ！我が百裂張り手を受けてみよ！">対戦挑発</button>
-          <button class="preset-btn" data-preset="本日のちゃんこ鍋はごちそうですね。">ごっつぁん</button>
-          <button class="preset-btn" data-preset="ホンダホンダホダ ﾎﾝﾀﾞ ﾎﾝﾀﾞ!? ﾎｰﾝﾀﾞ&quot;!!">ホンダ呪文</button>
+          <button class="preset-btn" data-preset="本日のちゃんこ鍋はとても美味しいですね。">ごちそう</button>
+          <button class="preset-btn" data-preset="ホンダホンダホダ ﾎﾝﾀﾞ ﾎﾝﾀﾞ!? ﾎｰﾝﾀﾞ&quot;!!">呪文</button>
         </div>
 
-        <!-- Conversion Controls -->
-        <div class="controls-grid">
-          <div class="control-group">
-            <label class="control-label" for="mode-select">本田必殺技モード</label>
-            <select id="mode-select">
-              <option value="chaos">💥 半角カオス本田 (Chaos Honda)</option>
-              <option value="harite">✋ 百裂張り手 (Hyakuretsu Harite)</option>
-              <option value="zutsuki">🐂 スーパー頭突き (Super Zutsuki)</option>
-              <option value="gottsuan">🍲 ごっつぁんちゃんこ (Gottsuan)</option>
-              <option value="champion">🏆 世界一の相撲 (World Champion)</option>
-            </select>
-          </div>
-
+        <!-- Single Controls (Tension Slider) -->
+        <div class="controls-grid" style="grid-template-columns: 1fr;">
           <div class="control-group">
             <label class="control-label" for="tension-slider">
-              <span>どすこいテンション</span>
+              <span>どすこいテンション (本田パワー)</span>
               <span id="tension-value">80%</span>
             </label>
             <input type="range" id="tension-slider" min="10" max="100" value="80">
@@ -67,7 +56,7 @@
 
         <div class="action-buttons">
           <button class="btn btn-primary" id="convert-btn">
-            <span>🔥 百裂どすこい変換！</span>
+            <span>🔥 エドモンド本田語に変換！</span>
           </button>
           <button class="btn btn-secondary btn-icon" id="clear-btn" title="クリア">
             🗑️
@@ -114,7 +103,7 @@
 
     <!-- Footer -->
     <footer>
-      <p>E. HONDAFY Engine &copy; 2026 Inspired by Street Fighter E. Honda モーラ・張り手アルゴリズム</p>
+      <p>E. HONDAFY Engine &copy; 2026 Inspired by Street Fighter E. Honda</p>
     </footer>
   </div>
 
