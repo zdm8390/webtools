@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ストリートファイターのエドモンド本田がモチーフ！入力テキストの音節をどすこい・百裂張り手・ホンダ語（ホンダホンダホダ ﾎﾝﾀﾞ ﾎﾝﾀﾞ!? ﾎｰﾝﾀﾞ&quot;!!）に変換するE. HONDAFY超次元相撲アタッチメント。">
+  <meta name="keywords" content="エドモンド本田, E.HONDA, ストリートファイター, どすこい, 百裂張り手, スーパー頭突き, ホンダ変換">
+  <title>E. HONDAFY - ストリートファイター エドモンド本田 どすこい変換器</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✋</text></svg>">
+</head>
+<body>
+
+  <!-- Canvas Particle FX -->
+  <canvas id="particle-canvas"></canvas>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <img src="ehonda_hero.jpg" alt="E. Honda Banner" class="hero-banner" id="hero-img">
+      <div class="title-wrap">
+        <h1 class="app-title">E. HONDAFY <span class="badge">STREET FIGHTER</span></h1>
+      </div>
+      <p class="app-subtitle">「どすこい！わははは！相撲こそが世界一であることを証明して見せる！」</p>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="app-grid">
+      <!-- Input Panel -->
+      <section class="panel" id="input-panel">
+        <div class="panel-header">
+          <h2 class="panel-title"><span>01.</span> 原文挑戦 (INPUT)</h2>
+          <span class="char-counter" id="char-count">0 文字</span>
+        </div>
+
+        <textarea id="input-text" placeholder="ここに変換したい言葉を入力してください...&#10;例: こんにちは！今日も一日元気に頑張りましょう！？"></textarea>
+
+        <!-- Presets -->
+        <div class="presets-wrap">
+          <button class="preset-btn" data-preset="こんにちは！今日も元気にどすこい！">挨拶</button>
+          <button class="preset-btn" data-preset="勝負だ！我が百裂張り手を受けてみよ！">対戦挑発</button>
+          <button class="preset-btn" data-preset="本日のちゃんこ鍋はごちそうですね。">ごっつぁん</button>
+          <button class="preset-btn" data-preset="ホンダホンダホダ ﾎﾝﾀﾞ ﾎﾝﾀﾞ!? ﾎｰﾝﾀﾞ&quot;!!">ホンダ呪文</button>
+        </div>
+
+        <!-- Conversion Controls -->
+        <div class="controls-grid">
+          <div class="control-group">
+            <label class="control-label" for="mode-select">本田必殺技モード</label>
+            <select id="mode-select">
+              <option value="chaos">💥 半角カオス本田 (Chaos Honda)</option>
+              <option value="harite">✋ 百裂張り手 (Hyakuretsu Harite)</option>
+              <option value="zutsuki">🐂 スーパー頭突き (Super Zutsuki)</option>
+              <option value="gottsuan">🍲 ごっつぁんちゃんこ (Gottsuan)</option>
+              <option value="champion">🏆 世界一の相撲 (World Champion)</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="tension-slider">
+              <span>どすこいテンション</span>
+              <span id="tension-value">80%</span>
+            </label>
+            <input type="range" id="tension-slider" min="10" max="100" value="80">
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="convert-btn">
+            <span>🔥 百裂どすこい変換！</span>
+          </button>
+          <button class="btn btn-secondary btn-icon" id="clear-btn" title="クリア">
+            🗑️
+          </button>
+          <button class="sound-toggle active" id="sound-toggle" title="効果音切替">🔊</button>
+        </div>
+      </section>
+
+      <!-- Output Panel -->
+      <section class="panel" id="output-panel">
+        <div class="panel-header">
+          <h2 class="panel-title"><span>02.</span> エドモンド本田語 (OUTPUT)</h2>
+          <span class="hit-badge" id="hit-badge">100 HITS!</span>
+        </div>
+
+        <div class="output-box" id="output-text">
+          <span class="output-placeholder">ここにエドモンド本田語の変換結果が表示されます...</span>
+        </div>
+
+        <!-- Gauge -->
+        <div class="gauge-container">
+          <div class="gauge-header">
+            <span>HONDA POWER (本田パワー)</span>
+            <span id="purity-value">0%</span>
+          </div>
+          <div class="gauge-bar-bg">
+            <div class="gauge-bar-fill" id="purity-fill"></div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="copy-btn">
+            <span>📋 ごっつぁんコピー</span>
+          </button>
+          <button class="btn btn-secondary" id="speak-btn" title="本田朗読">
+            <span>🔊 どすこい朗読</span>
+          </button>
+          <button class="btn btn-secondary" id="share-btn" title="Xで共有">
+            <span>𝕏 ポスト</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <p>E. HONDAFY Engine &copy; 2026 Inspired by Street Fighter E. Honda モーラ・張り手アルゴリズム</p>
+    </footer>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">コピーしました！</div>
+
+  <script src="app.js"></script>
+</body>
+</html>

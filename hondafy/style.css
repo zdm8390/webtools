@@ -1,0 +1,472 @@
+/* ==========================================================================
+   E. HONDAFY - Street Fighter E. Honda Sumo Converter Theme
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Orbitron:wght@700;900&family=Noto+Sans+JP:wght@500;700;900&display=swap');
+
+:root {
+  --bg-color: #0d0809;
+  --panel-bg: rgba(26, 15, 18, 0.82);
+  --panel-border: rgba(235, 47, 6, 0.4);
+  --honda-red: #eb2f06;
+  --honda-crimson: #b71540;
+  --honda-gold: #f6b93b;
+  --honda-sumo-blue: #1e3799;
+  --text-main: #f8f9fa;
+  --text-muted: #a4b0be;
+  --font-brush: 'Yuji Syuku', 'Noto Sans JP', serif;
+  --font-arcade: 'Orbitron', 'Noto Sans JP', sans-serif;
+  --font-body: 'Noto Sans JP', sans-serif;
+  --glass-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+  --radius-lg: 18px;
+  --radius-md: 10px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  background-image: 
+    radial-gradient(circle at 50% 10%, rgba(235, 47, 6, 0.18) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(246, 185, 59, 0.1) 0%, transparent 45%),
+    linear-gradient(to bottom, rgba(13, 8, 9, 0.96), rgba(13, 8, 9, 0.99));
+}
+
+/* Canvas Particle Overlay */
+#particle-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.container {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Header */
+header {
+  text-align: center;
+  margin-bottom: 2.2rem;
+  position: relative;
+}
+
+.hero-banner {
+  width: 100%;
+  max-height: 230px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--honda-red);
+  box-shadow: 0 0 35px rgba(235, 47, 6, 0.4);
+  margin-bottom: 1.25rem;
+  filter: brightness(1.05) contrast(1.1);
+}
+
+.app-title {
+  font-family: var(--font-brush);
+  font-size: clamp(2.5rem, 6vw, 4.2rem);
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #ffffff 20%, var(--honda-gold) 50%, var(--honda-red) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 20px rgba(235, 47, 6, 0.5);
+}
+
+.app-subtitle {
+  color: var(--honda-gold);
+  font-family: var(--font-brush);
+  font-size: 1.15rem;
+  margin-top: 0.4rem;
+  letter-spacing: 2px;
+}
+
+.badge {
+  background: linear-gradient(135deg, var(--honda-red), var(--honda-crimson));
+  color: #fff;
+  font-family: var(--font-arcade);
+  font-size: 0.8rem;
+  font-weight: 900;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-left: 0.6rem;
+  box-shadow: 0 0 15px var(--honda-red);
+  border: 1px solid var(--honda-gold);
+}
+
+/* Main Layout Grid */
+.app-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+}
+
+@media (min-width: 900px) {
+  .app-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Glass Panels */
+.panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 2px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--honda-red), var(--honda-gold), var(--honda-crimson));
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(246, 185, 59, 0.2);
+  padding-bottom: 0.75rem;
+}
+
+.panel-title {
+  font-family: var(--font-brush);
+  font-size: 1.35rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-main);
+}
+
+.panel-title span {
+  color: var(--honda-gold);
+}
+
+.hit-badge {
+  font-family: var(--font-arcade);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--honda-gold);
+  text-shadow: 0 0 10px rgba(246, 185, 59, 0.8);
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+/* Textarea */
+textarea {
+  width: 100%;
+  height: 170px;
+  background: rgba(10, 6, 7, 0.85);
+  border: 1px solid rgba(246, 185, 59, 0.3);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  transition: var(--transition);
+}
+
+textarea:focus {
+  border-color: var(--honda-red);
+  box-shadow: 0 0 20px rgba(235, 47, 6, 0.4);
+}
+
+/* Output Display Area */
+.output-box {
+  min-height: 170px;
+  background: rgba(10, 6, 7, 0.92);
+  border: 2px solid var(--honda-red);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  color: #fff;
+  font-family: var(--font-brush);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.8;
+  word-break: break-all;
+  white-space: pre-wrap;
+  position: relative;
+  overflow-y: auto;
+  max-height: 270px;
+  box-shadow: inset 0 0 15px rgba(235, 47, 6, 0.2);
+}
+
+.output-placeholder {
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Presets */
+.presets-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.preset-btn {
+  background: rgba(235, 47, 6, 0.15);
+  border: 1px solid rgba(246, 185, 59, 0.3);
+  color: var(--honda-gold);
+  font-family: var(--font-brush);
+  font-size: 0.95rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.preset-btn:hover {
+  background: var(--honda-red);
+  border-color: var(--honda-gold);
+  color: #fff;
+  box-shadow: 0 0 12px var(--honda-red);
+}
+
+/* Controls */
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.control-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+}
+
+select {
+  background: rgba(10, 6, 7, 0.9);
+  border: 1px solid rgba(246, 185, 59, 0.3);
+  color: #fff;
+  padding: 0.65rem 0.8rem;
+  border-radius: 8px;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+select:focus {
+  border-color: var(--honda-red);
+}
+
+/* Range Slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--honda-gold);
+  border: 2px solid var(--honda-red);
+  box-shadow: 0 0 12px var(--honda-gold);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+}
+
+/* Gauge */
+.gauge-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.gauge-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--honda-gold);
+  font-family: var(--font-arcade);
+}
+
+.gauge-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(246, 185, 59, 0.3);
+}
+
+.gauge-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--honda-gold), var(--honda-red));
+  box-shadow: 0 0 15px var(--honda-red);
+  transition: width 0.4s ease;
+}
+
+/* Buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.4rem;
+  font-family: var(--font-brush);
+  font-size: 1.1rem;
+  font-weight: 900;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--honda-gold);
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #eb2f06 0%, #b71540 100%);
+  color: #fff;
+  box-shadow: 0 5px 25px rgba(235, 47, 6, 0.5);
+  flex: 2;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 35px rgba(235, 47, 6, 0.7);
+  background: linear-gradient(135deg, #ff3f10 0%, #d6184a 100%);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(246, 185, 59, 0.4);
+  color: var(--text-main);
+  flex: 1;
+}
+
+.btn-secondary:hover {
+  background: rgba(246, 185, 59, 0.2);
+  border-color: var(--honda-gold);
+}
+
+.sound-toggle {
+  background: transparent;
+  border: 1px solid rgba(246, 185, 59, 0.4);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.sound-toggle.active {
+  color: var(--honda-gold);
+  border-color: var(--honda-gold);
+  box-shadow: 0 0 10px rgba(246, 185, 59, 0.5);
+}
+
+.shake {
+  animation: shakeAnim 0.35s ease-in-out;
+}
+
+@keyframes shakeAnim {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-6px, 3px) rotate(-1.5deg); }
+  40% { transform: translate(6px, -3px) rotate(1.5deg); }
+  60% { transform: translate(-4px, 2px) rotate(-1deg); }
+  80% { transform: translate(4px, -2px) rotate(1deg); }
+}
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(26, 15, 18, 0.95);
+  border: 2px solid var(--honda-gold);
+  color: #fff;
+  padding: 0.75rem 1.6rem;
+  border-radius: 30px;
+  font-family: var(--font-brush);
+  font-size: 1.05rem;
+  font-weight: 700;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9), 0 0 20px rgba(235, 47, 6, 0.5);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 100;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+footer {
+  margin-top: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-family: var(--font-brush);
+}
