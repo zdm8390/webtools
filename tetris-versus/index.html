@@ -25,7 +25,7 @@
         <div id="game-viewport">
             
             <!-- Global Version Badge (Small in Bottom-Right Corner) -->
-            <div class="version-tag">ver 1.5.0</div>
+            <div class="version-tag">ver 3.0.0 Master Edition</div>
 
             <!-- Notification / Alert Overlay (P2P Challenger & Global Messages) -->
             <div id="global-toast-container"></div>
@@ -39,8 +39,9 @@
                         <div class="logo-header">
                             <span class="logo-badge">🐾 POP ANIMAL MAGIC TETRIS</span>
                             <h1 class="game-title">テトリスン</h1>
-                            <p class="game-subtitle">〜 魔法の動物たちとパステルテトリス対戦！ 〜 <span class="header-ver-text">v1.5.0</span></p>
+                            <p class="game-subtitle">〜 魔法の動物たちとパステルテトリス対戦！ 〜 <span class="header-ver-text">v3.0.0</span></p>
                         </div>
+
 
                         <div class="howto-content">
                             <h2>🎮 操作方法のご案内</h2>
@@ -348,18 +349,26 @@
                                 </div>
 
                                 <!-- Large Pop-up ADV Dialogue Modal -->
-                                <div id="adv-dialogue-box" class="adv-dialogue-modal glass-panel" style="display:none;">
+                                <div id="adv-dialogue-box" class="adv-dialogue-modal glass-panel" style="display:none;" onclick="app.nextDialogue()">
                                     <div class="adv-large-header">
-                                        <div class="adv-speaker-tag" id="adv-speaker-name">ネコニャー</div>
-                                        <button class="adv-skip-btn" onclick="app.skipDialogue()">スキップ ▶▶</button>
+                                        <div class="adv-speaker-left">
+                                            <div class="adv-speaker-avatar-wrapper" id="adv-avatar-wrapper">
+                                                <img id="adv-speaker-img" class="adv-speaker-img" src="assets/nekonya.jpg" alt="Speaker Avatar">
+                                                <div id="adv-emotion-badge" class="adv-emotion-badge">😊</div>
+                                            </div>
+                                            <div class="adv-speaker-tag" id="adv-speaker-name">ネコニャー</div>
+                                        </div>
+                                        <button class="adv-skip-btn" onclick="event.stopPropagation(); app.skipDialogue();">スキップ ▶▶</button>
                                     </div>
                                     <div class="adv-large-body">
                                         <p id="adv-text" class="adv-dialogue-text text-autowrap">「準備はいいニャ？勝負開始ニャ！」</p>
                                     </div>
-                                    <div class="adv-large-footer" onclick="app.nextDialogue()">
-                                        <span class="blink-prompt">クリック / ボタンで次へ進む 💬</span>
+                                    <div class="adv-large-footer">
+                                        <span class="blink-prompt">画面のどこでもクリック / ボタンで次へ進む 💬</span>
                                     </div>
                                 </div>
+
+
 
                                 <!-- Magic Roulette Display Modal -->
                                 <div id="magic-roulette-modal" class="roulette-modal glass-panel" style="display:none;">
@@ -446,8 +455,19 @@
                             </div>
 
                         </div>
+
+                        <!-- Touch Mobile Controller (Iteration 5) -->
+                        <div id="touch-controls" class="mobile-touch-controls">
+                            <button class="touch-btn" onclick="app.p1Game && app.p1Game.moveLeft()">◀</button>
+                            <button class="touch-btn" onclick="app.p1Game && app.p1Game.moveRight()">▶</button>
+                            <button class="touch-btn" onclick="app.p1Game && app.p1Game.rotatePiece(1)">↻</button>
+                            <button class="touch-btn" onclick="app.p1Game && app.p1Game.softDrop()">▼</button>
+                            <button class="touch-btn btn-drop" onclick="app.p1Game && app.p1Game.hardDrop()">DROP</button>
+                            <button class="touch-btn btn-magic" onclick="app.triggerMagic('p1')">✨ 魔法</button>
+                        </div>
                     </div>
                 </section>
+
 
 
                 <!-- 5. スコア登録画面 (Score Result & Ranking Screen) -->
