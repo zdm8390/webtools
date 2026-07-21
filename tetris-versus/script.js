@@ -1,3065 +1,1536 @@
 /**
- * Cyber Tetris Versus - Web Audio, Canvas Arcade & WebRTC Online Multiplayer Engine
- * Antigravity Webtools Suite
+ * ==========================================================================
+ * 『テトリスン』(Tetrisun) - Core Game Engine & Application Logic
+ * ==========================================================================
  */
 
-(function () {
-    'use strict';
+'use strict';
 
-    // --- TETROMINO DEFINITIONS & COLOR PALETTE ---
-    const TETROMINOES = {
-        I: {
-            color: '#06b6d4', // Cyan
-            ghostColor: 'rgba(6, 182, 212, 0.25)',
-            shape: [
-                [0, 0, 0, 0],
-                [1, 1, 1, 1],
-                [0, 0, 0, 0],
-                [0, 0, 0, 0]
-            ]
-        },
-        J: {
-            color: '#3b82f6', // Blue
-            ghostColor: 'rgba(59, 130, 246, 0.25)',
-            shape: [
-                [1, 0, 0],
-                [1, 1, 1],
-                [0, 0, 0]
-            ]
-        },
-        L: {
-            color: '#f97316', // Orange
-            ghostColor: 'rgba(249, 115, 22, 0.25)',
-            shape: [
-                [0, 0, 1],
-                [1, 1, 1],
-                [0, 0, 0]
-            ]
-        },
-        O: {
-            color: '#eab308', // Yellow
-            ghostColor: 'rgba(234, 179, 8, 0.25)',
-            shape: [
-                [1, 1],
-                [1, 1]
-            ]
-        },
-        S: {
-            color: '#22c55e', // Green
-            ghostColor: 'rgba(34, 197, 94, 0.25)',
-            shape: [
-                [0, 1, 1],
-                [1, 1, 0],
-                [0, 0, 0]
-            ]
-        },
-        T: {
-            color: '#a855f7', // Purple
-            ghostColor: 'rgba(168, 85, 247, 0.25)',
-            shape: [
-                [0, 1, 0],
-                [1, 1, 1],
-                [0, 0, 0]
-            ]
-        },
-        Z: {
-            color: '#ef4444', // Red
-            ghostColor: 'rgba(239, 68, 68, 0.25)',
-            shape: [
-                [1, 1, 0],
-                [0, 1, 1],
-                [0, 0, 0]
-            ]
-        }
+/* --- Canvas roundRect Polyfill for Universal Compatibility --- */
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, radii) {
+        let r = radii;
+        if (typeof r === 'number') r = [r, r, r, r];
+        else if (!Array.isArray(r)) r = [0, 0, 0, 0];
+        const topL = r[0] || 0, topR = r[1] || r[0] || 0, botR = r[2] || r[0] || 0, botL = r[3] || r[1] || r[0] || 0;
+        this.beginPath();
+        this.moveTo(x + topL, y);
+        this.lineTo(x + w - topR, y);
+        this.quadraticCurveTo(x + w, y, x + w, y + topR);
+        this.lineTo(x + w, y + h - botR);
+        this.quadraticCurveTo(x + w, y + h, x + w - botR, y + h);
+        this.lineTo(x + botL, y + h);
+        this.quadraticCurveTo(x, y + h, x, y + h - botL);
+        this.lineTo(x, y + topL);
+        this.quadraticCurveTo(x, y, x + topL, y);
+        this.closePath();
+        return this;
     };
+}
 
-    const COLS = 10;
-    const ROWS = 20;
-    const BLOCK_SIZE = 30; // 300x600 canvas
+/* --------------------------------------------------------------------------
+   1. Data Specifications: Characters & Magic Definitions
+   -------------------------------------------------------------------------- */
+const CHARACTERS = {
+    nekonya: {
+        id: 'nekonya',
+        name: 'ネコニャー',
+        animal: '猫',
+        color: '#FFB7C5',
+        desc: '気まぐれだけどすばやいパズルが得意なニャンコ！',
+        magicName: '『気まぐれアタック』',
+        magicDesc: '自身の盤面の奇数行（1, 3, 5, 7, 9行目等）からランダムに3行分を消去する。'
+    },
+    inuwan: {
+        id: 'inuwan',
+        name: 'イヌワン',
+        animal: '犬',
+        color: '#FFDF80',
+        desc: '忠実で頼もしいワンコ！お邪魔ブロックを打ち返す！',
+        magicName: '『カエシテク・アタック』',
+        magicDesc: '現在自分の盤面にあるお邪魔行をそのまま相手に押し戻す（最大3行）。'
+    },
+    torichun: {
+        id: 'torichun',
+        name: 'トリチュン',
+        animal: '鳥',
+        color: '#A8E6CF',
+        desc: 'パタパタお空を飛ぶ鳥の歌姫！上からお掃除！',
+        magicName: '『ピーチクテイル』',
+        magicDesc: '自身の盤面の最上段から3行分のブロックを消去する。'
+    },
+    sarukkey: {
+        id: 'sarukkey',
+        name: 'サルウッキー',
+        animal: '猿',
+        color: '#FFD3B6',
+        desc: 'お調子者のサル！四角いテトリミノの嵐を起こす！',
+        magicName: '『ウッキッキー・スクエア』',
+        magicDesc: '次に出現するテトリミノが3回連続で「O型（四角）」に固定化される。'
+    },
+    tanupon: {
+        id: 'tanupon',
+        name: 'タヌポン',
+        animal: 'タヌキ',
+        color: '#CBA6D7',
+        desc: 'ドロンと化けるいたずらタヌキ！一瞬でリセット！',
+        magicName: '『ドロンコ・リセット』',
+        magicDesc: 'お互い（自分と相手）のステージ盤面を完全に空の初期状態へ戻す。'
+    },
+    kitsunekon: {
+        id: 'kitsunekon',
+        name: 'キツネコン',
+        animal: '狐',
+        color: '#AEC6CF',
+        desc: 'ミステリアスな忍者狐！相手と盤面をスワップ！',
+        magicName: '『トリック・チェンジ』',
+        magicDesc: '自分の盤面状態と相手の盤面状態をそのまま入れ替える。'
+    },
+    dragogon: {
+        id: 'dragogon',
+        name: 'ドラゴゴン',
+        animal: '竜',
+        color: '#FF7B9C',
+        desc: '伝説の小竜！強力なブレスで下部を焼き尽くす！',
+        magicName: '『ドラゴン・ブレス』',
+        magicDesc: '自身の盤面の下部から5行分のブロックを強力に消去する。'
+    }
+};
 
-    // --- Web Audio Synthesizer ---
-    // --- Web Audio Synthesizer & BGM Engine ---
-    class SoundEngine {
-        constructor() {
-            this.ctx = null;
-            this.enabled = true;
-            this.bgmEnabled = true;
-            this.bgmPlaying = false;
+/* Tetrimino Definitions */
+const TETRIMINOS = {
+    I: { color: '#74D2E7', shape: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]] },
+    J: { color: '#89CFF0', shape: [[1,0,0],[1,1,1],[0,0,0]] },
+    L: { color: '#FFD3B6', shape: [[0,0,1],[1,1,1],[0,0,0]] },
+    O: { color: '#FFDF80', shape: [[1,1],[1,1]] },
+    S: { color: '#A8E6CF', shape: [[0,1,1],[1,1,0],[0,0,0]] },
+    T: { color: '#CBA6D7', shape: [[0,1,0],[1,1,1],[0,0,0]] },
+    Z: { color: '#FFAAA5', shape: [[1,1,0],[0,1,1],[0,0,0]] }
+};
+
+/* SRS Rotation Wall-Kick Offsets */
+const WALLKICK_JLSTZ = [
+    [[0,0], [-1,0], [-1,1], [0,-2], [-1,-2]],
+    [[0,0], [1,0], [1,-1], [0,2], [1,2]],
+    [[0,0], [1,0], [1,-1], [0,2], [1,2]],
+    [[0,0], [-1,0], [-1,1], [0,-2], [-1,-2]],
+    [[0,0], [1,0], [1,1], [0,-2], [1,-2]],
+    [[0,0], [-1,0], [-1,-1], [0,2], [-1,2]],
+    [[0,0], [-1,0], [-1,-1], [0,2], [-1,2]],
+    [[0,0], [1,0], [1,1], [0,-2], [1,-2]]
+];
+
+const WALLKICK_I = [
+    [[0,0], [-2,0], [1,0], [-2,-1], [1,2]],
+    [[0,0], [2,0], [-1,0], [2,1], [-1,-2]],
+    [[0,0], [-1,0], [2,0], [-1,2], [2,-1]],
+    [[0,0], [1,0], [-2,0], [1,-2], [-2,1]],
+    [[0,0], [2,0], [-1,0], [2,1], [-1,-2]],
+    [[0,0], [-2,0], [1,0], [-2,-1], [1,2]],
+    [[0,0], [1,0], [-2,0], [1,-2], [-2,1]],
+    [[0,0], [-1,0], [2,0], [-1,2], [2,-1]]
+];
+
+
+/* --------------------------------------------------------------------------
+   2. Audio Engine (Pure Web Audio API Synthesizer)
+   -------------------------------------------------------------------------- */
+class SoundEngine {
+    constructor() {
+        this.ctx = null;
+        this.bgmVolume = 0.7;
+        this.seVolume = 0.8;
+        this.bgmTimer = null;
+        this.isPlayingBgm = false;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    playPopSE() {
+        if (!this.ctx || this.seVolume <= 0) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.05);
+        gain.gain.setValueAtTime(this.seVolume * 0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.05);
+    }
+
+    playRotateSE() {
+        if (!this.ctx || this.seVolume <= 0) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(600, this.ctx.currentTime + 0.06);
+        gain.gain.setValueAtTime(this.seVolume * 0.35, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.06);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.06);
+    }
+
+    playDropSE() {
+        if (!this.ctx || this.seVolume <= 0) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(this.seVolume * 0.4, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+    }
+
+    playLineClearSE(lines = 1) {
+        if (!this.ctx || this.seVolume <= 0) return;
+        const now = this.ctx.currentTime;
+        const baseFreq = lines >= 4 ? 523.25 : 440;
+        const count = lines >= 4 ? 6 : 3;
+        for (let i = 0; i < count; i++) {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(baseFreq * Math.pow(1.25, i), now + i * 0.05);
+            gain.gain.setValueAtTime(this.seVolume * 0.3, now + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.12);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i * 0.05);
+            osc.stop(now + i * 0.05 + 0.12);
+        }
+    }
+
+    playMagicSE() {
+        if (!this.ctx || this.seVolume <= 0) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.4);
+        gain.gain.setValueAtTime(this.seVolume * 0.4, now);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.4);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.4);
+    }
+
+    startBgm() {
+        if (this.isPlayingBgm) return;
+        this.init();
+        this.isPlayingBgm = true;
+        let step = 0;
+        const melody = [261.63, 329.63, 392.00, 523.25, 440.00, 349.23, 392.00, 293.66];
+        
+        this.bgmTimer = setInterval(() => {
+            if (!this.isPlayingBgm || this.bgmVolume <= 0) return;
+            const freq = melody[step % melody.length];
+            step++;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(this.bgmVolume * 0.08, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.18);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.18);
+        }, 220);
+    }
+
+    stopBgm() {
+        this.isPlayingBgm = false;
+        if (this.bgmTimer) {
+            clearInterval(this.bgmTimer);
             this.bgmTimer = null;
-            this.bgmStep = 0;
-            this.bgmTempo = 135; // BPM
+        }
+    }
+}
 
-            // Korobeiniki (Tetris Theme) Melody Sequence (Note frequencies, duration multiplier)
-            // 0 means rest
-            this.melody = [
-                { f: 659.25, d: 2 }, { f: 493.88, d: 1 }, { f: 523.25, d: 1 }, { f: 587.33, d: 2 }, { f: 523.25, d: 1 }, { f: 493.88, d: 1 },
-                { f: 440.00, d: 2 }, { f: 440.00, d: 1 }, { f: 523.25, d: 1 }, { f: 659.25, d: 2 }, { f: 587.33, d: 1 }, { f: 523.25, d: 1 },
-                { f: 493.88, d: 3 }, { f: 523.25, d: 1 }, { f: 587.33, d: 2 }, { f: 659.25, d: 2 },
-                { f: 523.25, d: 2 }, { f: 440.00, d: 2 }, { f: 440.00, d: 4 },
 
-                { f: 0, d: 1 }, { f: 587.33, d: 2 }, { f: 698.46, d: 1 }, { f: 880.00, d: 2 }, { f: 783.99, d: 1 }, { f: 698.46, d: 1 },
-                { f: 659.25, d: 3 }, { f: 523.25, d: 1 }, { f: 659.25, d: 2 }, { f: 587.33, d: 1 }, { f: 523.25, d: 1 },
-                { f: 493.88, d: 2 }, { f: 493.88, d: 1 }, { f: 523.25, d: 1 }, { f: 587.33, d: 2 }, { f: 659.25, d: 2 },
-                { f: 523.25, d: 2 }, { f: 440.00, d: 2 }, { f: 440.00, d: 4 }
-            ];
+/* --------------------------------------------------------------------------
+   3. Character Face Canvas Engine
+   -------------------------------------------------------------------------- */
+function drawCharacterFace(canvas, charId, emotion = 'normal') {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
 
-            this.bassline = [
-                329.63, 440.00, 329.63, 440.00, 293.66, 392.00, 261.63, 349.23,
-                246.94, 329.63, 440.00, 440.00, 293.66, 392.00, 261.63, 329.63
-            ];
+    const char = CHARACTERS[charId] || CHARACTERS.nekonya;
+    const cx = w / 2;
+    const cy = h / 2;
+    const radius = w * 0.4;
+
+    // Background circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = char.color;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.stroke();
+
+    // Eyes & Expression
+    ctx.fillStyle = '#4A4A68';
+    if (emotion === 'happy' || emotion === 'magic') {
+        ctx.beginPath();
+        ctx.arc(cx - radius * 0.35, cy - radius * 0.1, 6, Math.PI, 0);
+        ctx.arc(cx + radius * 0.35, cy - radius * 0.1, 6, Math.PI, 0);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#4A4A68';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy + radius * 0.2, 8, 0, Math.PI);
+        ctx.fillStyle = '#FF7B9C';
+        ctx.fill();
+    } else if (emotion === 'sad') {
+        ctx.font = 'bold 16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('＞＜', cx, cy - 4);
+
+        ctx.beginPath();
+        ctx.arc(cx, cy + radius * 0.35, 6, Math.PI, 0);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#4A4A68';
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.arc(cx - radius * 0.35, cy - radius * 0.1, 5, 0, Math.PI * 2);
+        ctx.arc(cx + radius * 0.35, cy - radius * 0.1, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy + radius * 0.2, 5, 0, Math.PI);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#4A4A68';
+        ctx.stroke();
+    }
+}
+
+
+/* --------------------------------------------------------------------------
+   4. Single Player Board Engine (Tetris Logic)
+   -------------------------------------------------------------------------- */
+class TetrisGame {
+    constructor(playerId, isCpu = false) {
+        this.playerId = playerId;
+        this.isCpu = isCpu;
+        this.cols = 10;
+        this.rows = 20;
+        this.grid = this.createGrid();
+
+        this.score = 0;
+        this.lines = 0;
+        this.ren = 0;
+        this.level = 1;
+
+        this.bag = [];
+        this.currentPiece = null;
+        this.currentX = 0;
+        this.currentY = 0;
+        this.rotationState = 0;
+
+        this.nextQueue = [];
+        this.holdPiece = null;
+        this.canHold = true;
+
+        this.garbageQueue = 0;
+        this.magicGauge = 0;
+        this.barrierTimer = 0;
+        this.forceIPieces = 0;
+        this.forceOPieces = 0;
+
+        this.isGameOver = false;
+        this.isPaused = false;
+
+        this.dropCounter = 0;
+        this.dropInterval = 1000;
+        this.lastTime = 0;
+    }
+
+    createGrid() {
+        return Array.from({ length: this.rows }, () => Array(this.cols).fill(null));
+    }
+
+    reset() {
+        this.grid = this.createGrid();
+        this.score = 0;
+        this.lines = 0;
+        this.ren = 0;
+        this.level = 1;
+        this.bag = [];
+        this.nextQueue = [];
+        this.holdPiece = null;
+        this.canHold = true;
+        this.garbageQueue = 0;
+        this.magicGauge = 0;
+        this.barrierTimer = 0;
+        this.forceIPieces = 0;
+        this.forceOPieces = 0;
+        this.isGameOver = false;
+        this.isPaused = false;
+        this.dropInterval = 1000;
+
+        this.refillBag();
+        for (let i = 0; i < 4; i++) {
+            this.nextQueue.push(this.drawFromBag());
+        }
+        this.spawnPiece();
+    }
+
+    refillBag() {
+        const types = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'];
+        for (let i = types.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [types[i], types[j]] = [types[j], types[i]];
+        }
+        this.bag.push(...types);
+    }
+
+    drawFromBag() {
+        if (this.bag.length < 7) this.refillBag();
+        return this.bag.shift();
+    }
+
+    spawnPiece() {
+        let type;
+        if (this.forceIPieces > 0) {
+            type = 'I';
+            this.forceIPieces--;
+        } else if (this.forceOPieces > 0) {
+            type = 'O';
+            this.forceOPieces--;
+        } else {
+            type = this.nextQueue.shift();
+            this.nextQueue.push(this.drawFromBag());
         }
 
-        init() {
-            if (!this.ctx) {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) this.ctx = new AudioCtx();
-            }
-            if (this.ctx && this.ctx.state === 'suspended') {
-                this.ctx.resume();
-            }
-        }
+        const template = TETRIMINOS[type];
+        this.currentPiece = {
+            type: type,
+            color: template.color,
+            shape: template.shape.map(row => [...row])
+        };
+        this.rotationState = 0;
+        this.currentX = Math.floor((this.cols - this.currentPiece.shape[0].length) / 2);
+        this.currentY = 0;
+        this.canHold = true;
 
-        playTone(freq, duration, type = 'sine', gainVal = 0.1) {
-            if (!this.enabled || !this.ctx || freq <= 0) return;
-            try {
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
-            } catch (e) {}
-        }
-
-        move() { this.playTone(320, 0.04, 'triangle', 0.04); }
-        rotate() { this.playTone(520, 0.05, 'sine', 0.06); }
-        drop() { this.playTone(180, 0.06, 'square', 0.08); }
-        hardDrop() { this.playTone(90, 0.12, 'sawtooth', 0.14); }
-        
-        clear() {
-            this.playTone(523.25, 0.08, 'sine', 0.12);
-            setTimeout(() => this.playTone(659.25, 0.08, 'sine', 0.12), 50);
-            setTimeout(() => this.playTone(783.99, 0.12, 'sine', 0.14), 100);
-        }
-
-        rainbowClear() {
-            const freqs = [523.25, 659.25, 783.99, 1046.50, 1318.51];
-            freqs.forEach((f, i) => {
-                setTimeout(() => this.playTone(f, 0.15, 'triangle', 0.15), i * 40);
-            });
-        }
-
-        tetris() {
-            const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
-            notes.forEach((f, i) => {
-                setTimeout(() => this.playTone(f, 0.18, 'square', 0.16), i * 45);
-            });
-        }
-
-        cancel() {
-            this.playTone(880, 0.08, 'sine', 0.15);
-            setTimeout(() => this.playTone(1174.66, 0.12, 'triangle', 0.18), 60);
-        }
-
-        garbage() { this.playTone(110, 0.22, 'sawtooth', 0.2); }
-
-        magicCast() {
-            const freqs = [440, 554.37, 659.25, 880, 1108.73, 1318.51, 1760];
-            freqs.forEach((f, i) => {
-                setTimeout(() => this.playTone(f, 0.2, 'sine', 0.18), i * 35);
-            });
-        }
-
-        shield() {
-            this.playTone(392, 0.15, 'sine', 0.15);
-            setTimeout(() => this.playTone(523.25, 0.15, 'sine', 0.18), 80);
-            setTimeout(() => this.playTone(659.25, 0.3, 'sine', 0.2), 160);
-        }
-
-        transmute() {
-            const freqs = [1046.50, 880, 659.25, 523.25, 659.25, 880, 1046.50, 1318.51];
-            freqs.forEach((f, i) => {
-                setTimeout(() => this.playTone(f, 0.15, 'triangle', 0.15), i * 40);
-            });
-        }
-
-        fizzle() {
-            this.playTone(300, 0.15, 'sawtooth', 0.15);
-            setTimeout(() => this.playTone(200, 0.15, 'sawtooth', 0.15), 100);
-            setTimeout(() => this.playTone(120, 0.3, 'sawtooth', 0.18), 200);
-        }
-        
-        ko() {
-            this.playTone(220, 0.15, 'sawtooth', 0.2);
-            setTimeout(() => this.playTone(164.81, 0.15, 'sawtooth', 0.2), 120);
-            setTimeout(() => this.playTone(110, 0.35, 'sawtooth', 0.25), 240);
-        }
-
-        setBGMTheme(speedMultiplier = 1.0, pitchShift = 1.0) {
-            this.bgmSpeedMultiplier = speedMultiplier;
-            this.bgmPitchShift = pitchShift;
-            if (this.bgmPlaying) {
-                this.stopBGM();
-                this.startBGM();
-            }
-        }
-
-        // --- BGM SEQUENCER ENGINE ---
-        startBGM() {
-            this.init();
-            if (this.bgmPlaying || !this.bgmEnabled) return;
-            this.bgmPlaying = true;
-            this.bgmStep = 0;
-
-            const baseTempo = this.bgmTempo * (this.bgmSpeedMultiplier || 1.0);
-            const stepTime = (60 / baseTempo / 4) * 1000; // 16th note duration in ms
-
-            let subStep = 0;
-            let currentMelodyIdx = 0;
-            let noteTicksLeft = 0;
-
-            this.bgmTimer = setInterval(() => {
-                if (!this.bgmPlaying || !this.bgmEnabled || !this.ctx) return;
-
-                const pitchFactor = this.bgmPitchShift || 1.0;
-
-                // Play Melody
-                if (noteTicksLeft <= 0) {
-                    const item = this.melody[currentMelodyIdx];
-                    if (item && item.f > 0) {
-                        const dur = (item.d * stepTime * 2) / 1000;
-                        this.playTone(item.f * pitchFactor, dur * 0.85, 'square', 0.035);
-                    }
-                    noteTicksLeft = item ? item.d * 2 : 2;
-                    currentMelodyIdx = (currentMelodyIdx + 1) % this.melody.length;
-                }
-                noteTicksLeft--;
-
-                // Play Bassline
-                if (subStep % 2 === 0) {
-                    const bassIdx = Math.floor(subStep / 2) % this.bassline.length;
-                    const bassFreq = (this.bassline[bassIdx] / 2) * pitchFactor;
-                    this.playTone(bassFreq, (stepTime * 1.8) / 1000, 'triangle', 0.05);
-                }
-
-                // Hi-Hat / Percussion Noise
-                if (subStep % 4 === 2) {
-                    this.playTone(2000 * pitchFactor, 0.02, 'sine', 0.015);
-                }
-
-                subStep++;
-            }, stepTime);
-        }
-
-        stopBGM() {
-            this.bgmPlaying = false;
-            if (this.bgmTimer) {
-                clearInterval(this.bgmTimer);
-                this.bgmTimer = null;
-            }
+        if (this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY)) {
+            this.isGameOver = true;
         }
     }
 
-    const sound = new SoundEngine();
-
-    // --- TETRIS PLAYER BOARD CLASS ---
-    // --- TETRIS PLAYER BOARD CLASS ---
-    class TetrisBoard {
-        constructor(id, isCPU = false, cpuDiff = 'medium', isRemote = false) {
-            this.id = id;
-            this.isCPU = isCPU;
-            this.cpuDiff = cpuDiff;
-            this.isRemote = isRemote; // True if controlled remotely over WebRTC
-
-            this.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
-            this.score = 0;
-            this.lines = 0;
-            this.combo = -1;
-            this.garbageSentTotal = 0;
-            this.queuedGarbage = 0;
-
-            this.bag = [];
-            this.currentPiece = null;
-            this.pieceX = 0;
-            this.pieceY = 0;
-            this.holdPiece = null;
-            this.canHold = true;
-            this.nextQueue = [];
-
-            // Lock Delay (猶予時間) Variables
-            this.lockTimer = 0;
-            this.lockDelay = 500; // 500ms lock delay
-            this.lockResets = 0;
-            this.maxLockResets = 15;
-
-            // Mana Gauge & Magic System Properties
-            this.mana = 0;
-            this.isShielded = false;
-            this.shieldTimer = 0;
-            this.iRushTurns = 0;
-
-            // Excitement Visuals: Particles & Rainbow Line Animations
-            this.particles = [];
-            this.clearingLines = []; // { y, timer, hue }
-            this.rainbowHue = 0;
-
-            this.isGameOver = false;
-            this.dropCounter = 0;
-            this.dropInterval = 800; // ms
-            this.lastTime = 0;
-
-            this.cpuTimer = 0;
-            this.cpuTarget = null;
-
-            // Canvas references
-            this.boardCanvas = document.getElementById(`${id}-board-canvas`);
-            this.boardCtx = this.boardCanvas.getContext('2d');
-            this.holdCanvas = document.getElementById(`${id}-hold-canvas`);
-            this.holdCtx = this.holdCanvas.getContext('2d');
-            this.nextCanvas = document.getElementById(`${id}-next-canvas`);
-            this.nextCtx = this.nextCanvas.getContext('2d');
-
-            // UI Elements
-            this.scoreEl = document.getElementById(`${id}-score`);
-            this.linesEl = document.getElementById(`${id}-lines`);
-            this.comboEl = document.getElementById(`${id}-combo`);
-            this.garbageSentEl = document.getElementById(`${id}-garbage-sent`);
-            this.garbageGaugeEl = document.getElementById(`${id}-garbage-gauge`);
-            this.manaGaugeEl = document.getElementById(`${id}-mana-gauge`);
-            this.magicBtnEl = document.getElementById(`btn-${id}-magic`);
-            this.magicOverlayEl = document.getElementById(`${id}-magic-overlay`);
-            this.magicBannerEl = document.getElementById(`${id}-magic-banner`);
-            this.shieldIndicatorEl = document.getElementById(`${id}-shield-indicator`);
-            this.announcerEl = document.getElementById(`${id}-announcer`);
-            this.koOverlayEl = document.getElementById(`${id}-ko-overlay`);
-
-            if (this.magicBtnEl) {
-                this.magicBtnEl.addEventListener('click', () => this.castMagic());
-            }
-
-            this.opponent = null; // Reference to enemy board
-            this.fillBag();
-            this.spawnPiece();
-        }
-
-        addMana(amount) {
-            if (this.isGameOver) return;
-            this.mana = Math.min(100, this.mana + amount);
-            if (this.mana >= 100) {
-                if (this.manaGaugeEl) this.manaGaugeEl.classList.add('mana-full');
-                if (this.magicBtnEl) {
-                    this.magicBtnEl.classList.add('ready');
-                    this.magicBtnEl.disabled = false;
+    checkCollision(shape, x, y) {
+        for (let r = 0; r < shape.length; r++) {
+            for (let c = 0; c < shape[r].length; c++) {
+                if (shape[r][c]) {
+                    const newX = x + c;
+                    const newY = y + r;
+                    if (newX < 0 || newX >= this.cols || newY >= this.rows) return true;
+                    if (newY >= 0 && this.grid[newY][newX] !== null) return true;
                 }
             }
         }
+        return false;
+    }
 
-        fillBag() {
-            const types = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'];
-            for (let i = types.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [types[i], types[j]] = [types[j], types[i]];
-            }
-            this.bag.push(...types);
-        }
+    rotatePiece(dir = 1) {
+        if (!this.currentPiece) return false;
+        const oldShape = this.currentPiece.shape;
+        const size = oldShape.length;
+        const newShape = Array.from({ length: size }, () => Array(size).fill(0));
 
-        getNextPieceType() {
-            if (this.bag.length < 7) {
-                this.fillBag();
-            }
-            return this.bag.shift();
-        }
-
-        spawnPiece() {
-            while (this.nextQueue.length < 4) {
-                this.nextQueue.push(this.getNextPieceType());
-            }
-
-            let type;
-            if (this.iRushTurns > 0) {
-                type = 'I';
-                this.iRushTurns--;
-            } else {
-                type = this.nextQueue.shift();
-            }
-
-            this.currentPiece = {
-                type: type,
-                matrix: JSON.parse(JSON.stringify(TETROMINOES[type].shape)),
-                color: TETROMINOES[type].color,
-                ghostColor: TETROMINOES[type].ghostColor
-            };
-
-            this.pieceX = Math.floor((COLS - this.currentPiece.matrix[0].length) / 2);
-            this.pieceY = 0;
-            this.canHold = true;
-            this.lockTimer = 0;
-            this.lockResets = 0;
-
-            if (this.collide(this.grid, this.currentPiece.matrix, { x: this.pieceX, y: this.pieceY })) {
-                this.isGameOver = true;
-                this.koOverlayEl.style.display = 'flex';
-                sound.ko();
-            }
-
-            if (this.isCPU) {
-                this.calculateCPUMove();
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                if (dir === 1) newShape[c][size - 1 - r] = oldShape[r][c];
+                else newShape[size - 1 - c][r] = oldShape[r][c];
             }
         }
 
-        collide(grid, matrix, offset) {
-            for (let y = 0; y < matrix.length; y++) {
-                for (let x = 0; x < matrix[y].length; x++) {
-                    if (matrix[y][x] !== 0) {
-                        const boardX = x + offset.x;
-                        const boardY = y + offset.y;
-                        if (boardX < 0 || boardX >= COLS || boardY >= ROWS) {
-                            return true;
-                        }
-                        if (boardY >= 0 && grid[boardY][boardX] !== 0) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        }
+        const oldRotation = this.rotationState;
+        const newRotation = (oldRotation + dir + 4) % 4;
+        const kickTable = (this.currentPiece.type === 'I') ? WALLKICK_I : WALLKICK_JLSTZ;
+        const kickIndex = (oldRotation * 2) + (dir === 1 ? 0 : 1);
+        const offsets = kickTable[kickIndex] || [[0,0]];
 
-        checkGrounded() {
-            if (!this.currentPiece) return false;
-            return this.collide(this.grid, this.currentPiece.matrix, { x: this.pieceX, y: this.pieceY + 1 });
-        }
-
-        resetLockDelayIfGrounded() {
-            if (this.checkGrounded()) {
-                if (this.lockResets < this.maxLockResets) {
-                    this.lockTimer = 0;
-                    this.lockResets++;
-                }
-            }
-        }
-
-        rotateMatrix(matrix, dir = 1) {
-            const result = matrix.map((_, i) => matrix.map(col => col[i]));
-            if (dir > 0) return result.map(row => row.reverse());
-            return result.reverse();
-        }
-
-        rotate(dir = 1) {
-            if (this.isRemote) return;
-            const originalMatrix = this.currentPiece.matrix;
-            const rotated = this.rotateMatrix(originalMatrix, dir);
-
-            if (!this.collide(this.grid, rotated, { x: this.pieceX, y: this.pieceY })) {
-                this.currentPiece.matrix = rotated;
-                this.resetLockDelayIfGrounded();
-                sound.rotate();
-                return;
-            }
-
-            // Wall Kick (SRS)
-            const kicks = [1, -1, 2, -2];
-            for (let k of kicks) {
-                if (!this.collide(this.grid, rotated, { x: this.pieceX + k, y: this.pieceY })) {
-                    this.pieceX += k;
-                    this.currentPiece.matrix = rotated;
-                    this.resetLockDelayIfGrounded();
-                    sound.rotate();
-                    return;
-                }
-            }
-        }
-
-        move(dir) {
-            if (this.isRemote) return;
-            if (!this.collide(this.grid, this.currentPiece.matrix, { x: this.pieceX + dir, y: this.pieceY })) {
-                this.pieceX += dir;
-                this.resetLockDelayIfGrounded();
-                sound.move();
-            }
-        }
-
-        softDrop() {
-            if (this.isRemote) return false;
-            if (!this.collide(this.grid, this.currentPiece.matrix, { x: this.pieceX, y: this.pieceY + 1 })) {
-                this.pieceY++;
-                this.score += 1;
-                this.dropCounter = 0;
-                this.lockTimer = 0;
+        for (let [dx, dy] of offsets) {
+            if (!this.checkCollision(newShape, this.currentX + dx, this.currentY - dy)) {
+                this.currentPiece.shape = newShape;
+                this.currentX += dx;
+                this.currentY -= dy;
+                this.rotationState = newRotation;
                 return true;
-            } else {
-                this.lockPiece();
-                return false;
             }
         }
+        return false;
+    }
 
-        hardDrop() {
-            if (this.isRemote) return;
-            let dropDist = 0;
-            while (!this.collide(this.grid, this.currentPiece.matrix, { x: this.pieceX, y: this.pieceY + 1 })) {
-                this.pieceY++;
-                dropDist++;
-            }
-            this.score += dropDist * 2;
-            sound.hardDrop();
-            this.lockPiece();
+    moveLeft() {
+        if (!this.checkCollision(this.currentPiece.shape, this.currentX - 1, this.currentY)) {
+            this.currentX--;
+            return true;
         }
+        return false;
+    }
 
-        hold() {
-            if (this.isRemote || !this.canHold) return;
-            sound.move();
-
-            const currentType = this.currentPiece.type;
-            if (this.holdPiece === null) {
-                this.holdPiece = currentType;
-                this.spawnPiece();
-            } else {
-                const temp = this.holdPiece;
-                this.holdPiece = currentType;
-                this.currentPiece = {
-                    type: temp,
-                    matrix: JSON.parse(JSON.stringify(TETROMINOES[temp].shape)),
-                    color: TETROMINOES[temp].color,
-                    ghostColor: TETROMINOES[temp].ghostColor
-                };
-                this.pieceX = Math.floor((COLS - this.currentPiece.matrix[0].length) / 2);
-                this.pieceY = 0;
-            }
-
-            this.canHold = false;
-            this.lockTimer = 0;
-            this.lockResets = 0;
-            if (this.isCPU) this.calculateCPUMove();
+    moveRight() {
+        if (!this.checkCollision(this.currentPiece.shape, this.currentX + 1, this.currentY)) {
+            this.currentX++;
+            return true;
         }
+        return false;
+    }
 
-        lockPiece() {
-            this.currentPiece.matrix.forEach((row, y) => {
-                row.forEach((val, x) => {
-                    if (val !== 0) {
-                        const gy = y + this.pieceY;
-                        const gx = x + this.pieceX;
-                        if (gy >= 0 && gy < ROWS && gx >= 0 && gx < COLS) {
-                            this.grid[gy][gx] = this.currentPiece.color;
-                        }
-                    }
-                });
-            });
+    softDrop() {
+        if (!this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY + 1)) {
+            this.currentY++;
+            this.score += 1;
+            return true;
+        }
+        this.lockPiece();
+        return false;
+    }
 
-            this.lockTimer = 0;
-            this.lockResets = 0;
-            this.clearLines();
+    hardDrop() {
+        let droppedLines = 0;
+        while (!this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY + 1)) {
+            this.currentY++;
+            droppedLines++;
+        }
+        this.score += droppedLines * 2;
+        this.lockPiece();
+    }
+
+    getGhostY() {
+        if (!this.currentPiece) return 0;
+        let ghostY = this.currentY;
+        while (!this.checkCollision(this.currentPiece.shape, this.currentX, ghostY + 1)) {
+            ghostY++;
+        }
+        return ghostY;
+    }
+
+    hold() {
+        if (!this.canHold || !this.currentPiece) return;
+        const currentType = this.currentPiece.type;
+        if (!this.holdPiece) {
+            this.holdPiece = currentType;
             this.spawnPiece();
-        }
-
-        clearLines() {
-            const fullLines = [];
-            for (let y = ROWS - 1; y >= 0; y--) {
-                if (this.grid[y].every(cell => cell !== 0 && cell !== 'garbage_pending')) {
-                    fullLines.push(y);
-                }
-            }
-
-            if (fullLines.length > 0) {
-                this.lines += fullLines.length;
-                this.combo++;
-
-                // Charge Mana on Line Clear
-                this.addMana(fullLines.length * 15);
-
-                // CHARACTER-SPECIFIC LINE CLEAR PARTICLES & EFFECTS
-                fullLines.forEach(y => {
-                    this.clearingLines.push({ y: y, timer: 240, style: this.clearStyle || 'rainbow', hue: Math.floor(Math.random() * 360) });
-                    
-                    const particleCount = 16;
-                    for (let i = 0; i < particleCount; i++) {
-                        let pColor = `hsl(${Math.random() * 360}, 100%, 65%)`;
-                        let pSize = Math.random() * 6 + 3;
-                        let pVy = (Math.random() - 0.5) * 10 - 3;
-                        let pVx = (Math.random() - 0.5) * 10;
-                        let pShape = 'circle';
-
-                        if (this.clearStyle === 'digital') {
-                            pColor = '#22c55e';
-                            pShape = 'square';
-                        } else if (this.clearStyle === 'moon') {
-                            pColor = Math.random() < 0.5 ? '#38bdf8' : '#e0e7ff';
-                            pShape = 'star';
-                        } else if (this.clearStyle === 'lightning') {
-                            pColor = Math.random() < 0.5 ? '#eab308' : '#60a5fa';
-                            pVy = (Math.random() - 0.5) * 14;
-                        } else if (this.clearStyle === 'sakura') {
-                            pColor = '#f472b6';
-                            pSize = Math.random() * 8 + 4;
-                            pVy = Math.random() * 3 + 1; // Falling sakura petals
-                        } else if (this.clearStyle === 'ice') {
-                            pColor = '#38bdf8';
-                            pShape = 'diamond';
-                        } else if (this.clearStyle === 'fire') {
-                            pColor = Math.random() < 0.5 ? '#ef4444' : '#a855f7';
-                            pVy = -Math.random() * 6 - 2; // Flame rising
-                        } else if (this.clearStyle === 'cosmic') {
-                            pColor = `hsl(${(i * 45) % 360}, 100%, 75%)`;
-                            pSize = Math.random() * 10 + 4;
-                        }
-
-                        this.particles.push({
-                            x: (Math.random() * COLS) * BLOCK_SIZE,
-                            y: y * BLOCK_SIZE + (BLOCK_SIZE / 2),
-                            vx: pVx,
-                            vy: pVy,
-                            size: pSize,
-                            color: pColor,
-                            shape: pShape,
-                            life: 1.0,
-                            decay: Math.random() * 0.03 + 0.02
-                        });
-                    }
-                });
-
-                // Clear grid rows
-                fullLines.sort((a, b) => a - b).forEach(y => {
-                    this.grid.splice(y, 1);
-                    this.grid.unshift(Array(COLS).fill(0));
-                });
-
-                // Calculate attack power based on rule selection
-                const garbageRule = document.getElementById('garbage-rule')?.value || 'direct';
-                let attack = 0;
-
-                if (garbageRule === 'direct') {
-                    // User Request: 1 line = 1 garbage, 2 lines = 2, 3 lines = 3, 4 lines = 4
-                    attack = fullLines.length;
-                } else {
-                    // Classic Tetris rule: 2 lines = 1, 3 lines = 2, 4 lines = 4
-                    if (fullLines.length === 2) attack = 1;
-                    else if (fullLines.length === 3) attack = 2;
-                    else if (fullLines.length === 4) attack = 4;
-                }
-
-                if (fullLines.length === 4) {
-                    sound.tetris();
-                    this.showAnnouncer('✨ RAINBOW TETRIS! ✨', true);
-                    this.triggerShake(true);
-                } else {
-                    sound.rainbowClear();
-                    if (fullLines.length >= 2) this.triggerShake(false);
-                }
-
-                // Combo Bonus
-                if (this.combo > 0) {
-                    attack += Math.floor(this.combo / 2);
-                    this.addMana(this.combo * 4);
-                    if (fullLines.length < 4) {
-                        const label = fullLines.length === 1 ? 'SINGLE' : fullLines.length === 2 ? 'DOUBLE' : 'TRIPLE';
-                        this.showAnnouncer(`${label}!\n🔥 ${this.combo} REN`, false);
-                    }
-                }
-
-                this.score += fullLines.length * 100 * (this.combo + 1);
-
-                // 🛡️ GARBAGE CANCELLATION / COUNTER SYSTEM (相殺)
-                if (this.queuedGarbage > 0) {
-                    const cancelAmount = Math.min(this.queuedGarbage, attack);
-                    this.queuedGarbage -= cancelAmount;
-                    attack -= cancelAmount;
-
-                    if (cancelAmount > 0) {
-                        sound.cancel();
-                        this.addMana(cancelAmount * 10);
-                        this.showAnnouncer(`🛡️ COUNTER!\n-${cancelAmount} GARBAGE`, true);
-                    }
-                }
-
-                // Send attack garbage to opponent
-                if (attack > 0 && this.opponent) {
-                    this.garbageSentTotal += attack;
-                    this.opponent.receiveGarbage(attack);
-                    this.spawnAttackStream(attack);
-                }
-            } else {
-                this.combo = -1;
-
-                // Apply pending garbage if no lines cleared
-                if (this.queuedGarbage > 0) {
-                    this.applyGarbage(this.queuedGarbage);
-                    this.queuedGarbage = 0;
-                }
-            }
-        }
-
-        castMagic() {
-            if (this.isGameOver || this.mana < 100) return;
-
-            this.mana = 0;
-            if (this.manaGaugeEl) this.manaGaugeEl.classList.remove('mana-full');
-            if (this.magicBtnEl) {
-                this.magicBtnEl.classList.remove('ready');
-                this.magicBtnEl.disabled = true;
-            }
-
-            sound.magicCast();
-
-            // Determine player/boss character unique spell
-            let charObj = null;
-            if (window.storyApp) {
-                if (this.id === 'p1') {
-                    const charVal = document.getElementById('player-character')?.value || 'hero';
-                    charObj = window.storyApp.getCharacterById(charVal);
-                } else {
-                    charObj = window.storyApp.getCurrentBoss();
-                }
-            }
-
-            const uniqueName = charObj?.uniqueSpell?.name || '🌟 キャラ固有奥義';
-
-            const rouletteItems = [
-                '⚡ [Lv.1] メガクリア',
-                '🗡️ [Lv.2] ブレード・オブ・アイ',
-                '🛡️ [Lv.3] アブソリュートシールド',
-                '💥 [MISFIRE] 呪文不発',
-                '🔮 [Lv.MAX] トランスミュート',
-                `✨ ${uniqueName}`
-            ];
-
-            if (this.magicOverlayEl && this.magicBannerEl) {
-                this.magicBannerEl.className = 'magic-banner roulette-spinning';
-                this.magicOverlayEl.style.display = 'flex';
-
-                let rouletteIndex = 0;
-                const rouletteTimer = setInterval(() => {
-                    rouletteIndex = (rouletteIndex + 1) % rouletteItems.length;
-                    this.magicBannerEl.textContent = `🎰 SPELL ROULETTE 🎰\n${rouletteItems[rouletteIndex]}`;
-                    sound.playTone(400 + (rouletteIndex * 120), 0.03, 'sine', 0.05);
-                }, 45);
-
-                setTimeout(() => {
-                    clearInterval(rouletteTimer);
-                    const chosenSpell = Math.floor(Math.random() * rouletteItems.length) + 1;
-
-                    this.magicBannerEl.className = 'magic-banner spell-selected-pop';
-                    this.magicBannerEl.textContent = `✨ SPELL CAST! ✨\n${rouletteItems[chosenSpell - 1]}`;
-                    sound.magicCast();
-
-                    setTimeout(() => {
-                        if (chosenSpell === 6 && charObj?.uniqueSpell) {
-                            this.executeUniqueSpell(charObj.uniqueSpell);
-                        } else {
-                            this.executeSpell(chosenSpell);
-                        }
-                    }, 1000);
-                }, 900);
-            } else {
-                const chosenSpell = Math.floor(Math.random() * 6) + 1;
-                if (chosenSpell === 6 && charObj?.uniqueSpell) {
-                    this.executeUniqueSpell(charObj.uniqueSpell);
-                } else {
-                    this.executeSpell(chosenSpell);
-                }
-            }
-        }
-
-        executeUniqueSpell(uniqueSpell) {
-            if (this.magicOverlayEl) {
-                this.magicOverlayEl.style.display = 'none';
-            }
-
-            sound.rainbowClear();
-            this.triggerShake(true);
-
-            switch (uniqueSpell.code) {
-                case 'hero_rainbow':
-                    for (let i = 0; i < 4; i++) {
-                        this.grid.pop();
-                        this.grid.unshift(Array(COLS).fill(0));
-                    }
-                    if (this.opponent) this.opponent.receiveGarbage(3);
-                    this.showAnnouncer(`🌟 ${uniqueSpell.name}!\n下4行消去＆3攻撃！`, true);
-                    break;
-
-                case 'bot_overload':
-                    for (let i = 0; i < 3; i++) {
-                        this.grid.pop();
-                        this.grid.unshift(Array(COLS).fill(0));
-                    }
-                    for (let y = 0; y < ROWS; y++) {
-                        for (let x = 0; x < COLS; x++) {
-                            if (this.grid[y][x] !== 0 && this.grid[y][x] !== '#475569') {
-                                this.grid[y][x] = TETROMINOES['S'].color;
-                            }
-                        }
-                    }
-                    this.showAnnouncer(`⚡ ${uniqueSpell.name}!\n緑ブロックオーバーロード！`, true);
-                    break;
-
-                case 'luna_hack':
-                    if (this.queuedGarbage > 0) this.queuedGarbage = 0;
-                    this.isShielded = true;
-                    this.shieldTimer = 5000;
-                    if (this.shieldIndicatorEl) this.shieldIndicatorEl.style.display = 'block';
-                    this.showAnnouncer(`🌙 ${uniqueSpell.name}!\nお邪魔無効化＆ハッキングバリア！`, true);
-                    break;
-
-                case 'zeus_thunder':
-                    for (let y = 0; y < ROWS; y++) {
-                        for (let x = 0; x < COLS; x++) {
-                            if (this.grid[y][x] === '#475569') this.grid[y][x] = 0;
-                        }
-                    }
-                    if (this.opponent) this.opponent.receiveGarbage(3);
-                    this.showAnnouncer(`⚡ ${uniqueSpell.name}!\n落雷全破砕＆3電撃攻撃！`, true);
-                    break;
-
-                case 'hayate_shadow':
-                    this.iRushTurns = 5;
-                    this.nextQueue = ['I', 'I', 'I', 'I', 'I', ...this.nextQueue];
-                    this.showAnnouncer(`🥷 ${uniqueSpell.name}!\n影分身・5連縦棒！`, true);
-                    break;
-
-                case 'valk_freeze':
-                    this.isShielded = true;
-                    this.shieldTimer = 8000;
-                    if (this.shieldIndicatorEl) this.shieldIndicatorEl.style.display = 'block';
-                    this.showAnnouncer(`👸 ${uniqueSpell.name}!\n8秒間絶対ダイヤバリア！`, true);
-                    break;
-
-                case 'venom_inferno':
-                    this.queuedGarbage = 0;
-                    if (this.opponent) this.opponent.receiveGarbage(4);
-                    this.showAnnouncer(`👿 ${uniqueSpell.name}!\n地獄暗黒4行攻撃！`, true);
-                    break;
-
-                case 'astral_bigbang':
-                    for (let y = 0; y < ROWS; y++) {
-                        for (let x = 0; x < COLS; x++) {
-                            if (this.grid[y][x] === '#475569') {
-                                this.grid[y][x] = TETROMINOES['T'].color;
-                            }
-                        }
-                    }
-                    for (let i = 0; i < 6; i++) {
-                        this.grid.pop();
-                        this.grid.unshift(Array(COLS).fill(0));
-                    }
-                    this.queuedGarbage = 0;
-                    this.showAnnouncer(`🌌 ${uniqueSpell.name}!\n全浄化＆6行消去！`, true);
-                    break;
-
-                default:
-                    this.showAnnouncer(`✨ ${uniqueSpell.name}!`, true);
-                    break;
-            }
-        }
-
-        executeSpell(spell) {
-            if (this.magicOverlayEl) {
-                this.magicOverlayEl.style.display = 'none';
-            }
-
-            switch (spell) {
-                case 1:
-                    // ⚡ [Lv.1] MEGA CLEAR
-                    for (let i = 0; i < 5; i++) {
-                        this.grid.pop();
-                        this.grid.unshift(Array(COLS).fill(0));
-                    }
-                    sound.rainbowClear();
-                    this.triggerShake(true);
-                    this.showAnnouncer('⚡ [Lv.1] MEGA CLEAR ⚡\n下5行一気消し！', true);
-                    break;
-
-                case 2:
-                    // 🗡️ [Lv.2] BLADE OF I
-                    this.iRushTurns = 5;
-                    this.nextQueue = ['I', 'I', 'I', 'I', 'I', ...this.nextQueue];
-                    sound.clear();
-                    this.showAnnouncer('🗡️ [Lv.2] BLADE OF I 🗡️\n5連縦棒ラッシュ！', true);
-                    break;
-
-                case 3:
-                    // 🛡️ [Lv.3] ABSOLUTE SHIELD
-                    this.isShielded = true;
-                    this.shieldTimer = 5000;
-                    if (this.shieldIndicatorEl) this.shieldIndicatorEl.style.display = 'block';
-                    sound.shield();
-                    this.showAnnouncer('🛡️ [Lv.3] ABSOLUTE SHIELD 🛡️\n5秒間お邪魔無効化！', true);
-                    break;
-
-                case 4:
-                    // 💥 [Lv.4] MISFIRE
-                    sound.fizzle();
-                    this.showAnnouncer('💥 [Lv.4] MISFIRE 💥\n呪文不発！(ハズレ)', false);
-                    break;
-
-                case 5:
-                    // 🔮 [Lv.MAX] TRANSMUTE
-                    let transmutedCount = 0;
-                    for (let y = 0; y < ROWS; y++) {
-                        for (let x = 0; x < COLS; x++) {
-                            if (this.grid[y][x] === '#475569') {
-                                this.grid[y][x] = TETROMINOES['I'].color;
-                                transmutedCount++;
-                            }
-                        }
-                    }
-                    this.queuedGarbage = 0;
-                    sound.transmute();
-                    this.triggerShake(false);
-                    this.showAnnouncer('🔮 [Lv.MAX] TRANSMUTE 🔮\nお邪魔全浄化！', true);
-                    break;
-            }
-        }
-
-        triggerShake(heavy = false) {
-            const container = document.getElementById(`${this.id}-board-canvas`);
-            if (!container) return;
-            const cls = heavy ? 'screen-shake-heavy' : 'screen-shake';
-            container.classList.remove('screen-shake', 'screen-shake-heavy');
-            void container.offsetWidth;
-            container.classList.add(cls);
-            setTimeout(() => container.classList.remove(cls), 450);
-        }
-
-        spawnAttackStream(amount) {
-            const streamContainer = document.getElementById('attack-stream-container');
-            if (!streamContainer) return;
-            for (let i = 0; i < Math.min(amount * 2, 8); i++) {
-                const orb = document.createElement('div');
-                orb.style.cssText = `
-                    position: absolute;
-                    width: 14px;
-                    height: 14px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, #ef4444, #f59e0b);
-                    box-shadow: 0 0 12px #ef4444;
-                    left: ${this.id === 'p1' ? '20%' : '80%'};
-                    top: ${30 + Math.random() * 40}%;
-                    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-                    z-index: 100;
-                    pointer-events: none;
-                `;
-                streamContainer.appendChild(orb);
-                setTimeout(() => {
-                    orb.style.left = this.id === 'p1' ? '80%' : '20%';
-                    orb.style.opacity = '0';
-                    orb.style.transform = 'scale(1.6)';
-                }, 30);
-                setTimeout(() => orb.remove(), 550);
-            }
-        }
-
-        receiveGarbage(count) {
-            if (this.isShielded) {
-                sound.shield();
-                this.showAnnouncer('🛡️ BLOCKED!\nお邪魔をバリアで遮断！', false);
-                return;
-            }
-            this.queuedGarbage += count;
-            sound.garbage();
-        }
-
-        applyGarbage(count) {
-            for (let i = 0; i < count; i++) {
-                const holeX = Math.floor(Math.random() * COLS);
-                const garbageRow = Array(COLS).fill('#475569');
-                garbageRow[holeX] = 0;
-
-                this.grid.shift();
-                this.grid.push(garbageRow);
-            }
-        }
-
-        showAnnouncer(text, isRainbow = false) {
-            this.announcerEl.textContent = text;
-            this.announcerEl.className = 'announcer-overlay';
-            if (isRainbow) {
-                this.announcerEl.classList.add('rainbow-text');
-            }
-            this.announcerEl.classList.add('show');
-            setTimeout(() => this.announcerEl.classList.remove('show'), 1200);
-        }
-
-        // AI BOT CPU BRAIN
-        calculateCPUMove() {
-            if (!this.currentPiece) return;
-
-            let bestScore = -Infinity;
-            let bestMove = { x: this.pieceX, rotation: 0, hold: false };
-
-            const testPieceRotations = [0, 1, 2, 3];
-
-            testPieceRotations.forEach(rot => {
-                let testMatrix = JSON.parse(JSON.stringify(this.currentPiece.matrix));
-                for (let r = 0; r < rot; r++) {
-                    testMatrix = this.rotateMatrix(testMatrix, 1);
-                }
-
-                const width = testMatrix[0].length;
-                for (let x = -2; x <= COLS - width + 2; x++) {
-                    if (this.collide(this.grid, testMatrix, { x: x, y: 0 })) continue;
-
-                    let y = 0;
-                    while (!this.collide(this.grid, testMatrix, { x: x, y: y + 1 })) {
-                        y++;
-                    }
-
-                    const score = this.evaluateBoard(this.grid, testMatrix, x, y);
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMove = { x: x, rotation: rot, hold: false };
-                    }
-                }
-            });
-
-            this.cpuTarget = bestMove;
-            this.cpuTimer = 0;
-        }
-
-        evaluateBoard(grid, matrix, pieceX, pieceY) {
-            const tempGrid = JSON.parse(JSON.stringify(grid));
-            matrix.forEach((row, y) => {
-                row.forEach((val, x) => {
-                    if (val !== 0 && y + pieceY >= 0 && y + pieceY < ROWS && x + pieceX >= 0 && x + pieceX < COLS) {
-                        tempGrid[y + pieceY][x + pieceX] = 1;
-                    }
-                });
-            });
-
-            let aggregateHeight = 0;
-            let completeLines = 0;
-            let holes = 0;
-            let bumpiness = 0;
-
-            const heights = Array(COLS).fill(0);
-            for (let x = 0; x < COLS; x++) {
-                for (let y = 0; y < ROWS; y++) {
-                    if (tempGrid[y][x] !== 0) {
-                        heights[x] = ROWS - y;
-                        break;
-                    }
-                }
-                aggregateHeight += heights[x];
-            }
-
-            for (let y = 0; y < ROWS; y++) {
-                if (tempGrid[y].every(cell => cell !== 0)) completeLines++;
-            }
-
-            for (let x = 0; x < COLS; x++) {
-                let blockFound = false;
-                for (let y = 0; y < ROWS; y++) {
-                    if (tempGrid[y][x] !== 0) blockFound = true;
-                    else if (blockFound && tempGrid[y][x] === 0) holes++;
-                }
-            }
-
-            for (let x = 0; x < COLS - 1; x++) {
-                bumpiness += Math.abs(heights[x] - heights[x + 1]);
-            }
-
-            return (-0.51 * aggregateHeight) + (0.76 * completeLines) - (0.36 * holes) - (0.18 * bumpiness);
-        }
-
-        updateCPU(delta) {
-            if (this.isGameOver) return;
-
-            // CPU Auto Cast Magic when Mana is full
-            if (this.mana >= 100 && Math.random() < 0.04) {
-                this.castMagic();
-            }
-
-            if (!this.cpuTarget || !this.currentPiece) {
-                this.calculateCPUMove();
-                if (!this.cpuTarget) return;
-            }
-
-            let cpuDelay = 400;
-            if (this.cpuDiff === 'easy') cpuDelay = 700;
-            else if (this.cpuDiff === 'medium') cpuDelay = 350;
-            else if (this.cpuDiff === 'hard') cpuDelay = 120;
-            else if (this.cpuDiff === 'master') cpuDelay = 30;
-
-            this.cpuTimer += delta;
-            if (this.cpuTimer >= cpuDelay) {
-                this.cpuTimer = 0;
-
-                if (this.cpuTarget.rotation > 0) {
-                    const prevMatrix = this.currentPiece.matrix;
-                    this.rotate(1);
-                    if (this.currentPiece.matrix !== prevMatrix) {
-                        this.cpuTarget.rotation--;
-                    } else {
-                        // Rotation blocked, recalculate best move
-                        this.calculateCPUMove();
-                    }
-                    return;
-                }
-
-                if (this.pieceX < this.cpuTarget.x) {
-                    const prevX = this.pieceX;
-                    this.move(1);
-                    if (this.pieceX === prevX) this.calculateCPUMove();
-                } else if (this.pieceX > this.cpuTarget.x) {
-                    const prevX = this.pieceX;
-                    this.move(-1);
-                    if (this.pieceX === prevX) this.calculateCPUMove();
-                } else {
-                    if (this.cpuDiff === 'hard' || this.cpuDiff === 'master') {
-                        this.hardDrop();
-                    } else {
-                        this.softDrop();
-                    }
-                }
-            }
-        }
-
-        update(time = 0) {
-            if (this.isGameOver) return;
-
-            const delta = Math.min(time - this.lastTime, 100);
-            this.lastTime = time;
-
-            // Passive Mana Charge over time
-            this.addMana(delta * 0.0025);
-
-            // Shield Timer update
-            if (this.isShielded) {
-                this.shieldTimer -= delta;
-                if (this.shieldTimer <= 0) {
-                    this.isShielded = false;
-                    if (this.shieldIndicatorEl) this.shieldIndicatorEl.style.display = 'none';
-                }
-            }
-
-            // 1. Particle Physics
-            for (let i = this.particles.length - 1; i >= 0; i--) {
-                const p = this.particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += 0.2; // Gravity
-                p.life -= p.decay;
-                if (p.life <= 0) {
-                    this.particles.splice(i, 1);
-                }
-            }
-
-            // 2. Rainbow Clearing Lines Timer
-            for (let i = this.clearingLines.length - 1; i >= 0; i--) {
-                this.clearingLines[i].timer -= delta;
-                if (this.clearingLines[i].timer <= 0) {
-                    this.clearingLines.splice(i, 1);
-                }
-            }
-
-            // 3. Lock Delay Check when Grounded
-            if (this.checkGrounded() && !this.isRemote && !this.isCPU) {
-                this.lockTimer += delta;
-                if (this.lockTimer >= this.lockDelay) {
-                    this.lockPiece();
-                }
-            }
-
-            // 4. CPU AI Update
-            if (this.isCPU) {
-                this.updateCPU(delta);
-            }
-
-            // 5. Gravity Drop Update
-            if (!this.isRemote) {
-                this.dropCounter += delta;
-                if (this.dropCounter > this.dropInterval) {
-                    this.softDrop();
-                    this.dropCounter = 0;
-                }
-            }
-
-            this.render();
-            this.updateUI();
-        }
-
-        render() {
-            this.boardCtx.fillStyle = '#ffffff';
-            this.boardCtx.fillRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
-
-            // Grid background lines (Soft pop grid)
-            this.boardCtx.strokeStyle = 'rgba(226, 232, 240, 0.8)';
-            this.boardCtx.lineWidth = 1;
-            for (let x = 0; x <= COLS; x++) {
-                this.boardCtx.beginPath();
-                this.boardCtx.moveTo(x * BLOCK_SIZE, 0);
-                this.boardCtx.lineTo(x * BLOCK_SIZE, ROWS * BLOCK_SIZE);
-                this.boardCtx.stroke();
-            }
-            for (let y = 0; y <= ROWS; y++) {
-                this.boardCtx.beginPath();
-                this.boardCtx.moveTo(0, y * BLOCK_SIZE);
-                this.boardCtx.lineTo(COLS * BLOCK_SIZE, y * BLOCK_SIZE);
-                this.boardCtx.stroke();
-            }
-
-            // Render standard Grid Blocks
-            for (let y = 0; y < ROWS; y++) {
-                for (let x = 0; x < COLS; x++) {
-                    if (this.grid[y][x] !== 0) {
-                        this.drawBlock(this.boardCtx, x, y, this.grid[y][x]);
-                    }
-                }
-            }
-
-            // Render Character-Specific Line Clear Overlay Effect
-            this.rainbowHue = (this.rainbowHue + 8) % 360;
-            this.clearingLines.forEach(cl => {
-                const alpha = Math.max(0, cl.timer / 240);
-                if (cl.style === 'digital') {
-                    this.boardCtx.fillStyle = `rgba(34, 197, 94, ${alpha})`;
-                    this.boardCtx.shadowColor = '#22c55e';
-                } else if (cl.style === 'moon') {
-                    this.boardCtx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
-                    this.boardCtx.shadowColor = '#38bdf8';
-                } else if (cl.style === 'lightning') {
-                    this.boardCtx.fillStyle = `rgba(234, 179, 8, ${alpha})`;
-                    this.boardCtx.shadowColor = '#eab308';
-                } else if (cl.style === 'sakura') {
-                    this.boardCtx.fillStyle = `rgba(244, 114, 182, ${alpha})`;
-                    this.boardCtx.shadowColor = '#f472b6';
-                } else if (cl.style === 'ice') {
-                    this.boardCtx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
-                    this.boardCtx.shadowColor = '#60a5fa';
-                } else if (cl.style === 'fire') {
-                    this.boardCtx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
-                    this.boardCtx.shadowColor = '#ef4444';
-                } else if (cl.style === 'cosmic') {
-                    this.boardCtx.fillStyle = `hsla(${this.rainbowHue}, 100%, 75%, ${alpha})`;
-                    this.boardCtx.shadowColor = `hsl(${this.rainbowHue}, 100%, 70%)`;
-                } else {
-                    this.boardCtx.fillStyle = `hsla(${this.rainbowHue}, 100%, 65%, ${alpha})`;
-                    this.boardCtx.shadowColor = `hsl(${this.rainbowHue}, 100%, 60%)`;
-                }
-                this.boardCtx.shadowBlur = 18;
-                this.boardCtx.fillRect(0, cl.y * BLOCK_SIZE, COLS * BLOCK_SIZE, BLOCK_SIZE);
-                this.boardCtx.shadowBlur = 0;
-            });
-
-            // Ghost & Current Piece Rendering
-            if (this.currentPiece) {
-                let ghostY = this.pieceY;
-                while (!this.collide(this.grid, this.currentPiece.matrix, { x: this.pieceX, y: ghostY + 1 })) {
-                    ghostY++;
-                }
-
-                this.currentPiece.matrix.forEach((row, y) => {
-                    row.forEach((val, x) => {
-                        if (val !== 0) {
-                            this.drawBlock(this.boardCtx, x + this.pieceX, y + ghostY, this.currentPiece.ghostColor, true);
-                        }
-                    });
-                });
-
-                this.currentPiece.matrix.forEach((row, y) => {
-                    row.forEach((val, x) => {
-                        if (val !== 0) {
-                            this.drawBlock(this.boardCtx, x + this.pieceX, y + this.pieceY, this.currentPiece.color);
-                        }
-                    });
-                });
-            }
-
-            // Render Sparkle Particles
-            this.particles.forEach(p => {
-                this.boardCtx.fillStyle = p.color;
-                this.boardCtx.globalAlpha = Math.max(0, p.life);
-                this.boardCtx.shadowColor = p.color;
-                this.boardCtx.shadowBlur = 8;
-                this.boardCtx.beginPath();
-                this.boardCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                this.boardCtx.fill();
-                this.boardCtx.globalAlpha = 1.0;
-                this.boardCtx.shadowBlur = 0;
-            });
-
-            // Render Hold Canvas
-            this.holdCtx.clearRect(0, 0, this.holdCanvas.width, this.holdCanvas.height);
-            if (this.holdPiece) {
-                const spec = TETROMINOES[this.holdPiece];
-                const matrix = spec.shape;
-                const size = 18;
-                const offsetX = (this.holdCanvas.width - matrix[0].length * size) / 2;
-                const offsetY = (this.holdCanvas.height - matrix.length * size) / 2;
-
-                matrix.forEach((row, y) => {
-                    row.forEach((val, x) => {
-                        if (val !== 0) {
-                            const bx = offsetX + x * size;
-                            const by = offsetY + y * size;
-                            this.holdCtx.beginPath();
-                            this.holdCtx.roundRect(bx, by, size - 2, size - 2, 4);
-                            this.holdCtx.fillStyle = spec.color;
-                            this.holdCtx.fill();
-                            this.holdCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-                            this.holdCtx.fillRect(bx + 1, by + 1, size - 4, 2);
-                        }
-                    });
-                });
-            }
-
-            // Render Next Queue Canvas
-            this.nextCtx.clearRect(0, 0, this.nextCanvas.width, this.nextCanvas.height);
-            this.nextQueue.slice(0, 3).forEach((type, idx) => {
-                const spec = TETROMINOES[type];
-                const matrix = spec.shape;
-                const size = 16;
-                const offsetX = (this.nextCanvas.width - matrix[0].length * size) / 2;
-                const offsetY = 12 + idx * 75;
-
-                matrix.forEach((row, y) => {
-                    row.forEach((val, x) => {
-                        if (val !== 0) {
-                            const bx = offsetX + x * size;
-                            const by = offsetY + y * size;
-                            this.nextCtx.beginPath();
-                            this.nextCtx.roundRect(bx, by, size - 2, size - 2, 4);
-                            this.nextCtx.fillStyle = spec.color;
-                            this.nextCtx.fill();
-                            this.nextCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-                            this.nextCtx.fillRect(bx + 1, by + 1, size - 4, 2);
-                        }
-                    });
-                });
-            });
-        }
-
-        drawBlock(ctx, x, y, color, isGhost = false) {
-            const px = x * BLOCK_SIZE;
-            const py = y * BLOCK_SIZE;
-            const size = BLOCK_SIZE - 2;
-            const radius = 6; // 可愛く丸まらせた丸っこいテトリミノ角丸
-
-            ctx.save();
-            if (isGhost) {
-                ctx.strokeStyle = color.replace('0.25', '0.7');
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.roundRect(px + 1, py + 1, size, size, radius);
-                ctx.stroke();
-                ctx.restore();
-                return;
-            }
-
-            // ぷっくり丸いキャンディ・マカロンテトリミノ本体
-            ctx.beginPath();
-            ctx.roundRect(px + 1, py + 1, size, size, radius);
-            ctx.fillStyle = color;
-            ctx.fill();
-
-            // 上部ぷっくり光沢ハイライト
-            ctx.beginPath();
-            ctx.roundRect(px + 2, py + 2, size - 2, size / 2.2, [radius - 1, radius - 1, 2, 2]);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
-            ctx.fill();
-
-            // ドロップキャンディ光沢スポット
-            ctx.beginPath();
-            ctx.arc(px + 7, py + 7, 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-            ctx.fill();
-
-            // 下部立体シャドウ
-            ctx.beginPath();
-            ctx.roundRect(px + 2, py + size / 2, size - 2, size / 2 - 1, [2, 2, radius - 1, radius - 1]);
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
-            ctx.fill();
-
-            ctx.restore();
-        }
-
-        updateUI() {
-            this.scoreEl.textContent = this.score;
-            this.linesEl.textContent = this.lines;
-            this.comboEl.textContent = Math.max(0, this.combo);
-            this.garbageSentEl.textContent = this.garbageSentTotal;
-
-            const fillPct = Math.min(100, (this.queuedGarbage / 12) * 100);
-            this.garbageGaugeEl.style.height = `${fillPct}%`;
-
-            if (this.manaGaugeEl) {
-                this.manaGaugeEl.style.height = `${this.mana}%`;
-            }
-
-            if (this.magicBtnEl) {
-                if (this.mana >= 100) {
-                    this.magicBtnEl.classList.add('ready');
-                    this.magicBtnEl.disabled = false;
-                } else {
-                    this.magicBtnEl.classList.remove('ready');
-                    this.magicBtnEl.disabled = true;
-                }
-            }
-        }
-
-        // Export state payload for network synchronization
-        exportState() {
-            return {
-                grid: this.grid,
-                score: this.score,
-                lines: this.lines,
-                combo: this.combo,
-                queuedGarbage: this.queuedGarbage,
-                pieceX: this.pieceX,
-                pieceY: this.pieceY,
-                pieceType: this.currentPiece ? this.currentPiece.type : null,
-                pieceMatrix: this.currentPiece ? this.currentPiece.matrix : null,
-                holdPiece: this.holdPiece,
-                nextQueue: this.nextQueue,
-                isGameOver: this.isGameOver
+        } else {
+            const temp = this.holdPiece;
+            this.holdPiece = currentType;
+            const template = TETRIMINOS[temp];
+            this.currentPiece = {
+                type: temp,
+                color: template.color,
+                shape: template.shape.map(r => [...r])
             };
+            this.currentX = Math.floor((this.cols - this.currentPiece.shape[0].length) / 2);
+            this.currentY = 0;
         }
-
-        // Import network state payload from remote peer
-        importState(state) {
-            if (!state) return;
-            this.grid = state.grid;
-            this.score = state.score;
-            this.lines = state.lines;
-            this.combo = state.combo;
-            this.queuedGarbage = state.queuedGarbage;
-            this.pieceX = state.pieceX;
-            this.pieceY = state.pieceY;
-            if (state.pieceType) {
-                this.currentPiece = {
-                    type: state.pieceType,
-                    matrix: state.pieceMatrix,
-                    color: TETROMINOES[state.pieceType].color,
-                    ghostColor: TETROMINOES[state.pieceType].ghostColor
-                };
-            }
-            this.holdPiece = state.holdPiece;
-            this.nextQueue = state.nextQueue;
-            this.isGameOver = state.isGameOver;
-            if (this.isGameOver) {
-                this.koOverlayEl.style.display = 'flex';
-            }
-        }
+        this.canHold = false;
     }
 
-    // --- PEERJS WEBRTC NETWORK MANAGER ---
-    class PeerManager {
-        constructor(matchManager) {
-            this.matchManager = matchManager;
-            this.peer = null;
-            this.conn = null;
-            this.isHost = false;
-            this.roomCode = null;
-
-            this.logEl = document.getElementById('online-connection-log');
-            this.statusDot = document.getElementById('online-status-dot');
-            this.statusText = document.getElementById('online-status-text');
-        }
-
-        log(msg) {
-            if (this.logEl) this.logEl.textContent = `[WebRTC] ${msg}`;
-        }
-
-        setStatus(status, text) {
-            this.statusDot.className = `status-dot ${status}`;
-            this.statusText.textContent = text;
-        }
-
-        createRoom() {
-            const randomCode = 'TETRIS-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-            this.roomCode = randomCode;
-            this.isHost = true;
-            this.setStatus('connecting', '接続待機中...');
-            this.log(`ルーム作成中 (${randomCode})...`);
-
-            try {
-                this.peer = new Peer(randomCode);
-            } catch (err) {
-                this.log(`エラー: PeerJS初期化失敗 - ${err.message}`);
-                return;
-            }
-
-            this.peer.on('open', (id) => {
-                this.log(`ルーム作成完了！コード: ${id}`);
-                document.getElementById('my-room-code-display').textContent = id;
-                document.getElementById('room-created-info').style.display = 'block';
-            });
-
-            this.peer.on('connection', (connection) => {
-                this.conn = connection;
-                this.setupConnection();
-            });
-
-            this.peer.on('error', (err) => {
-                this.log(`通信エラー: ${err.type}`);
-                this.setStatus('disconnected', 'エラー');
-            });
-        }
-
-        joinRoom(targetCode) {
-            if (!targetCode) {
-                alert('ルームコードを入力してください。');
-                return;
-            }
-            this.isHost = false;
-            this.setStatus('connecting', '接続中...');
-            this.log(`ルーム ${targetCode} に接続試行中...`);
-
-            try {
-                this.peer = new Peer();
-            } catch (err) {
-                this.log(`エラー: PeerJS初期化失敗 - ${err.message}`);
-                return;
-            }
-
-            this.peer.on('open', () => {
-                this.conn = this.peer.connect(targetCode);
-                this.setupConnection();
-            });
-
-            this.peer.on('error', (err) => {
-                this.log(`接続エラー: ${err.type}`);
-                this.setStatus('disconnected', 'エラー');
-            });
-        }
-
-        setupConnection() {
-            this.conn.on('open', () => {
-                this.setStatus('connected', 'オンライン接続完了');
-                this.log(`対戦相手と通信確立！対戦を開始できます。`);
-                document.getElementById('modal-online-lobby').style.display = 'none';
-                this.matchManager.onOnlineConnected(this.isHost);
-            });
-
-            this.conn.on('data', (data) => {
-                this.handleData(data);
-            });
-
-            this.conn.on('close', () => {
-                this.setStatus('disconnected', '切断されました');
-                this.log(`対戦相手との通信が切断されました。`);
-            });
-        }
-
-        send(data) {
-            if (this.conn && this.conn.open) {
-                this.conn.send(data);
+    lockPiece() {
+        const shape = this.currentPiece.shape;
+        for (let r = 0; r < shape.length; r++) {
+            for (let c = 0; c < shape[r].length; c++) {
+                if (shape[r][c]) {
+                    const gy = this.currentY + r;
+                    const gx = this.currentX + c;
+                    if (gy >= 0 && gy < this.rows) {
+                        this.grid[gy][gx] = { color: this.currentPiece.color, isGarbage: false };
+                    }
+                }
             }
         }
 
-        handleData(data) {
-            if (!data) return;
-            if (data.type === 'STATE_SYNC') {
-                if (this.isHost) {
-                    // Host receives Guest (P2) board state
-                    if (this.matchManager.p2) this.matchManager.p2.importState(data.state);
+        const cleared = this.clearLines();
+        if (cleared > 0) {
+            this.ren++;
+            let sentGarbage = 0;
+            if (cleared === 2) sentGarbage = 1;
+            else if (cleared === 3) sentGarbage = 2;
+            else if (cleared === 4) sentGarbage = 4;
+
+            if (this.ren > 1) sentGarbage += (this.ren - 1);
+
+            if (this.garbageQueue > 0) {
+                if (sentGarbage >= this.garbageQueue) {
+                    sentGarbage -= this.garbageQueue;
+                    this.garbageQueue = 0;
                 } else {
-                    // Guest receives Host (P1) board state
-                    if (this.matchManager.p1) this.matchManager.p1.importState(data.state);
+                    this.garbageQueue -= sentGarbage;
+                    sentGarbage = 0;
                 }
-            } else if (data.type === 'INPUT') {
-                this.matchManager.handleRemoteInput(data.action, this.isHost ? 'p2' : 'p1');
-            } else if (data.type === 'START_MATCH') {
-                this.matchManager.startRound(false);
-            } else if (data.type === 'RESET_MATCH') {
-                this.matchManager.resetMatch(false);
             }
+
+            if (sentGarbage > 0 && this.onSendGarbage) {
+                this.onSendGarbage(sentGarbage);
+            }
+        } else {
+            this.ren = 0;
+            if (this.garbageQueue > 0) {
+                this.riseGarbage(this.garbageQueue);
+                this.garbageQueue = 0;
+            }
+        }
+
+        this.spawnPiece();
+    }
+
+    clearLines() {
+        let cleared = 0;
+        for (let r = this.rows - 1; r >= 0; r--) {
+            if (this.grid[r].every(cell => cell !== null)) {
+                this.grid.splice(r, 1);
+                this.grid.unshift(Array(this.cols).fill(null));
+                cleared++;
+                r++;
+            }
+        }
+        if (cleared > 0) {
+            this.lines += cleared;
+            this.score += [0, 100, 300, 500, 800][cleared] * this.level;
+            this.level = Math.floor(this.lines / 10) + 1;
+            this.dropInterval = Math.max(100, 1000 - (this.level - 1) * 80);
+        }
+        return cleared;
+    }
+
+    riseGarbage(count) {
+        for (let i = 0; i < count; i++) {
+            this.grid.shift();
+            const hole = Math.floor(Math.random() * this.cols);
+            const row = Array(this.cols).fill(null).map((_, c) => c === hole ? null : { color: '#CBD5E1', isGarbage: true });
+            this.grid.push(row);
         }
     }
 
-    // --- KEYBOARD & GAMEPAD INPUT ENGINE WITH DAS / ARR ---
-    class InputEngine {
-        constructor(matchManager) {
-            this.matchManager = matchManager;
-            this.keys = {};
+    receiveGarbage(lines) {
+        if (this.barrierTimer > 0) return;
+        this.garbageQueue += lines;
+        this.magicGauge = Math.min(100, this.magicGauge + lines * 15);
+    }
+}
 
-            // DAS (Delayed Auto Shift) & ARR (Auto Repeat Rate)
-            this.DAS_DELAY = 135; // ms delay before continuous shift
-            this.ARR_RATE = 16;   // ms shift repeat interval (60fps ultra responsive)
-            this.SOFT_DROP_ARR = 25; // ms soft drop repeat interval
 
-            window.addEventListener('keydown', (e) => this.onKeyDown(e));
-            window.addEventListener('keyup', (e) => this.onKeyUp(e));
+/* --------------------------------------------------------------------------
+   5. CPU AI Logic Engine
+   -------------------------------------------------------------------------- */
+class CpuAI {
+    constructor(game, difficulty = 'normal') {
+        this.game = game;
+        this.difficulty = difficulty;
+        this.lastMoveTime = 0;
+        this.target = null;
+    }
 
-            // Gamepad Connection Listeners
-            window.addEventListener('gamepadconnected', (e) => {
-                const padName = e.gamepad.id.split('(')[0].trim();
-                this.showToast(`🎮 ゲームパッド #${e.gamepad.index + 1} (${padName}) 接続`);
-            });
+    update(now) {
+        if (!this.game || this.game.isGameOver || !this.game.currentPiece) return;
 
-            window.addEventListener('gamepaddisconnected', (e) => {
-                this.showToast(`🎮 ゲームパッド #${e.gamepad.index + 1} 切断`);
-            });
+        const interval = this.difficulty === 'easy' ? 450 : (this.difficulty === 'hard' ? 120 : 250);
+        if (now - this.lastMoveTime < interval) return;
+        this.lastMoveTime = now;
+
+        if (!this.target) {
+            this.target = this.findBestMove();
         }
 
-        showToast(text) {
-            const toast = document.getElementById('gamepad-toast');
-            const toastText = document.getElementById('gamepad-toast-text');
-            if (toast && toastText) {
-                toastText.textContent = text;
-                toast.style.display = 'flex';
-                setTimeout(() => { toast.style.display = 'none'; }, 3500);
-            }
-        }
-
-        onKeyDown(e) {
-            const gameKeys = ['KeyA', 'KeyD', 'KeyS', 'KeyW', 'KeyE', 'KeyQ', 'Space', 'ShiftLeft', 'ShiftRight', 'KeyF', 'KeyN', 'ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'KeyK', 'KeyJ', 'KeyL'];
-            if (gameKeys.includes(e.code)) {
-                e.preventDefault();
-            }
-
-            if (!this.matchManager.isRunning || this.matchManager.isPaused) return;
-
-            if (!this.keys[e.code] || !this.keys[e.code].isDown) {
-                this.keys[e.code] = {
-                    isDown: true,
-                    dasTimer: 0,
-                    arrTimer: 0
-                };
-                this.triggerAction(e.code);
-            }
-        }
-
-        onKeyUp(e) {
-            if (this.keys[e.code]) {
-                this.keys[e.code].isDown = false;
-            }
-        }
-
-        pollGamepads() {
-            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-            if (!gamepads) return;
-
-            for (let i = 0; i < gamepads.length; i++) {
-                const pad = gamepads[i];
-                if (!pad) continue;
-
-                const prefix = i === 0 ? 'GP0_' : 'GP1_';
-
-                // D-Pad and Left Analog Stick (with 0.4 deadzone)
-                const left = (pad.buttons[14] && pad.buttons[14].pressed) || (pad.axes[0] && pad.axes[0] < -0.4);
-                const right = (pad.buttons[15] && pad.buttons[15].pressed) || (pad.axes[0] && pad.axes[0] > 0.4);
-                const down = (pad.buttons[13] && pad.buttons[13].pressed) || (pad.axes[1] && pad.axes[1] > 0.4);
-                const up = (pad.buttons[12] && pad.buttons[12].pressed) || (pad.axes[1] && pad.axes[1] < -0.4) || (pad.buttons[3] && pad.buttons[3].pressed);
-
-                // Face Buttons & Shoulders
-                const rotRight = (pad.buttons[0] && pad.buttons[0].pressed) || (pad.buttons[1] && pad.buttons[1].pressed);
-                const rotLeft = (pad.buttons[2] && pad.buttons[2].pressed);
-                const hold = (pad.buttons[4] && pad.buttons[4].pressed) || (pad.buttons[5] && pad.buttons[5].pressed);
-                const magic = (pad.buttons[6] && pad.buttons[6].pressed) || (pad.buttons[7] && pad.buttons[7].pressed); // L2 / R2 for Magic
-                const start = (pad.buttons[9] && pad.buttons[9].pressed);
-
-                this.setVirtualKey(`${prefix}Left`, left);
-                this.setVirtualKey(`${prefix}Right`, right);
-                this.setVirtualKey(`${prefix}Down`, down);
-                this.setVirtualKey(`${prefix}Up`, up);
-                this.setVirtualKey(`${prefix}RotR`, rotRight);
-                this.setVirtualKey(`${prefix}RotL`, rotLeft);
-                this.setVirtualKey(`${prefix}Hold`, hold);
-                this.setVirtualKey(`${prefix}Magic`, magic);
-                this.setVirtualKey(`${prefix}Start`, start);
-            }
-        }
-
-        setVirtualKey(code, isPressed) {
-            if (isPressed) {
-                if (!this.keys[code] || !this.keys[code].isDown) {
-                    this.keys[code] = {
-                        isDown: true,
-                        dasTimer: 0,
-                        arrTimer: 0
-                    };
-                    this.triggerAction(code);
-                }
+        if (this.target) {
+            if (this.game.rotationState !== this.target.rotation) {
+                this.game.rotatePiece(1);
+            } else if (this.game.currentX < this.target.x) {
+                this.game.moveRight();
+            } else if (this.game.currentX > this.target.x) {
+                this.game.moveLeft();
             } else {
-                if (this.keys[code]) {
-                    this.keys[code].isDown = false;
-                }
-            }
-        }
-
-        update(delta) {
-            this.pollGamepads();
-
-            if (!this.matchManager.isRunning || this.matchManager.isPaused) return;
-
-            for (const code in this.keys) {
-                const k = this.keys[code];
-                if (!k || !k.isDown) continue;
-
-                // Non-repeating single trigger actions
-                if (['KeyW', 'ArrowUp', 'KeyE', 'KeyQ', 'KeyK', 'KeyJ', 'KeyL', 'Space', 'ShiftLeft', 'ShiftRight', 'KeyF', 'KeyN',
-                     'GP0_Up', 'GP0_RotR', 'GP0_RotL', 'GP0_Hold', 'GP0_Magic', 'GP0_Start',
-                     'GP1_Up', 'GP1_RotR', 'GP1_RotL', 'GP1_Hold', 'GP1_Magic', 'GP1_Start'].includes(code)) {
-                    continue;
-                }
-
-                k.dasTimer += delta;
-
-                const isSoftDrop = (code === 'KeyS' || code === 'ArrowDown' || code === 'GP0_Down' || code === 'GP1_Down');
-                const dasThreshold = isSoftDrop ? 0 : this.DAS_DELAY;
-                const arrRate = isSoftDrop ? this.SOFT_DROP_ARR : this.ARR_RATE;
-
-                if (k.dasTimer >= dasThreshold) {
-                    k.arrTimer += delta;
-                    while (k.arrTimer >= arrRate) {
-                        k.arrTimer -= arrRate;
-                        this.triggerAction(code);
-                    }
-                }
-            }
-        }
-
-        triggerAction(code) {
-            const mm = this.matchManager;
-            if (mm.mode === 'online') {
-                const myBoard = mm.peerMgr.isHost ? mm.p1 : mm.p2;
-                if (!myBoard || myBoard.isGameOver) return;
-                let action = null;
-                switch (code) {
-                    case 'KeyA': case 'ArrowLeft': case 'GP0_Left': case 'GP1_Left': action = 'moveLeft'; myBoard.move(-1); break;
-                    case 'KeyD': case 'ArrowRight': case 'GP0_Right': case 'GP1_Right': action = 'moveRight'; myBoard.move(1); break;
-                    case 'KeyS': case 'ArrowDown': case 'GP0_Down': case 'GP1_Down': action = 'softDrop'; myBoard.softDrop(); break;
-                    case 'KeyW': case 'ArrowUp': case 'GP0_Up': case 'GP1_Up': action = 'hardDrop'; myBoard.hardDrop(); break;
-                    case 'KeyE': case 'KeyK': case 'GP0_RotR': case 'GP1_RotR': action = 'rotateRight'; myBoard.rotate(1); break;
-                    case 'KeyQ': case 'KeyJ': case 'KeyL': case 'GP0_RotL': case 'GP1_RotL': action = 'rotateLeft'; myBoard.rotate(-1); break;
-                    case 'Space': case 'GP0_Hold': case 'GP1_Hold': action = 'hold'; myBoard.hold(); break;
-                    case 'ShiftLeft': case 'ShiftRight': case 'KeyF': case 'GP0_Magic': case 'GP1_Magic': action = 'castMagic'; myBoard.castMagic(); break;
-                }
-                if (action) {
-                    mm.peerMgr.send({ type: 'INPUT', action: action });
-                }
-                return;
-            }
-
-            // P1 Controls (Keyboard or Gamepad 0)
-            if (mm.p1 && !mm.p1.isCPU && !mm.p1.isGameOver) {
-                switch (code) {
-                    case 'KeyA': case 'GP0_Left': mm.p1.move(-1); break;
-                    case 'KeyD': case 'GP0_Right': mm.p1.move(1); break;
-                    case 'KeyS': case 'GP0_Down': mm.p1.softDrop(); break;
-                    case 'KeyW': case 'GP0_Up': mm.p1.hardDrop(); break;
-                    case 'KeyE': case 'GP0_RotR': mm.p1.rotate(1); break;
-                    case 'KeyQ': case 'GP0_RotL': mm.p1.rotate(-1); break;
-                    case 'Space': case 'GP0_Hold': mm.p1.hold(); break;
-                    case 'ShiftLeft': case 'KeyF': case 'GP0_Magic': mm.p1.castMagic(); break;
-                }
-            }
-
-            // P2 Controls (Keyboard or Gamepad 1)
-            if (mm.p2 && mm.mode === 'p1vsp2' && !mm.p2.isCPU && !mm.p2.isGameOver) {
-                switch (code) {
-                    case 'ArrowLeft': case 'GP1_Left': mm.p2.move(-1); break;
-                    case 'ArrowRight': case 'GP1_Right': mm.p2.move(1); break;
-                    case 'ArrowDown': case 'GP1_Down': mm.p2.softDrop(); break;
-                    case 'ArrowUp': case 'GP1_Up': mm.p2.hardDrop(); break;
-                    case 'KeyK': case 'GP1_RotR': mm.p2.rotate(1); break;
-                    case 'KeyJ': case 'KeyL': case 'GP1_RotL': mm.p2.rotate(-1); break;
-                    case 'ShiftRight': case 'KeyN': case 'GP1_Magic': mm.p2.castMagic(); break;
-                }
+                this.game.hardDrop();
+                this.target = null;
             }
         }
     }
 
-    // --- MATCH MANAGER (MATCH CONTROLLER) ---
-    class MatchManager {
-        constructor() {
-            this.mode = 'p1vscpu'; // 'p1vscpu', 'p1vsp2', 'online', 'cpuvscpu'
-            this.cpuDifficulty = 'medium';
-            this.targetWins = 3;
+    findBestMove() {
+        let bestScore = -Infinity;
+        let bestMove = { x: this.game.currentX, rotation: 0 };
+        const piece = this.game.currentPiece;
 
-            this.p1Wins = 0;
-            this.p2Wins = 0;
+        for (let rot = 0; rot < 4; rot++) {
+            const shape = this.getRotatedShape(piece.shape, rot);
+            const width = shape[0].length;
 
-            this.p1 = null;
-            this.p2 = null;
-            this.isRunning = false;
-            this.isPaused = false;
-            this.animationFrameId = null;
+            for (let x = -2; x <= this.game.cols - width + 2; x++) {
+                if (this.game.checkCollision(shape, x, 0)) continue;
+                let y = 0;
+                while (!this.game.checkCollision(shape, x, y + 1)) y++;
 
-            this.peerMgr = new PeerManager(this);
-            this.inputEngine = new InputEngine(this);
+                const evalScore = this.evaluateBoard(shape, x, y);
+                if (evalScore > bestScore) {
+                    bestScore = evalScore;
+                    bestMove = { x: x, rotation: rot };
+                }
+            }
+        }
+        return bestMove;
+    }
 
-            this.initDOM();
-            this.setupEvents();
-            this.checkUrlParams();
+    getRotatedShape(shape, times) {
+        let s = shape.map(r => [...r]);
+        for (let t = 0; t < times; t++) {
+            const size = s.length;
+            const res = Array.from({ length: size }, () => Array(size).fill(0));
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    res[c][size - 1 - r] = s[r][c];
+                }
+            }
+            s = res;
+        }
+        return s;
+    }
+
+    evaluateBoard(shape, x, y) {
+        const grid = this.game.grid.map(r => [...r]);
+        for (let r = 0; r < shape.length; r++) {
+            for (let c = 0; c < shape[r].length; c++) {
+                if (shape[r][c]) {
+                    const gy = y + r;
+                    const gx = x + c;
+                    if (gy >= 0 && gy < this.game.rows && gx >= 0 && gx < this.game.cols) {
+                        grid[gy][gx] = { color: '#000' };
+                    }
+                }
+            }
         }
 
-        initDOM() {
-            this.p1NameEl = document.getElementById('p1-name-display');
-            this.p2NameEl = document.getElementById('p2-name-display');
-            this.p1MatchScoreEl = document.getElementById('p1-match-score');
-            this.p2MatchScoreEl = document.getElementById('p2-match-score');
-            this.p1WinDotsEl = document.getElementById('p1-win-dots');
-            this.p2WinDotsEl = document.getElementById('p2-win-dots');
+        let aggregateHeight = 0, holes = 0, bumpiness = 0, clearedLines = 0;
+        const columnHeights = Array(this.game.cols).fill(0);
 
-            this.btnStart = document.getElementById('btn-start-match');
-            this.btnPause = document.getElementById('btn-pause-match');
-            this.btnReset = document.getElementById('btn-reset-match');
-
-            this.modeBadge = document.getElementById('current-mode-badge');
-            this.cpuDiffGroup = document.getElementById('cpu-diff-select-group');
-            this.cpuDiffSelect = document.getElementById('cpu-difficulty');
-            this.onlineStatusPill = document.getElementById('online-status-pill');
-
-            this.p2TouchGroup = document.getElementById('p2-touch-group');
+        for (let c = 0; c < this.game.cols; c++) {
+            for (let r = 0; r < this.game.rows; r++) {
+                if (grid[r][c] !== null) {
+                    columnHeights[c] = this.game.rows - r;
+                    break;
+                }
+            }
+            aggregateHeight += columnHeights[c];
         }
 
-        setupEvents() {
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    this.mode = btn.dataset.mode;
-                    this.updateModeUI();
+        for (let c = 0; c < this.game.cols; c++) {
+            let blockFound = false;
+            for (let r = 0; r < this.game.rows; r++) {
+                if (grid[r][c] !== null) blockFound = true;
+                else if (blockFound && grid[r][c] === null) holes++;
+            }
+        }
 
-                    if (this.mode === 'story') {
-                        if (window.storyApp) window.storyApp.showStageDialogue();
-                    } else if (this.mode === 'online') {
-                        document.getElementById('modal-online-lobby').style.display = 'flex';
-                    } else {
-                        this.resetMatch();
-                    }
-                });
-            });
+        for (let c = 0; c < this.game.cols - 1; c++) {
+            bumpiness += Math.abs(columnHeights[c] - columnHeights[c + 1]);
+        }
 
-            this.cpuDiffSelect.addEventListener('change', (e) => {
-                this.cpuDifficulty = e.target.value;
-                this.updateModeUI();
-            });
+        for (let r = 0; r < this.game.rows; r++) {
+            if (grid[r].every(cell => cell !== null)) clearedLines++;
+        }
 
-            this.btnStart.addEventListener('click', () => {
-                sound.init();
-                if (!this.isRunning) {
-                    this.startRound(true);
+        return (-0.51 * aggregateHeight) + (0.76 * clearedLines) - (0.35 * holes) - (0.18 * bumpiness);
+    }
+}
+
+
+/* --------------------------------------------------------------------------
+   6. Main Application Controller (UI & Flow)
+   -------------------------------------------------------------------------- */
+class TetrisunApp {
+    constructor() {
+        this.sound = new SoundEngine();
+        this.selectedMode = 'story';
+        this.difficulty = 'normal';
+        this.p2pEnabled = true;
+
+        this.playerChar = 'nekonya';
+        this.cpuChar = 'inuwan';
+
+        this.p1Game = null;
+        this.p2Game = null;
+        this.cpuAI = null;
+
+        this.peer = null;
+        this.peerId = null;
+        this.peerConn = null;
+
+        this.storyStage = 1;
+        this.storyYamlData = null;
+        this.storyDialogues = [];
+        this.currentDialogueIdx = 0;
+
+        this.highScores = JSON.parse(localStorage.getItem('tetrisun_scores') || '[]');
+        this.isLoopRunning = false;
+        this.lastTime = 0;
+    }
+
+    async init() {
+        this.fitToScreen();
+        window.addEventListener('resize', () => this.fitToScreen());
+
+        await this.loadStoryYaml();
+        this.initCharSelectGrid();
+        this.initPeerJS();
+        this.bindEvents();
+        this.updateRankingTable();
+        this.startMagicGaugeTimer();
+
+        console.log("🐾 Tetrisun initialized successfully.");
+    }
+
+    async loadStoryYaml() {
+        try {
+            const resp = await fetch('stories.yaml');
+            if (resp.ok) {
+                const text = await resp.text();
+                if (window.jsyaml) {
+                    this.storyYamlData = window.jsyaml.load(text);
                 }
-            });
-
-            this.btnPause.addEventListener('click', () => {
-                this.isPaused = !this.isPaused;
-                this.btnPause.querySelector('span').textContent = this.isPaused ? 'RESUME' : 'PAUSE';
-                if (this.isPaused) {
-                    sound.stopBGM();
-                } else {
-                    sound.startBGM();
-                }
-            });
-
-            this.btnReset.addEventListener('click', () => this.resetMatch(true));
-
-            // Sound Effects Toggle
-            document.getElementById('btn-sound-toggle').addEventListener('click', () => {
-                sound.enabled = !sound.enabled;
-                document.querySelector('.icon-sound-on').style.display = sound.enabled ? 'block' : 'none';
-                document.querySelector('.icon-sound-off').style.display = sound.enabled ? 'none' : 'block';
-            });
-
-            // BGM Music Toggle
-            const bgmBtn = document.getElementById('btn-bgm-toggle');
-            if (bgmBtn) {
-                bgmBtn.addEventListener('click', () => {
-                    sound.bgmEnabled = !sound.bgmEnabled;
-                    if (sound.bgmEnabled) {
-                        bgmBtn.classList.add('active-btn');
-                        if (this.isRunning && !this.isPaused) sound.startBGM();
-                    } else {
-                        bgmBtn.classList.remove('active-btn');
-                        sound.stopBGM();
-                    }
-                });
             }
+        } catch (e) {
+            console.warn('YAML fetch failed, fallback used.', e);
+        }
+    }
 
-            // Modals & Lobby Buttons
-            const tutorialBtn = document.getElementById('btn-tutorial-modal');
-            if (tutorialBtn) {
-                tutorialBtn.addEventListener('click', () => {
-                    document.getElementById('modal-tutorial').style.display = 'flex';
-                });
-            }
+    fitToScreen() {
+        const viewport = document.getElementById('game-viewport');
+        if (!viewport) return;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const scale = Math.min(w / 1280, h / 720);
+        viewport.style.transform = `scale(${scale})`;
+    }
 
-            const closeTutorialBtn = document.getElementById('btn-close-tutorial');
-            if (closeTutorialBtn) {
-                closeTutorialBtn.addEventListener('click', () => {
-                    sound.init();
-                    document.getElementById('modal-tutorial').style.display = 'none';
-                    if (window.viewApp) {
-                        window.viewApp.showView('main-menu');
-                    }
-                });
-            }
+    showScreen(screenId) {
+        document.querySelectorAll('.game-view').forEach(v => v.classList.remove('active'));
+        const target = document.getElementById(screenId);
+        if (target) target.classList.add('active');
+        this.sound.init();
+    }
 
-            // Show Tutorial Modal automatically on initial page start
+    selectMode(mode, btnEl) {
+        this.selectedMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        if (btnEl) btnEl.classList.add('active');
+
+        const cpuWrapper = document.getElementById('cpu-select-wrapper');
+        if (cpuWrapper) cpuWrapper.style.display = (mode === 'versus') ? 'flex' : 'none';
+    }
+
+    updateSettings() {
+        const diffEl = document.getElementById('setting-difficulty');
+        if (diffEl) this.difficulty = diffEl.value;
+
+        const chalEl = document.getElementById('setting-challenger');
+        if (chalEl) this.p2pEnabled = (chalEl.value === 'on');
+    }
+
+    updateAudioVolume() {
+        const bgmVal = document.getElementById('setting-bgm').value;
+        const seVal = document.getElementById('setting-se').value;
+        this.sound.bgmVolume = bgmVal / 100;
+        this.sound.seVolume = seVal / 100;
+    }
+
+    initCharSelectGrid() {
+        const grid = document.getElementById('char-grid');
+        const cpuSelect = document.getElementById('cpu-char-select');
+        if (!grid) return;
+        grid.innerHTML = '';
+        if (cpuSelect) cpuSelect.innerHTML = '';
+
+        Object.keys(CHARACTERS).forEach(id => {
+            const char = CHARACTERS[id];
+
+            const card = document.createElement('div');
+            card.className = `char-card ${id === this.playerChar ? 'selected' : ''}`;
+            card.onclick = () => this.selectPlayerChar(id);
+            card.innerHTML = `
+                <div class="char-card-avatar" id="avatar-mini-${id}"></div>
+                <div class="char-card-name">${char.name}</div>
+            `;
+            grid.appendChild(card);
+
             setTimeout(() => {
-                const tutorialModal = document.getElementById('modal-tutorial');
-                if (tutorialModal) tutorialModal.style.display = 'flex';
-            }, 300);
-
-            document.getElementById('btn-controls-modal').addEventListener('click', () => {
-                document.getElementById('modal-controls').style.display = 'flex';
-            });
-            document.getElementById('btn-open-online-lobby').addEventListener('click', () => {
-                document.getElementById('modal-online-lobby').style.display = 'flex';
-            });
-
-            document.querySelectorAll('[data-close]').forEach(b => {
-                b.addEventListener('click', () => {
-                    const targetModal = document.getElementById(b.dataset.close);
-                    if (targetModal) targetModal.style.display = 'none';
-                });
-            });
-
-            document.getElementById('btn-result-rematch').addEventListener('click', () => {
-                document.getElementById('modal-result').style.display = 'none';
-                this.resetMatch(true);
-                this.startRound(true);
-            });
-
-            // WebRTC Lobby Events
-            document.getElementById('btn-create-room').addEventListener('click', () => {
-                this.peerMgr.createRoom();
-            });
-
-            document.getElementById('btn-join-room').addEventListener('click', () => {
-                const code = document.getElementById('input-join-room-code').value.trim().toUpperCase();
-                this.peerMgr.joinRoom(code);
-            });
-
-            document.getElementById('btn-copy-room-code').addEventListener('click', () => {
-                if (this.peerMgr.roomCode) {
-                    navigator.clipboard.writeText(this.peerMgr.roomCode);
-                    alert('ルームコードをコピーしました！');
-                }
-            });
-
-            document.getElementById('btn-copy-invite-link').addEventListener('click', () => {
-                if (this.peerMgr.roomCode) {
-                    const link = `${window.location.origin}${window.location.pathname}?room=${this.peerMgr.roomCode}`;
-                    navigator.clipboard.writeText(link);
-                    alert('招待URLをコピーしました！');
-                }
-            });
-
-            // Touch Controls Binding
-            document.querySelectorAll('.btn-touch').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const key = btn.dataset.key;
-                    this.dispatchVirtualKey(key);
-                });
-            });
-        }
-
-        checkUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            const roomCode = params.get('room');
-            if (roomCode) {
-                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                const onlineBtn = document.querySelector('.mode-btn[data-mode="online"]');
-                if (onlineBtn) onlineBtn.classList.add('active');
-                this.mode = 'online';
-                this.updateModeUI();
-
-                document.getElementById('input-join-room-code').value = roomCode.toUpperCase();
-                document.getElementById('modal-online-lobby').style.display = 'flex';
-                this.peerMgr.joinRoom(roomCode.toUpperCase());
-            }
-        }
-
-        dispatchVirtualKey(code) {
-            this.inputEngine.triggerAction(code);
-        }
-
-        updateModeUI() {
-            this.cpuDiffGroup.style.display = 'none';
-            document.getElementById('story-diff-select-group').style.display = 'none';
-            this.onlineStatusPill.style.display = 'none';
-            this.p2TouchGroup.style.display = 'none';
-
-            if (this.mode === 'story') {
-                this.targetWins = 1; // ストーリーモードは1本先取！
-                this.modeBadge.textContent = '📖 ストーリーモード (1本先取)';
-                document.getElementById('story-diff-select-group').style.display = 'flex';
-                this.p1NameEl.textContent = 'PLAYER 1';
-                if (window.storyApp) window.storyApp.updateCurrentBossUI();
-            } else if (this.mode === 'p1vscpu') {
-                this.targetWins = 2;
-                this.modeBadge.textContent = '1P vs CPU';
-                this.p1NameEl.textContent = 'PLAYER 1';
-                this.p2NameEl.textContent = `CPU (${this.cpuDifficulty.toUpperCase()})`;
-                this.cpuDiffGroup.style.display = 'flex';
-            } else if (this.mode === 'p1vsp2') {
-                this.targetWins = 2;
-                this.modeBadge.textContent = '1P vs 2P';
-                this.p1NameEl.textContent = 'PLAYER 1';
-                this.p2NameEl.textContent = 'PLAYER 2';
-                this.p2TouchGroup.style.display = 'flex';
-            } else if (this.mode === 'online') {
-                this.targetWins = 2;
-                this.modeBadge.textContent = 'オンライン対戦';
-                this.p1NameEl.textContent = this.peerMgr.isHost ? 'YOU (P1/Host)' : 'YOU (P2/Guest)';
-                this.p2NameEl.textContent = this.peerMgr.isHost ? 'ENEMY (P2)' : 'ENEMY (P1)';
-                this.onlineStatusPill.style.display = 'flex';
-            } else if (this.mode === 'cpuvscpu') {
-                this.targetWins = 2;
-                this.modeBadge.textContent = 'CPU vs CPU';
-                this.p1NameEl.textContent = 'CPU 1 (MASTER)';
-                this.p2NameEl.textContent = `CPU 2 (${this.cpuDifficulty.toUpperCase()})`;
-                this.cpuDiffGroup.style.display = 'flex';
-            }
-
-            this.updateWinDots();
-        }
-
-        onOnlineConnected(isHost) {
-            this.updateModeUI();
-            this.resetMatch(false);
-        }
-
-        resetMatch(broadcast = true) {
-            this.isRunning = false;
-            this.isPaused = false;
-            if (this.animationFrameId) {
-                cancelAnimationFrame(this.animationFrameId);
-                this.animationFrameId = null;
-            }
-            sound.stopBGM();
-
-            this.p1Wins = 0;
-            this.p2Wins = 0;
-            this.updateWinDots();
-
-            this.btnStart.disabled = false;
-            this.btnPause.disabled = true;
-            this.btnPause.querySelector('span').textContent = 'PAUSE';
-
-            document.getElementById('p1-ko-overlay').style.display = 'none';
-            document.getElementById('p2-ko-overlay').style.display = 'none';
-            document.getElementById('modal-result').style.display = 'none';
-
-            this.initRoundBoards();
-
-            if (broadcast && this.mode === 'online') {
-                this.peerMgr.send({ type: 'RESET_MATCH' });
-            }
-        }
-
-        initRoundBoards() {
-            const p1IsCPU = (this.mode === 'cpuvscpu');
-            let p2IsCPU = (this.mode === 'p1vscpu' || this.mode === 'cpuvscpu' || this.mode === 'story');
-
-            const p1IsRemote = (this.mode === 'online' && !this.peerMgr.isHost);
-            const p2IsRemote = (this.mode === 'online' && this.peerMgr.isHost);
-
-            // User Request: Story mode is 1 Target Win (1本先取)
-            if (this.mode === 'story') {
-                this.targetWins = 1;
-                document.getElementById('match-target-text').textContent = 'STORY MODE (1 TARGET WIN)';
-                document.getElementById('story-stage-banner').style.display = 'flex';
-                document.getElementById('story-timer-card').style.display = 'flex';
-            } else {
-                this.targetWins = 3;
-                document.getElementById('match-target-text').textContent = 'FIRST TO 3 WINS';
-                document.getElementById('story-stage-banner').style.display = 'none';
-                document.getElementById('story-timer-card').style.display = 'none';
-            }
-
-            let p2Diff = this.cpuDifficulty;
-            if (this.mode === 'story' && window.storyApp) {
-                const boss = window.storyApp.getCurrentBoss();
-                p2Diff = boss.diff;
-            }
-
-            this.p1 = new TetrisBoard('p1', p1IsCPU, 'master', p1IsRemote);
-            this.p2 = new TetrisBoard('p2', p2IsCPU, p2Diff, p2IsRemote);
-
-            // Apply Selected Player Character to P1
-            const p1CharVal = document.getElementById('player-character')?.value || 'hero';
-            const p1BadgeEl = document.getElementById('p1-avatar-badge');
-            const p2BadgeEl = document.getElementById('p2-avatar-badge');
-
-            if (window.storyApp) {
-                const p1CharObj = window.storyApp.getCharacterById(p1CharVal);
-                if (p1CharObj) {
-                    this.p1.clearStyle = p1CharObj.clearStyle;
-                    this.p1NameEl.textContent = p1CharObj.name;
-                    if (p1BadgeEl) p1BadgeEl.textContent = p1CharObj.avatar;
-                } else {
-                    this.p1NameEl.textContent = 'みけねこニャン';
-                    if (p1BadgeEl) p1BadgeEl.textContent = '🐱';
-                }
-            }
-
-            // Apply Story Boss settings to P2
-            if (this.mode === 'story' && window.storyApp) {
-                const boss = window.storyApp.getCurrentBoss();
-                this.p2.dropInterval = boss.dropInterval;
-                this.p2.clearStyle = boss.clearStyle;
-                this.p2NameEl.textContent = boss.name;
-                if (p2BadgeEl) p2BadgeEl.textContent = boss.avatar;
-
-                // Update permanent Stage Banner Badge text
-                const maxStages = window.storyApp.getMaxStages();
-                document.getElementById('story-stage-badge-text').textContent = `STAGE ${window.storyApp.currentStage} / ${maxStages} (VS ${boss.name})`;
-            } else if (p2BadgeEl) {
-                p2BadgeEl.textContent = '🐶';
-            }
-
-            this.p1.opponent = this.p2;
-            this.p2.opponent = this.p1;
-
-            this.p1.render();
-            this.p2.render();
-            this.p1.updateUI();
-            this.p2.updateUI();
-        }
-
-        startRound(broadcast = true) {
-            if (this.p1Wins >= this.targetWins || this.p2Wins >= this.targetWins) {
-                this.p1Wins = 0;
-                this.p2Wins = 0;
-                this.updateWinDots();
-            }
-
-            if (this.animationFrameId) {
-                cancelAnimationFrame(this.animationFrameId);
-                this.animationFrameId = null;
-            }
-
-            document.getElementById('p1-ko-overlay').style.display = 'none';
-            document.getElementById('p2-ko-overlay').style.display = 'none';
-            document.getElementById('modal-result').style.display = 'none';
-
-            this.initRoundBoards();
-            this.isRunning = true;
-            this.isPaused = false;
-            this.btnStart.disabled = true;
-            this.btnPause.disabled = false;
-            this.btnPause.querySelector('span').textContent = 'PAUSE';
-
-            sound.startBGM();
-
-            if (broadcast && this.mode === 'online') {
-                this.peerMgr.send({ type: 'START_MATCH' });
-            }
-
-            let syncTimer = 0;
-            let lastLoopTime = performance.now();
-
-            const gameLoop = (time) => {
-                if (this.isRunning) {
-                    const delta = Math.min(time - lastLoopTime, 100);
-                    lastLoopTime = time;
-
-                    if (!this.isPaused) {
-                        this.inputEngine.update(delta);
-                        this.p1.update(time);
-                        this.p2.update(time);
-
-                        if (this.mode === 'story' && window.storyApp) {
-                            window.storyApp.updateTimer(delta);
-                        }
-
-                        if (this.mode === 'online') {
-                            syncTimer += delta;
-                            if (syncTimer > 100) {
-                                syncTimer = 0;
-                                const localBoard = this.peerMgr.isHost ? this.p1 : this.p2;
-                                this.peerMgr.send({ type: 'STATE_SYNC', state: localBoard.exportState() });
-                            }
-                        }
-
-                        this.checkRoundEnd();
-                    }
-                    this.animationFrameId = requestAnimationFrame(gameLoop);
-                }
-            };
-            this.animationFrameId = requestAnimationFrame(gameLoop);
-        }
-
-        checkRoundEnd() {
-            if (this.p1.isGameOver || this.p2.isGameOver) {
-                this.isRunning = false;
-                this.btnStart.disabled = false;
-                this.btnPause.disabled = true;
-                sound.stopBGM();
-
-                if (this.p1.isGameOver && !this.p2.isGameOver) {
-                    this.p2Wins++;
-                } else if (!this.p1.isGameOver && this.p2.isGameOver) {
-                    this.p1Wins++;
-                }
-
-                this.updateWinDots();
-
-                if (this.p1Wins >= this.targetWins || this.p2Wins >= this.targetWins) {
-                    setTimeout(() => this.showMatchResult(), 800);
-                } else {
-                    setTimeout(() => this.startRound(false), 1800);
-                }
-            }
-        }
-
-        updateWinDots() {
-            this.p1MatchScoreEl.textContent = this.p1Wins;
-            this.p2MatchScoreEl.textContent = this.p2Wins;
-
-            const updateDots = (container, count) => {
-                const dots = container.querySelectorAll('.dot');
-                dots.forEach((dot, idx) => {
-                    dot.classList.toggle('filled', idx < count);
-                });
-            };
-
-            updateDots(this.p1WinDotsEl, this.p1Wins);
-            updateDots(this.p2WinDotsEl, this.p2Wins);
-        }
-
-        showMatchResult() {
-            if (this.mode === 'story' && window.storyApp) {
-                if (this.p1Wins >= this.targetWins) {
-                    window.storyApp.onStageVictory();
-                    return;
-                }
-            }
-
-            const winner = this.p1Wins >= this.targetWins ? this.p1NameEl.textContent : this.p2NameEl.textContent;
-            document.getElementById('result-winner-title').textContent = `${winner} WINS!`;
-            document.getElementById('result-score-detail').textContent = `${this.p1Wins} - ${this.p2Wins} で完全勝利！`;
-            document.getElementById('modal-result').style.display = 'flex';
-        }
-
-        handleRemoteInput(action, playerSide) {
-            const targetBoard = playerSide === 'p1' ? this.p1 : this.p2;
-            if (!targetBoard || targetBoard.isGameOver) return;
-
-            switch (action) {
-                case 'moveLeft': targetBoard.move(-1); break;
-                case 'moveRight': targetBoard.move(1); break;
-                case 'softDrop': targetBoard.softDrop(); break;
-                case 'hardDrop': targetBoard.hardDrop(); break;
-                case 'rotateRight': targetBoard.rotate(1); break;
-                case 'rotateLeft': targetBoard.rotate(-1); break;
-                case 'hold': targetBoard.hold(); break;
-                case 'castMagic': targetBoard.castMagic(); break;
-            }
-        }
-    }
-
-    // --- ONLINE HIGH SCORE LEADERBOARD MANAGER ---
-    class LeaderboardManager {
-        constructor() {
-            this.storageKey = 'cyber_tetris_online_leaderboard';
-            this.defaultScores = [
-                { name: 'CYBER_MASTER', score: 152000, lines: 142, date: '2026-07-21' },
-                { name: 'TETRIS_KING', score: 118400, lines: 110, date: '2026-07-20' },
-                { name: 'NEON_BLADE', score: 89000, lines: 84, date: '2026-07-19' },
-                { name: 'HYPER_ACE', score: 64200, lines: 62, date: '2026-07-18' },
-                { name: 'PIXEL_HERO', score: 42000, lines: 45, date: '2026-07-17' }
-            ];
-
-            this.init();
-        }
-
-        init() {
-            const btnOpen = document.getElementById('btn-leaderboard-modal');
-            if (btnOpen) {
-                btnOpen.addEventListener('click', () => {
-                    document.getElementById('modal-leaderboard').style.display = 'flex';
-                    this.fetchScores();
-                });
-            }
-
-            const btnSubmit = document.getElementById('btn-submit-score');
-            if (btnSubmit) {
-                btnSubmit.addEventListener('click', () => this.submitCurrentScore());
-            }
-        }
-
-        getScores() {
-            try {
-                const stored = localStorage.getItem(this.storageKey);
-                if (stored) return JSON.parse(stored);
-            } catch (e) {}
-            return [...this.defaultScores];
-        }
-
-        saveScores(scores) {
-            try {
-                localStorage.setItem(this.storageKey, JSON.stringify(scores));
-            } catch (e) {}
-        }
-
-        fetchScores() {
-            const tbody = document.getElementById('leaderboard-tbody');
-            if (!tbody) return;
-
-            let scores = this.getScores();
-
-            tbody.innerHTML = '';
-            scores.sort((a, b) => b.score - a.score);
-            scores.slice(0, 10).forEach((s, idx) => {
-                const tr = document.createElement('tr');
-                const rankBadge = idx === 0 ? '🥇 1st' : idx === 1 ? '🥈 2nd' : idx === 2 ? '🥉 3rd' : `${idx + 1}th`;
-                tr.innerHTML = `
-                    <td class="rank-badge-top">${rankBadge}</td>
-                    <td style="font-weight:700;">${this.escapeHtml(s.name)}</td>
-                    <td style="color:#38bdf8; font-weight:800;">${s.score.toLocaleString()}</td>
-                    <td>${s.lines}</td>
-                    <td style="color:var(--text-muted); font-size:0.75rem;">${s.date}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        submitCurrentScore() {
-            const nameInput = document.getElementById('player-name-input');
-            const name = (nameInput?.value || 'PLAYER_1').trim();
-            const p1Score = parseInt(document.getElementById('p1-score')?.textContent || '0', 10);
-            const p1Lines = parseInt(document.getElementById('p1-lines')?.textContent || '0', 10);
-
-            if (p1Score <= 0) {
-                alert('登録できるスコアがありません。1Pプレイでスコアを獲得してください！');
-                return;
-            }
-
-            const now = new Date();
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-            const newEntry = { name: name.substring(0, 12), score: p1Score, lines: p1Lines, date: dateStr };
-            let scores = this.getScores();
-            scores.push(newEntry);
-            scores.sort((a, b) => b.score - a.score);
-            scores = scores.slice(0, 15);
-
-            this.saveScores(scores);
-            this.fetchScores();
-            alert(`🏆 ${name} 様のスコア ${p1Score.toLocaleString()}pt をオンラインランキングに登録しました！`);
-        }
-
-        submitStoryTime(course, timeMs, charName) {
-            const timeStr = window.storyApp ? window.storyApp.formatTime(timeMs) : `${Math.floor(timeMs / 1000)}s`;
-            const name = `${charName} (${course.toUpperCase()})`;
-            
-            // Calculate a score equivalent for sorting (faster time = higher score)
-            const calculatedScore = Math.max(1000, 1000000 - Math.floor(timeMs / 10));
-
-            const now = new Date();
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-            const newEntry = { name: name.substring(0, 14), score: calculatedScore, lines: `⏱️ ${timeStr}`, date: dateStr };
-            let scores = this.getScores();
-            scores.push(newEntry);
-            scores.sort((a, b) => b.score - a.score);
-            scores = scores.slice(0, 15);
-
-            this.saveScores(scores);
-            this.fetchScores();
-        }
-
-        escapeHtml(str) {
-            return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-        }
-    }
-
-    // --- ONLINE CHALLENGER MATCHMAKING (乱入システム) ---
-    class ChallengerManager {
-        constructor(matchManager) {
-            this.matchManager = matchManager;
-            this.isChallengerWelcome = true;
-
-            const selectEl = document.getElementById('challenger-mode');
-            if (selectEl) {
-                selectEl.addEventListener('change', (e) => {
-                    this.isChallengerWelcome = e.target.value === 'welcome';
-                });
-            }
-
-            this.startChallengerScanner();
-        }
-
-        startChallengerScanner() {
-            setInterval(() => {
-                if (this.isChallengerWelcome && this.matchManager.mode === 'p1vsp2' && this.matchManager.isRunning && !this.matchManager.isPaused) {
-                    if (Math.random() < 0.08) {
-                        this.triggerChallengerCutIn();
-                    }
-                }
-            }, 20000);
-        }
-
-        triggerChallengerCutIn() {
-            sound.magicCast();
-            const overlay = document.getElementById('challenger-cutin-overlay');
-            if (!overlay) return;
-
-            overlay.style.display = 'flex';
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                this.matchManager.p2NameEl.textContent = '⚔️ ONLINE CHALLENGER';
-                this.matchManager.p2.isCPU = true;
-                this.matchManager.p2.cpuDiff = 'master';
-                this.matchManager.p2.dropInterval = 120;
-                this.matchManager.showToast('⚔️ 挑戦者が乱入！オンラインバトルの始まりです！');
-            }, 2400);
-        }
-    }
-    class StoryModeManager {
-        constructor(matchManager) {
-            this.matchManager = matchManager;
-            this.currentStage = 1;
-            this.storyDifficulty = 'easy'; // 'easy' (3面), 'normal' (5面), 'hard' (7面)
-            this.currentDialogueIndex = 0;
-            this.purePlayTimeMs = 0;
-
-            this.characters = [
-                {
-                    id: 'hero',
-                    name: 'みけねこニャン',
-                    title: '🐱 かわいい三毛猫パズラー',
-                    avatar: '🐱',
-                    clearStyle: 'rainbow',
-                    uniqueSpell: {
-                        name: '🌟 にゃんこ・レインボー',
-                        code: 'hero_rainbow',
-                        desc: '即座に下4行を七色に変換して一括消去し、強力な攻撃お邪魔を相手に送るニャン！'
-                    }
-                },
-                {
-                    id: 'botmaru',
-                    name: 'ぽちまる',
-                    title: '🐶 おてんば柴犬ロボ',
-                    avatar: '🐶',
-                    clearStyle: 'digital',
-                    bgGradient: 'radial-gradient(circle at 50% 30%, #052e16 0%, #070913 85%)',
-                    bgmSpeed: 1.0,
-                    bgmPitch: 1.0,
-                    diff: 'easy',
-                    dropInterval: 750,
-                    uniqueSpell: {
-                        name: '⚡ 柴犬ワンワン・オーバーロード',
-                        code: 'bot_overload',
-                        desc: '下3行を消去し、自盤面の全ブロックを消しやすい単色グリーンブロックに変えるワン！'
-                    }
-                },
-                {
-                    id: 'luna',
-                    name: 'うさみみルナ',
-                    title: '🐰 月うさぎハッカー',
-                    avatar: '🐰',
-                    clearStyle: 'moon',
-                    bgGradient: 'radial-gradient(circle at 50% 30%, #3b0764 0%, #070913 85%)',
-                    bgmSpeed: 1.15,
-                    bgmPitch: 1.1,
-                    diff: 'medium',
-                    dropInterval: 420,
-                    uniqueSpell: {
-                        name: '🌙 うさみみ・ナイトハック',
-                        code: 'luna_hack',
-                        desc: '相手のお邪魔メーターを横取り吸収して消滅させ、自分のマナ＋5秒バリア！'
-                    }
-                },
-                {
-                    id: 'zeus',
-                    name: 'くまぞう',
-                    title: '🐻 いなずま大熊ゲーマー',
-                    avatar: '🐻',
-                    clearStyle: 'lightning',
-                    bgGradient: 'radial-gradient(circle at 50% 30%, #451a03 0%, #070913 85%)',
-                    bgmSpeed: 1.25,
-                    bgmPitch: 1.2,
-                    diff: 'hard',
-                    dropInterval: 220,
-                    uniqueSpell: {
-                        name: '⚡ クマさん・サンダーボルト',
-                        code: 'zeus_thunder',
-                        desc: '盤面内のお邪魔ブロックを落雷で全消去し、相手に強烈な3行お邪魔を叩き込むクマー！'
-                    }
-                },
-                {
-                    id: 'hayate',
-                    name: 'きつねハヤテ',
-                    title: '🦊 影の忍び狐',
-                    avatar: '🦊',
-                    clearStyle: 'sakura',
-                    bgGradient: 'radial-gradient(circle at 50% 30%, #831843 0%, #070913 85%)',
-                    bgmSpeed: 1.35,
-                    bgmPitch: 1.25,
-                    diff: 'hard',
-                    dropInterval: 120,
-                    uniqueSpell: {
-                        name: '🦊 狐火・影分身縦棒',
-                        code: 'hayate_shadow',
-                        desc: '5ターンの間、出現する全てのテトロミノが「Iミノ（縦棒）」に固定変化ポン！'
-                    }
-                },
-                {
-                    id: 'valkyrie',
-                    name: 'ぺんぎん女王',
-                    title: '🐧 氷結ペンギン女王',
-                    avatar: '🐧',
-                    clearStyle: 'ice',
-                    bgGradient: 'radial-gradient(circle at 50% 30%, #0c4a6e 0%, #070913 85%)',
-                    bgmSpeed: 1.45,
-                    bgmPitch: 1.3,
-                    diff: 'master',
-                    dropInterval: 60,
-                    uniqueSpell: {
-                        name: '🐧 氷結ペンギン・フリーズ',
-                        code: 'valk_freeze',
-                        desc: '8秒間相手からの攻撃を100%完全防御する極大ダイヤモンドバリアを展開パタ！'
-                    }
-                },
-                {
-                    id: 'venom',
-                    name: 'らいおんヴェノム',
-                    title: '🦁 暗黒の百獣王',
-                    avatar: '🦁',
-                    clearStyle: 'fire',
-                    bgGradient: 'radial-gradient(circle at 50% 30%, #450a0a 0%, #070913 85%)',
-                    bgmSpeed: 1.55,
-                    bgmPitch: 1.4,
-                    diff: 'master',
-                    dropInterval: 35,
-                    uniqueSpell: {
-                        name: '🦁 サバンナ・インフェルノ',
-                        code: 'venom_inferno',
-                        desc: '相手の盤面底に即座に4行の凶悪お邪魔を発生させ、自分のお邪魔を全リセットガオ！'
-                    }
-                },
-                {
-                    id: 'astral',
-                    name: 'ドラゴンアストラル',
-                    title: '🐲 究極の神竜',
-                    avatar: '🐲',
-                    clearStyle: 'cosmic',
-                    bgGradient: 'radial-gradient(circle at 50% 30%, #1e1b4b 0%, #312e81 85%)',
-                    bgmSpeed: 1.7,
-                    bgmPitch: 1.5,
-                    diff: 'master',
-                    dropInterval: 18,
-                    uniqueSpell: {
-                        name: '🐲 ドラゴンブレス・ビッグバン',
-                        code: 'astral_bigbang',
-                        desc: '盤面のお邪魔を全てカラーミノへ浄化し、さらに下6行を一括消去する神竜極大魔法！'
-                    }
-                }
-            ];
-
-            this.init();
-        }
-
-        getCharacterById(id) {
-            return this.characters.find(c => c.id === id) || this.characters[0];
-        }
-
-        getMaxStages() {
-            if (this.storyDifficulty === 'easy') return 3;
-            if (this.storyDifficulty === 'normal') return 5;
-            return 7;
-        }
-
-        updateTimer(delta) {
-            this.purePlayTimeMs += delta;
-            const timerEl = document.getElementById('story-timer-display');
-            if (timerEl) {
-                timerEl.textContent = this.formatTime(this.purePlayTimeMs);
-            }
-        }
-
-        formatTime(ms) {
-            const totalSec = Math.floor(ms / 1000);
-            const minutes = Math.floor(totalSec / 60);
-            const seconds = totalSec % 60;
-            const millis = Math.floor((ms % 1000) / 10);
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(millis).padStart(2, '0')}`;
-        }
-
-        init() {
-            const btnOpenCharModal = document.getElementById('btn-open-char-modal');
-            if (btnOpenCharModal) {
-                btnOpenCharModal.addEventListener('click', () => {
-                    this.renderCharSelectModal();
-                    document.getElementById('modal-char-select').style.display = 'flex';
-                });
-            }
-
-            const playerCharSelect = document.getElementById('player-character');
-            if (playerCharSelect) {
-                playerCharSelect.addEventListener('change', () => {
-                    if (this.matchManager) this.matchManager.initRoundBoards();
-                });
-            }
-
-            const selectEl = document.getElementById('story-difficulty');
-            if (selectEl) {
-                selectEl.addEventListener('change', (e) => {
-                    this.storyDifficulty = e.target.value;
-                    this.currentStage = 1;
-                    this.purePlayTimeMs = 0;
-                    if (this.matchManager.mode === 'story') {
-                        this.showStageDialogue();
-                    }
-                });
-            }
-
-            const btnNext = document.getElementById('btn-next-dialogue');
-            const bubbleContainer = document.getElementById('story-bubble-container');
-
-            const handleNext = () => {
-                const dialogueList = this.getBossDialogue();
-                if (this.currentDialogueIndex < dialogueList.length - 1) {
-                    this.currentDialogueIndex++;
-                    this.renderDialogueTurn();
-                } else {
-                    document.getElementById('modal-story-dialogue').style.display = 'none';
-                    this.matchManager.startRound(false);
-                }
-            };
-
-            if (btnNext) btnNext.addEventListener('click', handleNext);
-            if (bubbleContainer) bubbleContainer.addEventListener('click', handleNext);
-
-            const btnStartStage = document.getElementById('btn-start-story-stage');
-            if (btnStartStage) {
-                btnStartStage.addEventListener('click', () => {
-                    document.getElementById('modal-story-dialogue').style.display = 'none';
-                    this.matchManager.startRound(false);
-                });
-            }
-
-            const btnCloseClear = document.getElementById('btn-close-story-clear');
-            if (btnCloseClear) {
-                btnCloseClear.addEventListener('click', () => {
-                    document.getElementById('modal-story-clear').style.display = 'none';
-                    this.currentStage = 1;
-                    this.purePlayTimeMs = 0;
-                    this.matchManager.resetMatch(false);
-                });
-            }
-        }
-
-        renderCharSelectModal() {
-            const container = document.getElementById('char-cards-container');
-            if (!container) return;
-
-            const currentCharVal = document.getElementById('player-character')?.value || 'hero';
-            container.innerHTML = '';
-
-            this.characters.forEach(char => {
-                const card = document.createElement('div');
-                card.className = `char-card ${char.id === currentCharVal ? 'selected-char' : ''}`;
-                card.innerHTML = `
-                    <div class="char-card-header">
-                        <div class="char-card-avatar">${char.avatar}</div>
-                        <div class="char-card-info">
-                            <div class="char-card-name">${char.name} ${char.id === currentCharVal ? '✅(選択中)' : ''}</div>
-                            <div class="char-card-title">${char.title}</div>
-                        </div>
-                    </div>
-                    <div class="unique-spell-box">
-                        <div class="unique-spell-header">
-                            <span class="unique-spell-badge">🔮キャラ専用個別魔法</span>
-                            <span class="unique-spell-name">${char.uniqueSpell.name}</span>
-                        </div>
-                        <p class="unique-spell-desc">${char.uniqueSpell.desc}</p>
-                    </div>
-                `;
-
-                card.addEventListener('click', () => {
-                    const selectEl = document.getElementById('player-character');
-                    if (selectEl) {
-                        selectEl.value = char.id;
-                        if (this.matchManager) this.matchManager.initRoundBoards();
-                    }
-                    this.renderCharSelectModal();
-                });
-
-                container.appendChild(card);
-            });
-        }
-
-        getCurrentBoss() {
-            const index = Math.min(this.currentStage, this.characters.length - 1);
-            return this.characters[index];
-        }
-
-        updateCurrentBossUI() {
-            const boss = this.getCurrentBoss();
-            if (boss && this.matchManager.mode === 'story') {
-                this.matchManager.p2NameEl.textContent = `${boss.avatar} ${boss.name}`;
-
-                // Apply Stage Background & Music Theme
-                const appContainer = document.querySelector('.app-container');
-                if (appContainer && boss.bgGradient) {
-                    appContainer.style.background = boss.bgGradient;
-                }
-                sound.setBGMTheme(boss.bgmSpeed || 1.0, boss.bgmPitch || 1.0);
-            }
-        }
-
-        showStageDialogue() {
-            const boss = this.getCurrentBoss();
-            const maxStages = this.getMaxStages();
-
-            document.getElementById('story-stage-pill').textContent = `STAGE ${this.currentStage} / ${maxStages} (${this.storyDifficulty.toUpperCase()})`;
-            document.getElementById('story-boss-title').textContent = `⚔️ VS ${boss.name}`;
-            document.getElementById('story-boss-avatar').textContent = boss.avatar;
-            document.getElementById('story-boss-name').textContent = boss.name;
-
-            const p1CharVal = document.getElementById('player-character')?.value || 'hero';
-            const p1CharObj = this.getCharacterById(p1CharVal);
-            const p1AvatarEl = document.querySelector('#speaker-p1-card .character-avatar');
-            const p1NameEl = document.querySelector('#speaker-p1-card .speaker-name');
-            if (p1AvatarEl) p1AvatarEl.textContent = p1CharObj.avatar;
-            if (p1NameEl) p1NameEl.textContent = p1CharObj.name;
-
-            this.updateCurrentBossUI();
-            this.currentDialogueIndex = 0;
-            this.renderDialogueTurn();
-
-            document.getElementById('modal-story-dialogue').style.display = 'flex';
-        }
-
-        getBossDialogue() {
-            const boss = this.getCurrentBoss();
-            if (window.STORY_DIALOGUES && window.STORY_DIALOGUES[boss.id]) {
-                return window.STORY_DIALOGUES[boss.id];
-            }
-            return [
-                { speaker: 'p1', text: `「いざ勝負だ！${boss.name}！」` },
-                { speaker: 'boss', text: '「負けないわよ！勝負勝負！」' }
-            ];
-        }
-
-        renderDialogueTurn() {
-            const boss = this.getCurrentBoss();
-            const dialogueList = this.getBossDialogue();
-            const turn = dialogueList[this.currentDialogueIndex];
-            if (!turn) return;
-
-            sound.playTone(600 + (this.currentDialogueIndex * 80), 0.04, 'sine', 0.05);
-
-            const speakerP1Card = document.getElementById('speaker-p1-card');
-            const speakerBossCard = document.getElementById('speaker-boss-card');
-            const currentSpeakerLabel = document.getElementById('current-speaker-name');
-            const speechText = document.getElementById('story-speech-text');
-
-            const p1CharVal = document.getElementById('player-character')?.value || 'hero';
-            const p1CharObj = this.getCharacterById(p1CharVal);
-
-            if (turn.speaker === 'p1') {
-                speakerP1Card.classList.add('active-speaker');
-                speakerBossCard.classList.remove('active-speaker');
-                currentSpeakerLabel.textContent = p1CharObj.name;
-                currentSpeakerLabel.style.color = '#38bdf8';
-            } else {
-                speakerP1Card.classList.remove('active-speaker');
-                speakerBossCard.classList.add('active-speaker');
-                currentSpeakerLabel.textContent = boss.name;
-                currentSpeakerLabel.style.color = '#c084fc';
-            }
-
-            speechText.textContent = turn.text;
-        }
-
-        onStageVictory() {
-            const maxStages = this.getMaxStages();
-            if (this.currentStage >= maxStages) {
-                sound.magicCast();
-                const timeStr = this.formatTime(this.purePlayTimeMs);
-                document.getElementById('story-clear-desc').textContent = `${this.storyDifficulty.toUpperCase()} コース (全${maxStages}ステージ) を完全制覇！\n⏱️ 純プレイタイム: ${timeStr}`;
-                document.getElementById('modal-story-clear').style.display = 'flex';
-
-                if (window.leaderboardApp) {
-                    const p1CharVal = document.getElementById('player-character')?.value || 'hero';
-                    const p1CharObj = this.getCharacterById(p1CharVal);
-                    window.leaderboardApp.submitStoryTime(this.storyDifficulty, this.purePlayTimeMs, p1CharObj.name);
-                }
-            } else {
-                this.currentStage++;
-                this.updateCurrentBossUI();
-                setTimeout(() => {
-                    this.showStageDialogue();
-                }, 800);
-            }
-        }
-    }
-
-    // --- 🖥️ SCREEN VIEW MANAGER (画面遷移フロー制御) ---
-    class ViewManager {
-        constructor(matchManager, storyManager) {
-            this.matchManager = matchManager;
-            this.storyManager = storyManager;
-            this.selectedCharId = 'hero';
-
-            this.init();
-        }
-
-        showView(viewName) {
-            const views = {
-                'main-menu': document.getElementById('view-main-menu'),
-                'char-select': document.getElementById('view-char-select'),
-                'gameplay': document.getElementById('view-gameplay')
-            };
-
-            Object.keys(views).forEach(k => {
-                if (views[k]) views[k].style.display = (k === viewName) ? 'flex' : 'none';
-            });
-
-            if (viewName === 'char-select') {
-                this.renderCharCards();
-            } else if (viewName === 'gameplay') {
-                sound.init();
-                if (this.matchManager.mode === 'story') {
-                    this.storyManager.showStageDialogue();
-                } else {
-                    this.matchManager.startRound(true);
-                }
-            } else if (viewName === 'main-menu') {
-                sound.stopBGM();
-                this.matchManager.resetMatch(false);
-            }
-        }
-
-        init() {
-            // Mode Select Buttons in Main Menu
-            document.querySelectorAll('.mode-card-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.querySelectorAll('.mode-card-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    const mode = btn.dataset.mode;
-                    this.matchManager.mode = mode;
-                    this.matchManager.updateModeUI();
-
-                    const storyGroup = document.getElementById('story-diff-group');
-                    if (storyGroup) {
-                        storyGroup.style.display = (mode === 'story') ? 'flex' : 'none';
-                    }
-                });
-            });
-
-            // "Next: Go to Char Select" Button
-            const btnGoChar = document.getElementById('btn-go-to-char-select');
-            if (btnGoChar) {
-                btnGoChar.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    sound.init();
-                    this.showView('char-select');
-                });
-            }
-
-            // "Back to Settings Menu" Buttons
-            const btnBackMenu = document.getElementById('btn-back-to-menu-from-char');
-            if (btnBackMenu) {
-                btnBackMenu.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.showView('main-menu');
-                });
-            }
-
-            const btnBackFromGame = document.getElementById('btn-back-to-menu-from-game');
-            if (btnBackFromGame) {
-                btnBackFromGame.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.showView('main-menu');
-                });
-            }
-
-            // "Start Game from Char Select" Button
-            const btnStartGame = document.getElementById('btn-start-game-from-char');
-            if (btnStartGame) {
-                btnStartGame.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.showView('gameplay');
-                });
-            }
-
-            // Menu Modals
-            const btnRankMenu = document.getElementById('btn-leaderboard-modal-menu');
-            if (btnRankMenu) {
-                btnRankMenu.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.getElementById('modal-leaderboard').style.display = 'flex';
-                    if (window.leaderboardApp) window.leaderboardApp.fetchScores();
-                });
-            }
-
-            const btnGuideMenu = document.getElementById('btn-tutorial-modal-menu');
-            if (btnGuideMenu) {
-                btnGuideMenu.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.getElementById('modal-tutorial').style.display = 'flex';
-                });
-            }
-        }
-
-        renderCharCards() {
-            const container = document.getElementById('char-cards-full-grid');
-            if (!container || !this.storyManager) return;
-
-            container.innerHTML = '';
-            const charImages = {
-                'hero': 'assets/cat.jpg',
-                'botmaru': 'assets/shiba.jpg',
-                'luna': 'assets/rabbit.jpg'
-            };
-
-            this.storyManager.characters.forEach(char => {
-                const isSelected = char.id === this.selectedCharId;
-                const card = document.createElement('div');
-                card.className = `char-pop-card ${isSelected ? 'selected-pop-card' : ''}`;
-                card.dataset.charid = char.id;
-                card.setAttribute('onclick', `window.selectChar('${char.id}')`);
-
-                const imgHtml = charImages[char.id] 
-                    ? `<img src="${charImages[char.id]}" alt="${char.name}">`
-                    : `<span style="font-size:3rem; display:block; text-align:center;">${char.avatar}</span>`;
-
-                card.innerHTML = `
-                    <div class="char-img-frame">
-                        ${imgHtml}
-                    </div>
-                    <div class="char-pop-name">${char.name}</div>
-                    <div class="char-pop-title">${char.title}</div>
-                    <div class="unique-spell-box" style="margin-top:6px; width:100%;">
-                        <div class="unique-spell-header">
-                            <span class="unique-spell-badge">🔮個別魔法スキル</span>
-                            <span class="unique-spell-name">${char.uniqueSpell.name}</span>
-                        </div>
-                        <p class="unique-spell-desc">${char.uniqueSpell.desc}</p>
-                    </div>
-                `;
-
-                container.appendChild(card);
-            });
-        }
-    }
-
-    // Global Navigation & Character Handlers for Guaranteed Responsiveness
-    window.selectChar = function(charId) {
-        if (sound) {
-            sound.init();
-            sound.hold();
-        }
-
-        const cards = document.querySelectorAll('.char-pop-card');
-        cards.forEach(card => {
-            if (card.dataset.charid === charId) {
-                card.classList.add('selected-pop-card');
-            } else {
-                card.classList.remove('selected-pop-card');
+                const miniCanvas = document.createElement('canvas');
+                miniCanvas.width = 60;
+                miniCanvas.height = 60;
+                drawCharacterFace(miniCanvas, id, 'normal');
+                const box = document.getElementById(`avatar-mini-${id}`);
+                if (box) box.appendChild(miniCanvas);
+            }, 50);
+
+            if (cpuSelect) {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = `${char.name} (${char.animal})`;
+                if (id === this.cpuChar) opt.selected = true;
+                cpuSelect.appendChild(opt);
             }
         });
 
-        if (window.viewApp) {
-            window.viewApp.selectedCharId = charId;
+        this.updateCharDetailCard(this.playerChar);
+    }
+
+    selectPlayerChar(id) {
+        this.playerChar = id;
+        document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+        this.initCharSelectGrid();
+    }
+
+    selectCpuCharacter(id) {
+        this.cpuChar = id;
+    }
+
+    updateCharDetailCard(id) {
+        const char = CHARACTERS[id] || CHARACTERS.nekonya;
+        document.getElementById('char-name').textContent = char.name;
+        document.getElementById('char-animal').textContent = `モチーフ: ${char.animal}`;
+        document.getElementById('char-desc').textContent = char.desc;
+        document.getElementById('magic-name').textContent = char.magicName;
+        document.getElementById('magic-desc').textContent = char.magicDesc;
+
+        const canvas = document.getElementById('char-preview-canvas');
+        if (canvas) drawCharacterFace(canvas, id, 'normal');
+    }
+
+    proceedFromModeSelect() {
+        this.showScreen('view-character-select');
+    }
+
+    initPeerJS() {
+        try {
+            this.peer = new Peer();
+            this.peer.on('open', (id) => {
+                this.peerId = id;
+                const txt = document.getElementById('p2p-status-text');
+                if (txt) txt.textContent = `乱入待受中 (ID: ${id.substring(0, 6)}...)`;
+            });
+
+            this.peer.on('connection', (conn) => {
+                if (!this.p2pEnabled) return;
+                this.peerConn = conn;
+                this.showToast('⚡ 他プレイヤーからの乱入を受け入れました！対戦に移行します！');
+                this.setupPeerDataHandler();
+            });
+        } catch (e) {
+            console.warn('PeerJS init failed', e);
         }
-        if (window.matchApp) {
-            window.matchApp.playerCharId = charId;
-        }
+    }
 
-        const selectEl = document.getElementById('player-character');
-        if (selectEl) selectEl.value = charId;
-    };
+    setupPeerDataHandler() {
+        if (!this.peerConn) return;
+        this.peerConn.on('data', (data) => {
+            if (data.type === 'GARBAGE' && this.p1Game) {
+                this.p1Game.receiveGarbage(data.amount);
+            } else if (data.type === 'STATE' && this.p2Game) {
+                this.p2Game.grid = data.grid;
+                this.p2Game.score = data.score;
+            }
+        });
+    }
 
-    window.selectMode = function(modeName, btnEl) {
-        document.querySelectorAll('.mode-card-btn').forEach(b => b.classList.remove('active'));
-        if (btnEl) btnEl.classList.add('active');
+    showToast(msg) {
+        const container = document.getElementById('global-toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast-msg';
+        toast.textContent = msg;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
 
-        if (window.matchApp) {
-            window.matchApp.mode = modeName;
-            window.matchApp.updateModeUI();
-        }
+    startGame() {
+        this.showScreen('view-game');
+        this.sound.startBgm();
 
-        const storyGroup = document.getElementById('story-diff-group');
-        if (storyGroup) {
-            storyGroup.style.display = (modeName === 'story') ? 'flex' : 'none';
-        }
-    };
+        this.p1Game = new TetrisGame('p1', false);
+        this.p1Game.reset();
 
-    window.goToCharSelect = function() {
-        if (sound) sound.init();
-        if (window.viewApp) {
-            window.viewApp.showView('char-select');
-            window.viewApp.renderCharCards();
+        this.p1Game.onSendGarbage = (lines) => {
+            if (this.p2Game) this.p2Game.receiveGarbage(lines);
+            if (this.peerConn) this.peerConn.send({ type: 'GARBAGE', amount: lines });
+        };
+
+        if (this.selectedMode === 'scoreattack') {
+            this.p2Game = null;
+            document.getElementById('p2-stage-box').style.opacity = '0.3';
         } else {
-            const menu = document.getElementById('view-main-menu');
-            const charScreen = document.getElementById('view-char-select');
-            if (menu) menu.style.display = 'none';
-            if (charScreen) charScreen.style.display = 'flex';
+            document.getElementById('p2-stage-box').style.opacity = '1';
+            const enemyCharId = (this.selectedMode === 'story') ? this.getStoryEnemyChar() : this.cpuChar;
+            this.cpuChar = enemyCharId;
+            this.p2Game = new TetrisGame('p2', true);
+            this.p2Game.reset();
+            this.p2Game.onSendGarbage = (lines) => {
+                if (this.p1Game) this.p1Game.receiveGarbage(lines);
+            };
+            this.cpuAI = new CpuAI(this.p2Game, this.difficulty);
         }
-    };
 
-    window.backToMainMenu = function() {
-        if (sound) sound.stopBGM();
-        if (window.matchApp) window.matchApp.resetMatch(true);
+        document.getElementById('p1-name').textContent = `${CHARACTERS[this.playerChar].name} (1P)`;
+        document.getElementById('p2-name').textContent = `${CHARACTERS[this.cpuChar].name} (CPU)`;
+        document.getElementById('game-stage-info').textContent = (this.selectedMode === 'story') ? `STAGE ${this.storyStage}: ${CHARACTERS[this.cpuChar].name}戦` : 'SINGLE VERSUS';
 
-        if (window.viewApp) {
-            window.viewApp.showView('main-menu');
+        if (this.selectedMode === 'story') {
+            this.loadStoryDialogue();
         } else {
-            const menu = document.getElementById('view-main-menu');
-            const charScreen = document.getElementById('view-char-select');
-            const gameplay = document.getElementById('view-gameplay');
-            if (charScreen) charScreen.style.display = 'none';
-            if (gameplay) gameplay.style.display = 'none';
-            if (menu) menu.style.display = 'flex';
+            document.getElementById('adv-dialogue-box').style.display = 'none';
         }
-    };
 
-    window.startGameFromChar = function() {
-        if (sound) sound.init();
-        if (window.viewApp && window.matchApp) {
-            window.matchApp.playerCharId = window.viewApp.selectedCharId || 'hero';
-            window.viewApp.showView('gameplay');
+        if (!this.isLoopRunning) {
+            this.isLoopRunning = true;
+            this.lastTime = performance.now();
+            requestAnimationFrame((time) => this.gameLoop(time));
+        }
+    }
+
+    getStoryEnemyChar() {
+        const enemies = ['inuwan', 'torichun', 'sarukkey', 'tanupon', 'kitsunekon', 'dragogon', 'nekonya'];
+        return enemies[(this.storyStage - 1) % enemies.length];
+    }
+
+    loadStoryDialogue() {
+        const dialogBox = document.getElementById('adv-dialogue-box');
+        if (!dialogBox) return;
+
+        let dialogues = [];
+        if (this.storyYamlData && this.storyYamlData[this.difficulty]) {
+            const stageData = this.storyYamlData[this.difficulty].find(s => s.stage === this.storyStage);
+            if (stageData && stageData.dialogue) {
+                dialogues = stageData.dialogue.map(d => ({
+                    speaker: d.speaker === 'p1' ? CHARACTERS[this.playerChar].name : CHARACTERS[this.cpuChar].name,
+                    text: d.text
+                }));
+            }
+        }
+
+        if (dialogues.length === 0) {
+            dialogues = [
+                { speaker: CHARACTERS[this.playerChar].name, text: '「いよいよパステルテトリス対戦の始まりだね！」' },
+                { speaker: CHARACTERS[this.cpuChar].name, text: `「${CHARACTERS[this.cpuChar].name}の魔法で勝負だワン/ニャン！」` }
+            ];
+        }
+
+        this.storyDialogues = dialogues;
+        this.currentDialogueIdx = 0;
+        dialogBox.style.display = 'block';
+        this.renderDialogueStep();
+    }
+
+    renderDialogueStep() {
+        if (this.currentDialogueIdx >= this.storyDialogues.length) {
+            document.getElementById('adv-dialogue-box').style.display = 'none';
+            return;
+        }
+        const d = this.storyDialogues[this.currentDialogueIdx];
+        document.getElementById('adv-speaker-name').textContent = d.speaker;
+        document.getElementById('adv-text').textContent = d.text;
+    }
+
+    nextDialogue() {
+        this.currentDialogueIdx++;
+        this.renderDialogueStep();
+    }
+
+    skipDialogue() {
+        document.getElementById('adv-dialogue-box').style.display = 'none';
+    }
+
+    gameLoop(time) {
+        const dt = time - this.lastTime;
+        this.lastTime = time;
+
+        this.pollGamepad();
+
+        if (this.p1Game && !this.p1Game.isPaused && !this.p1Game.isGameOver) {
+            this.updatePlayerGame(this.p1Game, dt);
+        }
+
+        if (this.p2Game && !this.p2Game.isPaused && !this.p2Game.isGameOver) {
+            this.updatePlayerGame(this.p2Game, dt);
+            if (this.cpuAI) this.cpuAI.update(time);
+        }
+
+        this.renderAll();
+
+        if (this.p1Game && this.p1Game.isGameOver) {
+            this.handleGameOver(false);
+        } else if (this.p2Game && this.p2Game.isGameOver) {
+            this.handleGameOver(true);
         } else {
-            const charScreen = document.getElementById('view-char-select');
-            const gameplay = document.getElementById('view-gameplay');
-            if (charScreen) charScreen.style.display = 'none';
-            if (gameplay) gameplay.style.display = 'flex';
-            if (window.matchApp) window.matchApp.startRound(true);
+            requestAnimationFrame((t) => this.gameLoop(t));
         }
-    };
+    }
 
-    window.startMatch = function() {
-        if (sound) sound.init();
-        if (window.matchApp && !window.matchApp.isRunning) {
-            window.matchApp.startRound(true);
+    pollGamepad() {
+        const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+        const gp = gamepads[0];
+        if (!gp || !this.p1Game || this.p1Game.isGameOver) return;
+
+        // Button Mapping: 0: A (Rotate), 1: B (Rotate), 2: X (Hard drop), 3: Y (Hard drop), 4: L1 (Hold), 5: R1 (Hold), 7: R2 (Magic)
+        if (gp.buttons[0].pressed || gp.buttons[1].pressed) {
+            if (!this.gpPrevRotate) { this.p1Game.rotatePiece(1); this.sound.playRotateSE(); }
+            this.gpPrevRotate = true;
+        } else { this.gpPrevRotate = false; }
+
+        if (gp.buttons[2].pressed || gp.buttons[3].pressed) {
+            if (!this.gpPrevDrop) { this.p1Game.hardDrop(); this.sound.playDropSE(); }
+            this.gpPrevDrop = true;
+        } else { this.gpPrevDrop = false; }
+
+        if (gp.buttons[4].pressed || gp.buttons[5].pressed) {
+            if (!this.gpPrevHold) { this.p1Game.hold(); }
+            this.gpPrevHold = true;
+        } else { this.gpPrevHold = false; }
+
+        if (gp.buttons[7].pressed || gp.buttons[6].pressed) {
+            if (!this.gpPrevMagic) { this.triggerMagic('p1'); }
+            this.gpPrevMagic = true;
+        } else { this.gpPrevMagic = false; }
+
+        // D-Pad / Axis
+        if (gp.axes[0] < -0.5 || gp.buttons[14].pressed) this.p1Game.moveLeft();
+        else if (gp.axes[0] > 0.5 || gp.buttons[15].pressed) this.p1Game.moveRight();
+        if (gp.axes[1] > 0.5 || gp.buttons[13].pressed) this.p1Game.softDrop();
+    }
+
+    updatePlayerGame(game, dt) {
+        game.dropCounter += dt;
+        if (game.dropCounter > game.dropInterval) {
+            game.softDrop();
+            game.dropCounter = 0;
         }
-    };
 
-    window.pauseMatch = function() {
-        if (!window.matchApp) return;
-        window.matchApp.isPaused = !window.matchApp.isPaused;
-        const btnPause = document.getElementById('btn-pause-match');
-        if (btnPause) {
-            const label = btnPause.querySelector('span');
-            if (label) label.textContent = window.matchApp.isPaused ? 'RESUME' : 'PAUSE';
+        if (game.barrierTimer > 0) {
+            game.barrierTimer -= dt / 1000;
         }
-        if (window.matchApp.isPaused) {
-            if (sound) sound.stopBGM();
-        } else {
-            if (sound) sound.startBGM();
+    }
+
+    startMagicGaugeTimer() {
+        setInterval(() => {
+            if (this.p1Game && !this.p1Game.isGameOver) {
+                this.p1Game.magicGauge = Math.min(100, this.p1Game.magicGauge + 2);
+                const btn = document.getElementById('p1-magic-btn');
+                if (btn) btn.disabled = (this.p1Game.magicGauge < 100);
+            }
+            if (this.p2Game && !this.p2Game.isGameOver) {
+                this.p2Game.magicGauge = Math.min(100, this.p2Game.magicGauge + 2);
+                if (this.p2Game.magicGauge >= 100 && Math.random() < 0.3) {
+                    this.triggerMagic('p2');
+                }
+            }
+        }, 1000);
+    }
+
+    triggerMagic(playerId) {
+        const game = (playerId === 'p1') ? this.p1Game : this.p2Game;
+        const opponent = (playerId === 'p1') ? this.p2Game : this.p1Game;
+        const charId = (playerId === 'p1') ? this.playerChar : this.cpuChar;
+
+        if (!game || game.magicGauge < 100) return;
+        game.magicGauge = 0;
+        this.sound.playMagicSE();
+
+        const modal = document.getElementById('magic-roulette-modal');
+        const textEl = document.getElementById('roulette-text');
+        modal.style.display = 'block';
+
+        let spins = 0;
+        const timer = setInterval(() => {
+            spins++;
+            const randLv = Math.floor(Math.random() * 5);
+            textEl.textContent = `LV${randLv}: 魔法ルーレット回転中...`;
+            if (spins > 10) {
+                clearInterval(timer);
+                const finalLv = Math.floor(Math.random() * 5);
+                this.applyMagicEffect(finalLv, game, opponent, charId);
+                setTimeout(() => { modal.style.display = 'none'; }, 1000);
+            }
+        }, 80);
+    }
+
+    applyMagicEffect(lv, game, opponent, charId) {
+        const textEl = document.getElementById('roulette-text');
+        switch (lv) {
+            case 0:
+                textEl.textContent = 'LV0: はずれ (効果なし)';
+                break;
+            case 1:
+                textEl.textContent = 'LV1: 全お邪魔ブロック消去！';
+                game.grid.forEach(row => {
+                    row.forEach((cell, c) => {
+                        if (cell && cell.isGarbage) row[c] = null;
+                    });
+                });
+                break;
+            case 2:
+                textEl.textContent = 'LV2: 5秒間お邪魔無効バリア！';
+                game.barrierTimer = 5;
+                break;
+            case 3:
+                textEl.textContent = 'LV3: 次の5回「I型」固定！';
+                game.forceIPieces = 5;
+                break;
+            case 4:
+                textEl.textContent = `LV4: ${CHARACTERS[charId].magicName}！`;
+                this.executeCharacterMagic(charId, game, opponent);
+                break;
         }
-    };
+        this.showCutinBanner(`${CHARACTERS[charId].name}: LV${lv} 魔法発動！`);
+    }
 
-    window.restartMatch = function() {
-        if (sound) sound.init();
-        if (window.matchApp) {
-            window.matchApp.resetMatch(true);
-            window.matchApp.startRound(true);
+    executeCharacterMagic(charId, game, opponent) {
+        switch (charId) {
+            case 'nekonya':
+                let clearedCount = 0;
+                for (let r = 1; r < game.rows; r += 2) {
+                    if (clearedCount < 3) {
+                        game.grid[r] = Array(game.cols).fill(null);
+                        clearedCount++;
+                    }
+                }
+                break;
+
+            case 'inuwan':
+                let pushed = 0;
+                for (let r = game.rows - 1; r >= 0; r--) {
+                    if (game.grid[r].some(c => c && c.isGarbage) && pushed < 3) {
+                        game.grid[r] = Array(game.cols).fill(null);
+                        pushed++;
+                    }
+                }
+                if (pushed > 0 && opponent) opponent.receiveGarbage(pushed);
+                break;
+
+            case 'torichun':
+                let topCleared = 0;
+                for (let r = 0; r < game.rows; r++) {
+                    if (game.grid[r].some(c => c !== null) && topCleared < 3) {
+                        game.grid[r] = Array(game.cols).fill(null);
+                        topCleared++;
+                    }
+                }
+                break;
+
+            case 'sarukkey':
+                game.forceOPieces = 3;
+                break;
+
+            case 'tanupon':
+                game.grid = game.createGrid();
+                if (opponent) opponent.grid = opponent.createGrid();
+                break;
+
+            case 'kitsunekon':
+                if (opponent) {
+                    const temp = game.grid;
+                    game.grid = opponent.grid;
+                    opponent.grid = temp;
+                }
+                break;
+
+            case 'dragogon':
+                for (let r = game.rows - 1; r >= game.rows - 5; r--) {
+                    game.grid[r] = Array(game.cols).fill(null);
+                }
+                break;
         }
-    };
+    }
 
-    // Initialize Match App & Managers
-    document.addEventListener('DOMContentLoaded', () => {
-        window.matchApp = new MatchManager();
-        window.leaderboardApp = new LeaderboardManager();
-        window.challengerApp = new ChallengerManager(window.matchApp);
-        window.storyApp = new StoryModeManager(window.matchApp);
-        window.viewApp = new ViewManager(window.matchApp, window.storyApp);
-    });
+    showCutinBanner(text) {
+        const banner = document.getElementById('cutin-banner');
+        const txt = document.getElementById('cutin-text');
+        if (!banner || !txt) return;
+        txt.textContent = text;
+        banner.style.display = 'block';
+        setTimeout(() => { banner.style.display = 'none'; }, 1200);
+    }
 
-})();
+    renderAll() {
+        if (this.p1Game) {
+            this.renderBoard('p1-board-canvas', this.p1Game);
+            this.renderHold('p1-hold-canvas', this.p1Game.holdPiece);
+            this.renderNext('p1-next-canvas', this.p1Game.nextQueue);
+            document.getElementById('p1-score').textContent = `SCORE: ${String(this.p1Game.score).padStart(6, '0')}`;
+            document.getElementById('p1-lines').textContent = this.p1Game.lines;
+            document.getElementById('p1-ren').textContent = this.p1Game.ren;
+            document.getElementById('p1-level').textContent = this.p1Game.level;
+            document.getElementById('p1-magic-fill').style.width = `${this.p1Game.magicGauge}%`;
+            document.getElementById('p1-garbage-bar').style.height = `${Math.min(100, this.p1Game.garbageQueue * 10)}%`;
+            drawCharacterFace(document.getElementById('p1-face-canvas'), this.playerChar, this.p1Game.garbageQueue > 2 ? 'sad' : 'normal');
+        }
+
+        if (this.p2Game) {
+            this.renderBoard('p2-board-canvas', this.p2Game);
+            this.renderHold('p2-hold-canvas', this.p2Game.holdPiece);
+            this.renderNext('p2-next-canvas', this.p2Game.nextQueue);
+            document.getElementById('p2-score').textContent = `SCORE: ${String(this.p2Game.score).padStart(6, '0')}`;
+            document.getElementById('p2-lines').textContent = this.p2Game.lines;
+            document.getElementById('p2-ren').textContent = this.p2Game.ren;
+            document.getElementById('p2-level').textContent = this.p2Game.level;
+            document.getElementById('p2-magic-fill').style.width = `${this.p2Game.magicGauge}%`;
+            document.getElementById('p2-garbage-bar').style.height = `${Math.min(100, this.p2Game.garbageQueue * 10)}%`;
+            drawCharacterFace(document.getElementById('p2-face-canvas'), this.cpuChar, this.p2Game.garbageQueue > 2 ? 'sad' : 'normal');
+        }
+    }
+
+    renderBoard(canvasId, game) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const cellW = 24;
+        const cellH = 24;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let r = 0; r < game.rows; r++) {
+            for (let c = 0; c < game.cols; c++) {
+                if (game.grid[r][c]) {
+                    this.drawRoundedBlock(ctx, c * cellW, r * cellH, cellW, cellH, game.grid[r][c].color);
+                }
+            }
+        }
+
+        if (game.currentPiece && !game.isGameOver) {
+            const ghostY = game.getGhostY();
+            const shape = game.currentPiece.shape;
+
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c]) {
+                        const gx = (game.currentX + c) * cellW;
+                        const gy = (ghostY + r) * cellH;
+                        ctx.strokeStyle = 'rgba(150, 150, 180, 0.4)';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(gx + 2, gy + 2, cellW - 4, cellH - 4);
+                    }
+                }
+            }
+
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c]) {
+                        const px = (game.currentX + c) * cellW;
+                        const py = (game.currentY + r) * cellH;
+                        this.drawRoundedBlock(ctx, px, py, cellW, cellH, game.currentPiece.color);
+                    }
+                }
+            }
+        }
+    }
+
+    drawRoundedBlock(ctx, x, y, w, h, color) {
+        const radius = 5;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.roundRect(x + 1, y + 1, w - 2, h - 2, radius);
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.stroke();
+    }
+
+    renderHold(canvasId, type) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (!type) return;
+        const template = TETRIMINOS[type];
+        const shape = template.shape;
+        const cell = 14;
+        const offsetX = (canvas.width - shape[0].length * cell) / 2;
+        const offsetY = (canvas.height - shape.length * cell) / 2;
+
+        for (let r = 0; r < shape.length; r++) {
+            for (let c = 0; c < shape[r].length; c++) {
+                if (shape[r][c]) {
+                    this.drawRoundedBlock(ctx, offsetX + c * cell, offsetY + r * cell, cell, cell, template.color);
+                }
+            }
+        }
+    }
+
+    renderNext(canvasId, queue) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const cell = 14;
+        queue.slice(0, 3).forEach((type, idx) => {
+            const template = TETRIMINOS[type];
+            const shape = template.shape;
+            const offsetX = (canvas.width - shape[0].length * cell) / 2;
+            const offsetY = 10 + idx * 65;
+
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c]) {
+                        this.drawRoundedBlock(ctx, offsetX + c * cell, offsetY + r * cell, cell, cell, template.color);
+                    }
+                }
+            }
+        });
+    }
+
+    bindEvents() {
+        window.addEventListener('keydown', (e) => {
+            if (!this.p1Game || this.p1Game.isGameOver || this.p1Game.isPaused) return;
+            switch (e.code) {
+                case 'ArrowLeft':
+                    this.p1Game.moveLeft();
+                    this.sound.playPopSE();
+                    break;
+                case 'ArrowRight':
+                    this.p1Game.moveRight();
+                    this.sound.playPopSE();
+                    break;
+                case 'ArrowDown':
+                    this.p1Game.softDrop();
+                    break;
+                case 'ArrowUp':
+                    this.p1Game.hardDrop();
+                    this.sound.playDropSE();
+                    this.triggerScreenShake('small');
+                    break;
+                case 'KeyA':
+                    this.p1Game.rotatePiece(-1);
+                    this.sound.playRotateSE();
+                    break;
+                case 'KeyZ':
+                case 'KeyS':
+                    this.p1Game.rotatePiece(1);
+                    this.sound.playRotateSE();
+                    break;
+                case 'ShiftLeft':
+                case 'ShiftRight':
+                case 'KeyC':
+                    this.p1Game.hold();
+                    break;
+                case 'Space':
+                    this.triggerMagic('p1');
+                    break;
+            }
+        });
+    }
+
+    triggerScreenShake(type = 'small') {
+        const wrapper = document.getElementById('shake-wrapper');
+        if (!wrapper) return;
+        wrapper.className = (type === 'large') ? 'shake-large' : 'shake-small';
+        setTimeout(() => wrapper.className = '', 300);
+    }
+
+    togglePause() {
+        if (!this.p1Game) return;
+        this.p1Game.isPaused = !this.p1Game.isPaused;
+        const modal = document.getElementById('pause-modal');
+        if (modal) modal.style.display = this.p1Game.isPaused ? 'flex' : 'none';
+    }
+
+    quitToTitle() {
+        this.sound.stopBgm();
+        this.showScreen('view-mode-select');
+    }
+
+    handleGameOver(isWin) {
+        this.sound.stopBgm();
+        this.showScreen('view-score-result');
+
+        const titleBanner = document.getElementById('result-title-banner');
+        if (titleBanner) {
+            titleBanner.textContent = isWin ? '🎉 VICTORY! クリア成功！' : '💀 GAME OVER';
+        }
+
+        document.getElementById('res-score').textContent = String(this.p1Game ? this.p1Game.score : 0).padStart(6, '0');
+        document.getElementById('res-lines').textContent = this.p1Game ? this.p1Game.lines : 0;
+        document.getElementById('res-ren').textContent = this.p1Game ? this.p1Game.ren : 0;
+    }
+
+    submitScore() {
+        const nameInput = document.getElementById('player-name-input');
+        const rawName = nameInput ? nameInput.value.trim() : 'たびびと';
+        const safeName = this.escapeHTML(rawName || 'たびびと');
+
+        const entry = {
+            name: safeName,
+            score: this.p1Game ? this.p1Game.score : 0,
+            mode: this.selectedMode.toUpperCase(),
+            date: new Date().toLocaleDateString('ja-JP')
+        };
+
+        this.highScores.push(entry);
+        this.highScores.sort((a, b) => b.score - a.score);
+        this.highScores = this.highScores.slice(0, 5);
+
+        localStorage.setItem('tetrisun_scores', JSON.stringify(this.highScores));
+        this.updateRankingTable();
+        this.showToast('🏆 ランキングスコアを登録しました！');
+    }
+
+    updateRankingTable() {
+        const tbody = document.getElementById('ranking-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (this.highScores.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">まだ記録がありません</td></tr>';
+            return;
+        }
+
+        this.highScores.forEach((item, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>#${idx + 1}</strong></td>
+                <td>${item.name}</td>
+                <td>${item.score}</td>
+                <td>${item.mode}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+}
+
+// Global App Instance Setup
+const app = new TetrisunApp();
+window.app = app;
+
+window.addEventListener('DOMContentLoaded', () => {
+    app.init();
+});

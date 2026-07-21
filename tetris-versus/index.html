@@ -2,842 +2,462 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="WEBブラウザで遊べる本格対戦型テトリス！WebRTCオンライン対戦・2人ローカル対戦・CPU対戦対応、お邪魔ブロック相殺・コンボ機能搭載。" />
-    <title>Cyber Tetris Versus | オンライン対戦テトリス</title>
-    
-    <!-- Google Fonts (Pop Rounded Fonts) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>テトリスン | Tetrisun - パステル対戦パズル</title>
+    <meta name="description" content="パステルカラーの可愛い魔法動物たちが対戦するポップな対戦型テトリスゲーム『テトリスン』！独自魔法ルーレット、ストーリーモード、オンライン乱入対応。" />
+
+    <!-- Google Fonts: M PLUS Rounded 1c & Fredoka for Pop UI -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- PeerJS CDN for WebRTC P2P Online Multiplayer -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- PeerJS for Serverless WebRTC P2P Multiplayer & Challenger Entry -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
-    <!-- Separate Author Editable Story Dialogue Data File -->
-    <script src="story-dialogues.js"></script>
+    <!-- JS-YAML Parser CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app" class="app-container">
-        <!-- View 1: Main Menu & Settings Screen (画面①: 各種設定・モード選択画面) -->
-        <div id="view-main-menu" class="view-screen" style="display:flex;">
-            <div class="main-menu-container">
-                <div class="main-menu-header">
-                    <div class="app-title-badge">🐾 POP ANIMAL TETRIS</div>
-                    <h1>Cyber Tetris Animal VS</h1>
-                    <p class="subtitle">可愛い動物キャラ＆アニマル固有魔法で対戦パズル！</p>
-                </div>
-
-                <div class="menu-sections-grid">
-                    <!-- Section 1: Mode Select -->
-                    <div class="menu-card">
-                        <h3>🎮 対戦モード選択</h3>
-                        <div class="mode-selector-grid">
-                            <button class="mode-card-btn active" data-mode="p1vscpu" onclick="window.selectMode('p1vscpu', this)">
-                                <span class="mode-icon">🤖</span>
-                                <span class="mode-title">1P VS CPU</span>
-                                <span class="mode-desc">CPU対戦で特訓！</span>
-                            </button>
-                            <button class="mode-card-btn" data-mode="story" onclick="window.selectMode('story', this)">
-                                <span class="mode-icon">📖</span>
-                                <span class="mode-title">ストーリー</span>
-                                <span class="mode-desc">全アニマルと会話バトル！</span>
-                            </button>
-                            <button class="mode-card-btn" data-mode="p1vsp2" onclick="window.selectMode('p1vsp2', this)">
-                                <span class="mode-icon">👥</span>
-                                <span class="mode-title">2P ローカル</span>
-                                <span class="mode-desc">1台のPCで2人対戦！</span>
-                            </button>
-                            <button class="mode-card-btn highlight-online" data-mode="online" onclick="window.selectMode('online', this)">
-                                <span class="mode-icon">🌐</span>
-                                <span class="mode-title">オンライン</span>
-                                <span class="mode-desc">全国のライバルと対戦！</span>
-                            </button>
-                            <button class="mode-card-btn" data-mode="cpuvscpu" onclick="window.selectMode('cpuvscpu', this)">
-                                <span class="mode-icon">👀</span>
-                                <span class="mode-title">CPU 観戦</span>
-                                <span class="mode-desc">AI同士のバトル観戦！</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Section 2: Detailed Game Settings -->
-                    <div class="menu-card">
-                        <h3>⚙️ 各種ルール・難易度設定</h3>
-                        <div class="settings-form-grid">
-                            <div class="setting-item" id="story-diff-group" style="display:none;">
-                                <label for="story-difficulty">📖 ストーリーコース:</label>
-                                <select id="story-difficulty">
-                                    <option value="easy" selected>EASY (全3面)</option>
-                                    <option value="normal">NORMAL (全5面)</option>
-                                    <option value="hard">HARD (全7面)</option>
-                                </select>
-                            </div>
-
-                            <div class="setting-item" id="cpu-diff-group">
-                                <label for="cpu-difficulty">🤖 CPU強さレベル:</label>
-                                <select id="cpu-difficulty">
-                                    <option value="easy">Easy (やさしい)</option>
-                                    <option value="medium" selected>Medium (ふつう)</option>
-                                    <option value="hard">Hard (つよい)</option>
-                                    <option value="master">Master (神速)</option>
-                                </select>
-                            </div>
-
-                            <div class="setting-item" id="challenger-select-group">
-                                <label for="challenger-mode">⚔️ オンライン乱入受付:</label>
-                                <select id="challenger-mode">
-                                    <option value="welcome" selected>乱入上等 (受付ON)</option>
-                                    <option value="off">乱入不可 (受付OFF)</option>
-                                </select>
-                            </div>
-
-                            <div class="setting-item">
-                                <label for="garbage-rule">🔥 お邪魔攻撃ルール:</label>
-                                <select id="garbage-rule">
-                                    <option value="direct" selected>ダイレクト送出 (標準)</option>
-                                    <option value="classic">クラシック送出</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="menu-action-row" style="margin-top:16px;">
-                            <button id="btn-leaderboard-modal-menu" class="action-btn gold-glow" onclick="document.getElementById('modal-leaderboard').style.display='flex'; if(window.leaderboardApp)window.leaderboardApp.fetchScores();">🏆 ランキング</button>
-                            <button id="btn-tutorial-modal-menu" class="action-btn primary-glow" onclick="document.getElementById('modal-tutorial').style.display='flex';">❓ 遊び方ガイド</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Primary Action: Go to Character Select Screen -->
-                <div class="main-menu-footer">
-                    <button id="btn-go-to-char-select" class="btn-giant-start" onclick="window.goToCharSelect()">
-                        <span>🐾 キャラクター選択へ進む ▶</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- View 2: Pop Animal Character Selection Screen (画面②: 動物キャラ選択画面) -->
-        <div id="view-char-select" class="view-screen" style="display:none;">
-            <div class="char-select-screen-container">
-                <div class="char-screen-header">
-                    <h2>🐾 プレイヤーキャラクター選択</h2>
-                    <p>お気に入りのアニマルキャラと固有魔法スキルを選ぼう！</p>
-                </div>
-
-                <div class="char-cards-full-grid" id="char-cards-full-grid">
-                    <div class="char-pop-card selected-pop-card" data-charid="hero" onclick="window.selectCharCard(this, 'hero')">
-                        <div class="char-img-frame"><img src="assets/cat.jpg" alt="みけねこニャン"></div>
-                        <div class="char-pop-name">みけねこニャン</div>
-                        <div class="char-pop-title">🐱 にゃんこ魔法使い</div>
-                        <div class="unique-spell-box" style="margin-top:6px; width:100%;">
-                            <div class="unique-spell-header">
-                                <span class="unique-spell-badge">🔮個別魔法スキル</span>
-                                <span class="unique-spell-name">🌟 にゃんこ・レインボー</span>
-                            </div>
-                            <p class="unique-spell-desc">下5行消去＆マナ全回復！</p>
-                        </div>
-                    </div>
-                    <div class="char-pop-card" data-charid="botmaru" onclick="window.selectCharCard(this, 'botmaru')">
-                        <div class="char-img-frame"><img src="assets/shiba.jpg" alt="ぽちまる"></div>
-                        <div class="char-pop-name">ぽちまる</div>
-                        <div class="char-pop-title">🐶 柴犬ワンワン騎士</div>
-                        <div class="unique-spell-box" style="margin-top:6px; width:100%;">
-                            <div class="unique-spell-header">
-                                <span class="unique-spell-badge">🔮個別魔法スキル</span>
-                                <span class="unique-spell-name">⚡ 柴犬ワンワン・オーバーロード</span>
-                            </div>
-                            <p class="unique-spell-desc">全ライン一括破壊！</p>
-                        </div>
-                    </div>
-                    <div class="char-pop-card" data-charid="luna" onclick="window.selectCharCard(this, 'luna')">
-                        <div class="char-img-frame"><img src="assets/rabbit.jpg" alt="うさみみルナ"></div>
-                        <div class="char-pop-name">うさみみルナ</div>
-                        <div class="char-pop-title">🐰 月うさぎハッカー</div>
-                        <div class="unique-spell-box" style="margin-top:6px; width:100%;">
-                            <div class="unique-spell-header">
-                                <span class="unique-spell-badge">🔮個別魔法スキル</span>
-                                <span class="unique-spell-name">🌙 うさみみ・ナイトハック</span>
-                            </div>
-                            <p class="unique-spell-desc">お邪魔無効化＆ハッキングバリア！</p>
-                        </div>
-                    </div>
-                    <div class="char-pop-card" data-charid="kumazou" onclick="window.selectCharCard(this, 'kumazou')">
-                        <div class="char-img-frame"><span style="font-size:3.2rem; display:block; text-align:center;">🐻</span></div>
-                        <div class="char-pop-name">くまぞう</div>
-                        <div class="char-pop-title">🐻 森のクマさん</div>
-                        <div class="unique-spell-box" style="margin-top:6px; width:100%;">
-                            <div class="unique-spell-header">
-                                <span class="unique-spell-badge">🔮個別魔法スキル</span>
-                                <span class="unique-spell-name">⚡ クマさん・サンダーボルト</span>
-                            </div>
-                            <p class="unique-spell-desc">落雷全破砕＆3電撃攻撃！</p>
-                        </div>
-                    </div>
-                    <div class="char-pop-card" data-charid="hayate" onclick="window.selectCharCard(this, 'hayate')">
-                        <div class="char-img-frame"><span style="font-size:3.2rem; display:block; text-align:center;">🦊</span></div>
-                        <div class="char-pop-name">きつねハヤテ</div>
-                        <div class="char-pop-title">🦊 狐火の忍者</div>
-                        <div class="unique-spell-box" style="margin-top:6px; width:100%;">
-                            <div class="unique-spell-header">
-                                <span class="unique-spell-badge">🔮個別魔法スキル</span>
-                                <span class="unique-spell-name">🦊 狐火・影分身縦棒</span>
-                            </div>
-                            <p class="unique-spell-desc">影分身・5連縦棒！</p>
-                        </div>
-                    </div>
-                    <div class="char-pop-card" data-charid="valkyrie" onclick="window.selectCharCard(this, 'valkyrie')">
-                        <div class="char-img-frame"><span style="font-size:3.2rem; display:block; text-align:center;">🐧</span></div>
-                        <div class="char-pop-name">ぺんぎん女王</div>
-                        <div class="char-pop-title">🐧 氷結ペンギン</div>
-                        <div class="unique-spell-box" style="margin-top:6px; width:100%;">
-                            <div class="unique-spell-header">
-                                <span class="unique-spell-badge">🔮個別魔法スキル</span>
-                                <span class="unique-spell-name">🐧 氷結ペンギン・フリーズ</span>
-                            </div>
-                            <p class="unique-spell-desc">8秒間絶対ダイヤバリア！</p>
-                        </div>
-                    </div>
-                    <div class="char-pop-card" data-charid="venom" onclick="window.selectCharCard(this, 'venom')">
-                        <div class="char-img-frame"><span style="font-size:3.2rem; display:block; text-align:center;">🦁</span></div>
-                        <div class="char-pop-name">らいおんヴェノム</div>
-                        <div class="char-pop-title">🦁 サバンナの百獣王</div>
-                        <div class="unique-spell-box" style="margin-top:6px; width:100%;">
-                            <div class="unique-spell-header">
-                                <span class="unique-spell-badge">🔮個別魔法スキル</span>
-                                <span class="unique-spell-name">🦁 サバンナ・インフェルノ</span>
-                            </div>
-                            <p class="unique-spell-desc">地獄暗黒4行攻撃！</p>
-                        </div>
-                    </div>
-                    <div class="char-pop-card" data-charid="astral" onclick="window.selectCharCard(this, 'astral')">
-                        <div class="char-img-frame"><span style="font-size:3.2rem; display:block; text-align:center;">🐲</span></div>
-                        <div class="char-pop-name">ドラゴンアストラル</div>
-                        <div class="char-pop-title">🐲 幻竜アストラル</div>
-                        <div class="unique-spell-box" style="margin-top:6px; width:100%;">
-                            <div class="unique-spell-header">
-                                <span class="unique-spell-badge">🔮個別魔法スキル</span>
-                                <span class="unique-spell-name">🐲 ドラゴンブレス・ビッグバン</span>
-                            </div>
-                            <p class="unique-spell-desc">全浄化＆6行消去！</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="char-screen-footer">
-                    <button id="btn-back-to-menu-from-char" class="action-btn secondary" onclick="window.backToMainMenu()">
-                        <span>◀ 設定メニューへ戻る</span>
-                    </button>
-                    <button id="btn-start-game-from-char" class="btn-giant-start" onclick="window.startGameFromChar()">
-                        <span>⚔️ 決定して対戦スタート！ 🚀</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- View 3: Game Battle Arena (画面③: ゲーム対戦画面) -->
-        <div id="view-gameplay" class="view-screen" style="display:none;">
-            <!-- Clean Game Header Bar (No Scrollbar, Minimal Controls) -->
-            <header class="top-bar game-header">
-                <div class="brand">
-                    <button id="btn-back-to-menu-from-game" class="back-link-btn" title="設定画面に戻る" onclick="window.backToMainMenu()">
-                        ◀ 設定画面に戻る
-                    </button>
-                    <div class="logo-icon">🐾</div>
-                    <div class="brand-text">
-                        <h1>Cyber Tetris VS</h1>
-                        <span class="mode-badge" id="current-mode-badge">1P vs CPU</span>
-                    </div>
-                </div>
-
-                <div class="game-header-controls">
-                    <button id="btn-start-match" class="action-btn gold-glow" onclick="window.startMatch()">
-                        <span>START</span>
-                    </button>
-                    <button id="btn-pause-match" class="action-btn secondary" onclick="window.pauseMatch()">
-                        <span>PAUSE</span>
-                    </button>
-                    <button id="btn-reset-match" class="action-btn secondary" onclick="window.restartMatch()">
-                        <span>RESTART</span>
-                    </button>
-                    <button id="btn-sound-toggle" class="icon-btn" title="SE ON/OFF">
-                        <svg class="icon-sound-on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                    </button>
-                    <button id="btn-bgm-toggle" class="icon-btn active-btn" title="BGM ON/OFF">🎵BGM</button>
-                </div>
-            </header>
-
-            <main class="arena-wrapper">
-            <!-- Left Player (PLAYER 1) -->
-            <section class="player-section p1-side" id="p1-container">
-                <div class="player-header">
-                    <div class="player-avatar-badge" id="p1-avatar-badge">🐱</div>
-                    <h2 class="player-name" id="p1-name-display">みけねこニャン</h2>
-                    <div class="win-counter" id="p1-win-counter">
-                        <span class="win-label">WINS</span>
-                        <div class="win-dots" id="p1-win-dots">
-                            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="player-board-layout">
-                    <!-- Left Column: Hold & Stats -->
-                    <div class="side-panel left-panel">
-                        <div class="mini-box hold-box">
-                            <div class="box-title">HOLD</div>
-                            <canvas id="p1-hold-canvas" width="90" height="90"></canvas>
-                        </div>
-
-                        <div class="stats-box">
-                            <div class="stat-item">
-                                <span class="stat-label">SCORE</span>
-                                <span class="stat-value" id="p1-score">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">LINES</span>
-                                <span class="stat-value" id="p1-lines">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">COMBO</span>
-                                <span class="stat-value" id="p1-combo">0</span>
-                            </div>
-                            <div class="stat-item attack-stat">
-                                <span class="stat-label">SENT</span>
-                                <span class="stat-value" id="p1-garbage-sent">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Center: Main Tetris Canvas + Garbage Bar & Mana Bar -->
-                    <div class="board-area">
-                        <!-- Garbage Meter (Left side of board) -->
-                        <div class="garbage-gauge-wrapper" title="お邪魔ブロック警告ゲージ">
-                            <div class="garbage-gauge-bar" id="p1-garbage-gauge"></div>
-                        </div>
-
-                        <div class="canvas-container">
-                            <canvas id="p1-board-canvas" width="300" height="600"></canvas>
-
-                            <!-- Magic Cast Circle & Cut-in Overlay -->
-                            <div class="magic-overlay" id="p1-magic-overlay" style="display:none;">
-                                <div class="magic-circle"></div>
-                                <div class="magic-banner" id="p1-magic-banner">🔮 呪文発動！</div>
-                            </div>
-
-                            <!-- Shield Active Indicator -->
-                            <div class="shield-indicator" id="p1-shield-indicator" style="display:none;">🛡️ SHIELD ACTIVE</div>
-
-                            <!-- Overlay Announcer Text (e.g. TETRIS!, DOUBLE!, T-SPIN!) -->
-                            <div class="announcer-overlay" id="p1-announcer"></div>
-
-                            <!-- KO Overlay -->
-                            <div class="ko-overlay" id="p1-ko-overlay" style="display:none;">
-                                <div class="ko-text">K.O.</div>
-                            </div>
-                        </div>
-
-                        <!-- Mana Gauge (Right side of board) -->
-                        <div class="mana-gauge-wrapper" title="魔法マナゲージ (100%で発動可能！)">
-                            <div class="mana-gauge-bar" id="p1-mana-gauge"></div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Next Queue & Magic Button -->
-                    <div class="side-panel right-panel">
-                        <div class="mini-box next-box">
-                            <div class="box-title">NEXT</div>
-                            <canvas id="p1-next-canvas" width="90" height="240"></canvas>
-                        </div>
-                        <button class="btn-magic" id="btn-p1-magic" disabled title="マナ全開で魔法発動！(Shiftキー)">
-                            <span class="magic-sparkle">🪄</span>
-                            <span class="magic-label">SPELL</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Center VS Divider & Match Control Panel -->
-            <section class="vs-center-panel">
-                <!-- Permanent Story Stage Banner -->
-                <div class="story-stage-banner" id="story-stage-banner" style="display:none;">
-                    <span class="stage-flag-icon">📖</span>
-                    <span id="story-stage-badge-text">STAGE 1 / 3</span>
-                </div>
-
-                <div class="vs-badge">VS</div>
-
-                <div class="match-info-card">
-                    <div class="match-target" id="match-target-text">FIRST TO 3 WINS</div>
-                    <div class="match-score-display">
-                        <span id="p1-match-score">0</span>
-                        <span class="score-sep">-</span>
-                        <span id="p2-match-score">0</span>
-                    </div>
-                    <!-- Time Attack Timer Display -->
-                    <div class="story-timer-card" id="story-timer-card" style="display:none;">
-                        <span class="timer-icon">⏱️</span>
-                        <span id="story-timer-display">00:00.00</span>
-                    </div>
-                </div>
-
-                <div class="match-controls">
-                    <button id="btn-start-match" class="btn-cyber-primary">
-                        <span class="btn-glow"></span>
-                        <span class="btn-text">MATCH START</span>
-                    </button>
-                    <button id="btn-pause-match" class="btn-cyber-secondary" disabled>
-                        <span>PAUSE</span>
-                    </button>
-                    <button id="btn-reset-match" class="btn-cyber-danger">
-                        <span>RESET</span>
-                    </button>
-                </div>
-
-                <!-- Garbage Attack Indicator Animations -->
-                <div class="garbage-attack-stream" id="attack-stream-container"></div>
-            </section>
-
-            <!-- Right Player (PLAYER 2 / CPU / ONLINE GUEST) -->
-            <section class="player-section p2-side" id="p2-container">
-                <div class="player-header">
-                    <div class="player-avatar-badge" id="p2-avatar-badge">🐶</div>
-                    <h2 class="player-name" id="p2-name-display">ぽちまる</h2>
-                    <div class="win-counter" id="p2-win-counter">
-                        <span class="win-label">WINS</span>
-                        <div class="win-dots" id="p2-win-dots">
-                            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="player-board-layout">
-                    <!-- Left Column: Hold & Stats -->
-                    <div class="side-panel left-panel">
-                        <div class="mini-box hold-box">
-                            <div class="box-title">HOLD</div>
-                            <canvas id="p2-hold-canvas" width="90" height="90"></canvas>
-                        </div>
-
-                        <div class="stats-box">
-                            <div class="stat-item">
-                                <span class="stat-label">SCORE</span>
-                                <span class="stat-value" id="p2-score">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">LINES</span>
-                                <span class="stat-value" id="p2-lines">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">COMBO</span>
-                                <span class="stat-value" id="p2-combo">0</span>
-                            </div>
-                            <div class="stat-item attack-stat">
-                                <span class="stat-label">SENT</span>
-                                <span class="stat-value" id="p2-garbage-sent">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Center: Main Tetris Canvas + Garbage Bar & Mana Bar -->
-                    <div class="board-area">
-                        <!-- Garbage Meter -->
-                        <div class="garbage-gauge-wrapper" title="お邪魔ブロック警告ゲージ">
-                            <div class="garbage-gauge-bar" id="p2-garbage-gauge"></div>
-                        </div>
-
-                        <div class="canvas-container">
-                            <canvas id="p2-board-canvas" width="300" height="600"></canvas>
-
-                            <!-- Magic Cast Circle & Cut-in Overlay -->
-                            <div class="magic-overlay" id="p2-magic-overlay" style="display:none;">
-                                <div class="magic-circle"></div>
-                                <div class="magic-banner" id="p2-magic-banner">🔮 呪文発動！</div>
-                            </div>
-
-                            <!-- Shield Active Indicator -->
-                            <div class="shield-indicator" id="p2-shield-indicator" style="display:none;">🛡️ SHIELD ACTIVE</div>
-
-                            <!-- Overlay Announcer Text -->
-                            <div class="announcer-overlay" id="p2-announcer"></div>
-
-                            <!-- KO Overlay -->
-                            <div class="ko-overlay" id="p2-ko-overlay" style="display:none;">
-                                <div class="ko-text">K.O.</div>
-                            </div>
-                        </div>
-
-                        <!-- Mana Gauge -->
-                        <div class="mana-gauge-wrapper" title="魔法マナゲージ (100%で発動可能！)">
-                            <div class="mana-gauge-bar" id="p2-mana-gauge"></div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Next Queue & Magic Button -->
-                    <div class="side-panel right-panel">
-                        <div class="mini-box next-box">
-                            <div class="box-title">NEXT</div>
-                            <canvas id="p2-next-canvas" width="90" height="240"></canvas>
-                        </div>
-                        <button class="btn-magic" id="btn-p2-magic" disabled title="マナ全開で魔法発動！">
-                            <span class="magic-sparkle">🪄</span>
-                            <span class="magic-label">SPELL</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-            </main>
-        </div><!-- End of #view-gameplay -->
-
-        <!-- On-Screen Virtual Touch Controls -->
-        <footer class="touch-controls-footer">
-            <div class="touch-group p1-touch">
-                <span class="touch-label">1P Touch:</span>
-                <button class="btn-touch" data-key="KeyA">←</button>
-                <button class="btn-touch" data-key="KeyD">→</button>
-                <button class="btn-touch" data-key="KeyS">↓</button>
-                <button class="btn-touch" data-key="KeyW">⚡Hard</button>
-                <button class="btn-touch" data-key="KeyE">↻Rot</button>
-                <button class="btn-touch" data-key="Space">Hold</button>
-            </div>
-            <div class="touch-group p2-touch" id="p2-touch-group" style="display:none;">
-                <span class="touch-label">2P Touch:</span>
-                <button class="btn-touch" data-key="ArrowLeft">←</button>
-                <button class="btn-touch" data-key="ArrowRight">→</button>
-                <button class="btn-touch" data-key="ArrowDown">↓</button>
-                <button class="btn-touch" data-key="ArrowUp">⚡Hard</button>
-                <button class="btn-touch" data-key="KeyK">↻Rot</button>
-                <button class="btn-touch" data-key="ShiftRight">Hold</button>
-            </div>
-        </footer>
-    </div>
-
-    <!-- Online Lobby Modal -->
-    <div id="modal-online-lobby" class="modal-overlay" style="display:none;">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <h2>🌐 WebRTC オンライン対戦ロビー</h2>
-                <button class="modal-close" data-close="modal-online-lobby">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p style="font-size:0.85rem; color:var(--text-muted);">他のブラウザ・端末の対戦相手とリアルタイムで直接通信対戦できます。</p>
-
-                <div class="online-box-grid">
-                    <!-- Create Room -->
-                    <div class="online-card">
-                        <h3>1. ルームを作成する (ホスト)</h3>
-                        <p class="sub-desc">招待コードを発行して対戦相手を待ちます。</p>
-                        <button id="btn-create-room" class="btn-cyber-primary block-btn">
-                            <span>ルームコードを発行</span>
-                        </button>
-                        <div id="room-created-info" style="display:none; margin-top:12px;">
-                            <div class="room-code-badge">
-                                <span>ルームコード:</span>
-                                <strong id="my-room-code-display">----</strong>
-                            </div>
-                            <div style="margin-top:8px; display:flex; gap:6px;">
-                                <button id="btn-copy-room-code" class="action-btn secondary-small">コードをコピー</button>
-                                <button id="btn-copy-invite-link" class="action-btn secondary-small">招待リンクをコピー</button>
-                            </div>
-                            <div class="lobby-waiting-spinner">
-                                <span class="spinner-icon">🔄</span> 対戦相手の接続を待機中...
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Join Room -->
-                    <div class="online-card">
-                        <h3>2. ルームに参加する (ゲスト)</h3>
-                        <p class="sub-desc">相手から教わったルームコードを入力します。</p>
-                        <div class="form-row-online">
-                            <input type="text" id="input-join-room-code" placeholder="例: TETRIS-8A2F" uppercase>
-                            <button id="btn-join-room" class="action-btn primary">参加</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="connection-log-box" id="online-connection-log">
-                    接続状態: 未接続
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="action-btn secondary" data-close="modal-online-lobby">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Controls & Rules Modal -->
-    <div id="modal-controls" class="modal-overlay" style="display:none;">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <h2>🎮 操作方法 & 対戦ルール</h2>
-                <button class="modal-close" data-close="modal-controls">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="controls-grid">
-                    <!-- 1P Controls -->
-                    <div class="control-card p1-card">
-                        <h3>PLAYER 1 操作</h3>
-                        <table class="control-table">
-                            <tr><th>左 / 右 移動</th><td><kbd>A</kbd> / <kbd>D</kbd></td></tr>
-                            <tr><th>ソフトドロップ (高速落下)</th><td><kbd>S</kbd></td></tr>
-                            <tr><th>ハードドロップ (即時接地)</th><td><kbd>W</kbd></td></tr>
-                            <tr><th>回転 (右回 / 左回)</th><td><kbd>E</kbd> / <kbd>Q</kbd></td></tr>
-                            <tr><th>ホールド (キープ)</th><td><kbd>Space</kbd></td></tr>
-                        </table>
-                    </div>
-
-                    <!-- 2P Controls -->
-                    <div class="control-card p2-card">
-                        <h3>PLAYER 2 操作 (ローカル対戦時)</h3>
-                        <table class="control-table">
-                            <tr><th>左 / 右 移動</th><td><kbd>←</kbd> / <kbd>→</kbd></td></tr>
-                            <tr><th>ソフトドロップ (高速落下)</th><td><kbd>↓</kbd></td></tr>
-                            <tr><th>ハードドロップ (即時接地)</th><td><kbd>↑</kbd></td></tr>
-                            <tr><th>回転 (右回 / 左回)</th><td><kbd>K</kbd> / <kbd>J</kbd> または <kbd>L</kbd></td></tr>
-                            <tr><th>ホールド (キープ)</th><td><kbd>Right Shift</kbd></td></tr>
-                    <!-- Gamepad Controls -->
-                    <div class="control-card gamepad-card" style="grid-column: 1 / -1; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3);">
-                        <h3>🎮 ゲームパッド操作 (標準コントローラー対応)</h3>
-                        <table class="control-table">
-                            <tr><th>左 / 右 移動</th><td><kbd>十字キー ⬅ / ➡</kbd> または <kbd>Lスティック ⬅ / ➡</kbd></td></tr>
-                            <tr><th>ソフトドロップ (高速落下)</th><td><kbd>十字キー ⬇</kbd> または <kbd>Lスティック ⬇</kbd></td></tr>
-                            <tr><th>ハードドロップ (即時接地)</th><td><kbd>十字キー ⬆</kbd> / <kbd>Lスティック ⬆</kbd> / <kbd>Y (△)</kbd></td></tr>
-                            <tr><th>回転 (右回 / 左回)</th><td><kbd>A (✕)</kbd> / <kbd>B (◯)</kbd> または <kbd>X (□)</kbd></td></tr>
-                            <tr><th>ホールド (キープ)</th><td><kbd>L1 (LB)</kbd> / <kbd>R1 (RB)</kbd> / <kbd>L2</kbd> / <kbd>R2</kbd></td></tr>
-                            <tr><th>スタート / ポーズ</th><td><kbd>START / OPTIONS</kbd></td></tr>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="rules-section">
-                    <h3>⚡ 本格競技仕様の操作感 (DAS / ARR / Lock Delay)</h3>
-                    <ul class="rules-list">
-                        <li><strong>DAS & ARR (長押し横移動):</strong> キー長押し時の移動遅延(DAS)とリピート速度(ARR)を競技標準に最適化。長押しで瞬時に端まで移動可能！</li>
-                        <li><strong>接地猶予 (Lock Delay):</strong> ブロックが接地した後も 0.5秒間 は移動や回転の猶予が残り、すり込み回転や着地調整がスムーズに可能！</li>
-                        <li><strong>虹色ライン消去演出:</strong> ラインが揃うと虹色の輝きとパーティクルが炸裂し、大連鎖やTetris時の画面揺れで最高の爽快感！</li>
-                    </ul>
-
-                    <h3 style="margin-top:14px;">🔥 お邪魔ブロック攻撃・相殺システム</h3>
-                    <ul class="rules-list">
-                        <li><strong>ライン消去攻撃:</strong> 1行消し(1段)～Tetris/4行(4段) のお邪魔ブロックを即座に相手へダイレクト攻撃！（ルール切替可）</li>
-                        <li><strong>相殺 (Counter / Offset):</strong> 相手からのお邪魔ゲージが溜まっている時にラインを消すと、即座に相殺・消去して反撃！</li>
-                        <li><strong>REN / コンボボーナス:</strong> 連続でラインを消去すると極大のお邪魔ラインを追加！</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="action-btn primary" data-close="modal-controls">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Start Tutorial Modal -->
-    <div id="modal-tutorial" class="modal-overlay" style="display:none;">
-        <div class="modal-dialog tutorial-dialog">
-            <div class="modal-header">
-                <h2>🎮 Cyber Tetris VS かんたん遊び方ガイド</h2>
-                <button class="modal-close" data-close="modal-tutorial">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="tutorial-card-grid">
-                    <!-- Rule 1: Basics -->
-                    <div class="tutorial-card">
-                        <div class="card-icon">🕹️</div>
-                        <h3>1. 基本ルールと操作</h3>
-                        <p class="card-desc">落ちてくるテトロミノ（ブロック）を左右に動かし、隙間なく横一列を揃えるとラインが消去されます。積み上がって一番上まで届くとゲームオーバーです。</p>
-                        <div class="key-summary-pills">
-                            <span class="key-pill">移動: <kbd>A</kbd> / <kbd>D</kbd> (または <kbd>←</kbd> / <kbd>→</kbd>)</span>
-                            <span class="key-pill">高速落下: <kbd>S</kbd> / <kbd>↓</kbd></span>
-                            <span class="key-pill">一気に落とす: <kbd>W</kbd> / <kbd>↑</kbd></span>
-                            <span class="key-pill">回転: <kbd>E</kbd> / <kbd>Q</kbd></span>
-                            <span class="key-pill">キープ: <kbd>Space</kbd></span>
-                        </div>
-                    </div>
-
-                    <!-- Rule 2: Magic System -->
-                    <div class="tutorial-card highlight-card">
-                        <div class="card-icon">🔮</div>
-                        <h3>2. 一発逆転！魔法システム (Magic)</h3>
-                        <p class="card-desc">ライン消去や時間経過で、ボード右横の<strong>「マナゲージ(MANA)」</strong>が100%溜まります。<kbd>Shift</kbd> キーまたは画面の <kbd>🪄 SPELL</kbd> ボタン（ゲームパッド: <kbd>L2/R2</kbd>）を押すと、以下の5大魔法から1つがランダムで発動します！</p>
-                        <div class="magic-spells-list">
-                            <span class="spell-badge spell-1">⚡ [Lv.1] メガクリア (下5行一気消し)</span>
-                            <span class="spell-badge spell-2">🗡️ [Lv.2] ブレード・オブ・アイ (5連縦棒)</span>
-                            <span class="spell-badge spell-3">🛡️ [Lv.3] アブソリュートシールド (5秒無効)</span>
-                            <span class="spell-badge spell-4">💥 [MISFIRE] 呪文不発 (ハズレ)</span>
-                            <span class="spell-badge spell-5">🔮 [Lv.MAX] トランスミュート (お邪魔全浄化)</span>
-                        </div>
-                    </div>
-
-                    <!-- Rule 3: Attack & Counter -->
-                    <div class="tutorial-card">
-                        <div class="card-icon">🔥</div>
-                        <h3>3. お邪魔攻撃と相殺 (COUNTER)</h3>
-                        <p class="card-desc">自分がラインを消すと、相手のボードへ「お邪魔ブロック」を送って攻撃できます！相手から攻撃ゲージが押し寄せている時でも、自分がラインを消せば即座に<strong>相殺・打ち消し (COUNTER)</strong> して反撃できます！</p>
-                    </div>
-
-                    <!-- Rule 4: Competitive Feel -->
-                    <div class="tutorial-card">
-                        <div class="card-icon">⚡</div>
-                        <h3>4. 滑らかな操作感 (着地猶予 0.5秒)</h3>
-                        <p class="card-desc">ブロックが地面に触れた後も **0.5秒間は回転やスライド移動の猶予** が残ります。キー長押しでの超高速横移動も完備されており、ストレスなく滑らかな操作が可能です。</p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer center-footer">
-                <button id="btn-close-tutorial" class="btn-giant-start" data-close="modal-tutorial">
-                    <span>ガイドを閉じて対戦スタート！ 🚀</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Match Result Modal -->
-    <div id="modal-result" class="modal-overlay" style="display:none;">
-        <div class="modal-dialog result-dialog">
-            <div class="result-banner">
-                <div class="winner-trophy">🏆</div>
-                <h2 id="result-winner-title">PLAYER 1 WINS!</h2>
-                <div class="result-score-text" id="result-score-detail">3 - 1 で勝利！</div>
-            </div>
-            <div class="modal-footer center-footer">
-                <button id="btn-result-rematch" class="btn-cyber-primary">
-                    <span>REMATCH (再戦)</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Online High Score Leaderboard Modal -->
-    <div id="modal-leaderboard" class="modal-overlay" style="display:none;">
-        <div class="modal-dialog leaderboard-dialog">
-            <div class="modal-header">
-                <h2>🏆 オンライン世界ハイスコアランキング</h2>
-                <button class="modal-close" data-close="modal-leaderboard">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="leaderboard-submit-box">
-                    <label for="player-name-input">あなたのプレイヤー名:</label>
-                    <div class="submit-input-group">
-                        <input type="text" id="player-name-input" maxlength="12" placeholder="CYBER_PLAYER" value="PLAYER_1">
-                        <button id="btn-submit-score" class="action-btn gold-glow">オンラインスコア登録</button>
-                    </div>
-                </div>
-
-                <div class="leaderboard-table-wrapper">
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th>RANK</th>
-                                <th>PLAYER</th>
-                                <th>SCORE</th>
-                                <th>LINES</th>
-                                <th>DATE</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-tbody">
-                            <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">スコア読み込み中...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="action-btn primary" data-close="modal-leaderboard">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Story Dialogue & Stage Intro Modal (Puyo-Puyo Style Dual Dialogue) -->
-    <div id="modal-story-dialogue" class="modal-overlay" style="display:none;">
-        <div class="modal-dialog story-dialog puyo-dialog">
-            <div class="story-stage-header">
-                <span class="stage-pill" id="story-stage-pill">STAGE 1 / 3 (EASY)</span>
-                <h3 id="story-boss-title">🤖 VS ボット丸</h3>
-            </div>
+    <!-- Scalable 16:9 Viewport Box -->
+    <div id="game-viewport-container">
+        <div id="game-viewport">
             
-            <div class="puyo-dialogue-stage">
-                <!-- Left: Player 1 Avatar -->
-                <div class="dialogue-character left-speaker" id="speaker-p1-card">
-                    <div class="character-avatar p1-avatar">😎</div>
-                    <div class="speaker-name">PLAYER 1</div>
-                </div>
+            <!-- Notification / Alert Overlay (P2P Challenger & Global Messages) -->
+            <div id="global-toast-container"></div>
 
-                <!-- Right: Boss Avatar -->
-                <div class="dialogue-character right-speaker" id="speaker-boss-card">
-                    <div class="character-avatar boss-avatar" id="story-boss-avatar">🤖</div>
-                    <div class="speaker-name" id="story-boss-name">ボット丸</div>
-                </div>
-            </div>
+            <!-- Screen Shake Wrapper -->
+            <div id="shake-wrapper">
 
-            <div class="story-speech-bubble puyo-bubble" id="story-bubble-container">
-                <div class="character-name-label" id="current-speaker-name">ボット丸</div>
-                <p class="speech-text" id="story-speech-text">「ボク、新米AIロボットのボット丸だロボ！対戦よろしくロボ！」</p>
-                <div class="tap-next-prompt">▶ タップして次へ</div>
-            </div>
+                <!-- 1. 操作説明画面 (Tutorial & Keybindings Screen) -->
+                <section id="view-howto" class="game-view active">
+                    <div class="view-card glass-panel intro-panel">
+                        <div class="logo-header">
+                            <span class="logo-badge">🐾 POP ANIMAL MAGIC TETRIS</span>
+                            <h1 class="game-title">テトリスン</h1>
+                            <p class="game-subtitle">〜 魔法の動物たちとパステルテトリス対戦！ 〜</p>
+                        </div>
 
-            <div class="modal-footer center-footer dialogue-footer">
-                <button id="btn-next-dialogue" class="action-btn secondary">
-                    <span>次へ ▶</span>
-                </button>
-                <button id="btn-start-story-stage" class="btn-cyber-primary">
-                    <span>⚔️ バトルスタート！</span>
-                </button>
-            </div>
-        </div>
-    </div>
+                        <div class="howto-content">
+                            <h2>🎮 操作方法のご案内</h2>
+                            <div class="controls-grid">
+                                <div class="control-box">
+                                    <h3>⌨️ キーボード操作</h3>
+                                    <ul>
+                                        <li><kbd>←</kbd> <kbd>→</kbd> : 左右移動</li>
+                                        <li><kbd>↓</kbd> : ソフトドロップ (高速落下)</li>
+                                        <li><kbd>↑</kbd> : ハードドロップ (一瞬で固定)</li>
+                                        <li><kbd>A</kbd> / <kbd>Z</kbd> : ブロック左回転 / 右回転</li>
+                                        <li><kbd>Shift</kbd> / <kbd>C</kbd> : ホールド (キープ)</li>
+                                        <li><kbd>Space</kbd> : 魔法ルーレット発動！</li>
+                                    </ul>
+                                </div>
+                                <div class="control-box">
+                                    <h3>🎮 ゲームコントローラー (Gamepad)</h3>
+                                    <ul>
+                                        <li><span class="pad-btn">十字キー / Lスティック</span> : 左右移動・下落下</li>
+                                        <li><span class="pad-btn">A / B ボタン</span> : 回転操作</li>
+                                        <li><span class="pad-btn">X / Y ボタン</span> : ハードドロップ</li>
+                                        <li><span class="pad-btn">L1 / R1 ボタン</span> : ホールド</li>
+                                        <li><span class="pad-btn">R2 / Trigger</span> : 魔法ルーレット発動！</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
 
-    <!-- Story All Clear Modal -->
-    <div id="modal-story-clear" class="modal-overlay" style="display:none;">
-        <div class="modal-dialog story-clear-dialog">
-            <div class="result-banner clear-banner">
-                <div class="winner-trophy">👑</div>
-                <h2>🎉 STORY MODE ALL CLEAR!</h2>
-                <div class="result-score-text" id="story-clear-desc">全3ステージを見事に制覇しました！</div>
-            </div>
-            <div class="modal-footer center-footer">
-                <button id="btn-close-story-clear" class="btn-cyber-primary">
-                    <span>トップ画面へ戻る 🚀</span>
-                </button>
-            </div>
-        </div>
-    </div>
+                        <div class="howto-footer">
+                            <button id="btn-howto-next" class="btn-primary pulse-btn" onclick="app.showScreen('view-mode-select')">
+                                ボタンを押してモード選択へ ➔
+                            </button>
+                        </div>
+                    </div>
+                </section>
 
-    <!-- Character Selection & Unique Spell Details Modal -->
-    <div id="modal-char-select" class="modal-overlay" style="display:none;">
-        <div class="modal-dialog char-select-dialog">
-            <div class="modal-header">
-                <h2>🔮 キャラクター＆専用個別魔法 図鑑</h2>
-                <button class="modal-close" data-close="modal-char-select">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="char-cards-container" id="char-cards-container">
-                    <!-- Dynamic rendering by JS -->
-                </div>
-            </div>
-            <div class="modal-footer center-footer">
-                <button class="btn-cyber-primary" data-close="modal-char-select">
-                    <span>選択を確定して戻る 🚀</span>
-                </button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Challenger Cut-in Warning Overlay -->
-    <div id="challenger-cutin-overlay" class="challenger-overlay" style="display:none;">
-        <div class="challenger-content">
-            <div class="challenger-warning-flash">⚠️ HERE COMES A NEW CHALLENGER! ⚠️</div>
-            <div class="challenger-vs-title">挑戦者が乱入してきました！</div>
-            <div class="challenger-subtext">リアルタイムオンライン対戦を開始します！</div>
-        </div>
-    </div>
+                <!-- 2. モードセレクト＆設定画面 (Mode Select & Settings Screen) -->
+                <section id="view-mode-select" class="game-view">
+                    <div class="view-card glass-panel">
+                        <div class="header-small">
+                            <h2>🌸 モード選択 ＆ 設定</h2>
+                            <p>プレイしたいモードとゲームルールを設定してください</p>
+                        </div>
 
-    <!-- Gamepad Toast Notification Container -->
-    <div id="gamepad-toast" class="gamepad-toast-notification" style="display:none;">
-        <span class="gamepad-icon">🎮</span>
-        <span id="gamepad-toast-text">ゲームパッドが接続されました</span>
-    </div>
+                        <div class="mode-settings-layout">
+                            <!-- Left: Mode Selection Buttons -->
+                            <div class="mode-select-column">
+                                <h3>ゲームモードを選択</h3>
+                                <div class="mode-buttons-list">
+                                    <button class="mode-btn active" data-mode="story" onclick="app.selectMode('story', this)">
+                                        <div class="mode-icon">📖</div>
+                                        <div class="mode-info">
+                                            <div class="mode-name">ストーリーモード</div>
+                                            <div class="mode-desc">会話劇とともにステージを攻略！</div>
+                                        </div>
+                                    </button>
+                                    <button class="mode-btn" data-mode="versus" onclick="app.selectMode('versus', this)">
+                                        <div class="mode-icon">⚔️</div>
+                                        <div class="mode-info">
+                                            <div class="mode-name">シングル対戦モード</div>
+                                            <div class="mode-desc">好きなキャラとCPU対戦！</div>
+                                        </div>
+                                    </button>
+                                    <button class="mode-btn" data-mode="scoreattack" onclick="app.selectMode('scoreattack', this)">
+                                        <div class="mode-icon">🏆</div>
+                                        <div class="mode-info">
+                                            <div class="mode-name">スコアアタックモード</div>
+                                            <div class="mode-desc">限界に挑む一人用エンドレス！</div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Right: Detailed Settings Panel -->
+                            <div class="settings-column">
+                                <h3>⚙️ オプション設定</h3>
+                                <div class="settings-form">
+                                    <div class="setting-row">
+                                        <label for="setting-difficulty">🌟 難易度設定</label>
+                                        <select id="setting-difficulty" onchange="app.updateSettings()">
+                                            <option value="easy">Easy (初級 / 3ステージ)</option>
+                                            <option value="normal" selected>Normal (中級 / 5ステージ)</option>
+                                            <option value="hard">Hard (上級 / 7ステージ)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="setting-row">
+                                        <label for="setting-challenger">⚡ オンライン乱入設定</label>
+                                        <select id="setting-challenger" onchange="app.updateSettings()">
+                                            <option value="on" selected>乱入ON (P2P待受・対戦対応)</option>
+                                            <option value="off">乱入OFF (シングルに集中)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="setting-row">
+                                        <label for="setting-bgm">🎵 BGM 音量</label>
+                                        <input type="range" id="setting-bgm" min="0" max="100" value="70" oninput="app.updateAudioVolume()">
+                                    </div>
+
+                                    <div class="setting-row">
+                                        <label for="setting-se">🔔 SE 音量</label>
+                                        <input type="range" id="setting-se" min="0" max="100" value="80" oninput="app.updateAudioVolume()">
+                                    </div>
+                                </div>
+
+                                <div class="p2p-status-box" id="p2p-info">
+                                    <span class="status-dot online"></span>
+                                    <span id="p2p-status-text">乱入待受中 (Peer ID 取得中...)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="screen-nav-bar">
+                            <button class="btn-secondary" onclick="app.showScreen('view-howto')">⬅️ 操作説明へ戻る</button>
+                            <button class="btn-primary" onclick="app.proceedFromModeSelect()">キャラクター選択へ ➔</button>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- 3. キャラセレクト画面 (Character Selection Screen) -->
+                <section id="view-character-select" class="game-view">
+                    <div class="view-card glass-panel">
+                        <div class="header-small">
+                            <h2>✨ キャラクター選択</h2>
+                            <p>共に戦う魔法の動物を選んでください</p>
+                        </div>
+
+                        <div class="char-select-container">
+                            <!-- Character Grid (7 Characters) -->
+                            <div class="char-grid" id="char-grid">
+                                <!-- Dynamic Generated JS Cards -->
+                            </div>
+
+                            <!-- Selected Character Detail View -->
+                            <div class="char-detail-card glass-panel-sub" id="char-detail">
+                                <div class="char-avatar-container">
+                                    <canvas id="char-preview-canvas" width="120" height="120"></canvas>
+                                    <div id="char-emotion-badge" class="emotion-badge">NORMAL</div>
+                                </div>
+                                <div class="char-detail-info">
+                                    <h3 id="char-name">ネコニャー</h3>
+                                    <div class="char-animal" id="char-animal">モチーフ: 猫</div>
+                                    <p class="char-desc" id="char-desc">気まぐれだけど素早いパズルが得意！</p>
+                                    <div class="magic-info-box">
+                                        <div class="magic-title">✨ LV4 独自魔法</div>
+                                        <div class="magic-name" id="magic-name">『気まぐれアタック』</div>
+                                        <div class="magic-desc" id="magic-desc">自身の盤面の奇数行（1, 3, 5行目等）からランダムに3行分を消去する。</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CPU selection for versus mode -->
+                        <div id="cpu-select-wrapper" class="cpu-select-bar" style="display:none;">
+                            <label for="cpu-char-select">🤖 CPUキャラクター:</label>
+                            <select id="cpu-char-select" onchange="app.selectCpuCharacter(this.value)">
+                                <!-- Dynamic Options -->
+                            </select>
+                        </div>
+
+                        <div class="screen-nav-bar">
+                            <button class="btn-secondary" onclick="app.showScreen('view-mode-select')">⬅️ モード選択へ</button>
+                            <button class="btn-primary pulse-btn" id="btn-start-game" onclick="app.startGame()">ゲームスタート！ 🚀</button>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- 4. ゲーム本編画面 (Main Gameplay Screen - 16:9 1-Screen) -->
+                <section id="view-game" class="game-view">
+                    <div class="game-layout">
+
+                        <!-- Header Info Bar -->
+                        <div class="game-header-bar">
+                            <div class="game-stage-info" id="game-stage-info">STAGE 1: ぽちまる戦</div>
+                            <div class="game-mode-badge" id="game-mode-badge">STORY - NORMAL</div>
+                            <button class="btn-pause" onclick="app.togglePause()">⏸️ 一時停止</button>
+                        </div>
+
+                        <!-- Main Playfield Area (P1 Stage, Center Status/Dialogue, P2/CPU Stage) -->
+                        <div class="playfield-container">
+                            
+                            <!-- Player 1 Board Area -->
+                            <div class="player-stage-box" id="p1-stage-box">
+                                <div class="stage-header">
+                                    <div class="char-mini-portrait">
+                                        <canvas id="p1-face-canvas" width="60" height="60"></canvas>
+                                    </div>
+                                    <div class="player-meta">
+                                        <div class="player-name" id="p1-name">ネコニャー (1P)</div>
+                                        <div class="player-score" id="p1-score">SCORE: 000000</div>
+                                    </div>
+                                </div>
+
+                                <div class="stage-body">
+                                    <!-- Hold Area & Stats -->
+                                    <div class="side-panel-left">
+                                        <div class="panel-box hold-box">
+                                            <div class="panel-label">HOLD</div>
+                                            <canvas id="p1-hold-canvas" width="70" height="70"></canvas>
+                                        </div>
+                                        <div class="panel-box stats-box">
+                                            <div class="stat-item">LINE: <span id="p1-lines">0</span></div>
+                                            <div class="stat-item">REN: <span id="p1-ren">0</span></div>
+                                            <div class="stat-item">LV: <span id="p1-level">1</span></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Main Canvas Board -->
+                                    <div class="board-canvas-wrapper">
+                                        <canvas id="p1-board-canvas" width="240" height="480"></canvas>
+
+                                        <!-- Garbage Warning Bar -->
+                                        <div class="garbage-bar-container">
+                                            <div class="garbage-bar-fill" id="p1-garbage-bar"></div>
+                                        </div>
+
+                                        <!-- Magic Effect Overlay Canvas -->
+                                        <canvas id="p1-fx-canvas" class="fx-overlay-canvas" width="240" height="480"></canvas>
+                                    </div>
+
+                                    <!-- Next Queue Area -->
+                                    <div class="side-panel-right">
+                                        <div class="panel-box next-box">
+                                            <div class="panel-label">NEXT</div>
+                                            <canvas id="p1-next-canvas" width="70" height="210"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Magic Gauge & Roulette Box -->
+                                <div class="magic-control-bar">
+                                    <div class="magic-gauge-container">
+                                        <div class="magic-label">✨ MAGIC GAUGE</div>
+                                        <div class="magic-track">
+                                            <div class="magic-fill" id="p1-magic-fill" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                    <button id="p1-magic-btn" class="magic-trigger-btn" disabled onclick="app.triggerMagic('p1')">
+                                        <span class="btn-glow"></span>
+                                        <span class="btn-text">魔法スロット起動 (Space)</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Center Overlay & Dialogue & Magic Roulette Area -->
+                            <div class="center-stage-area">
+                                <!-- Story ADV Dialogue Window (Pop-up inside 1 screen) -->
+                                <div id="adv-dialogue-box" class="adv-dialogue-panel glass-panel" style="display:none;">
+                                    <div class="adv-header">
+                                        <span id="adv-speaker-name">ネコニャー</span>
+                                        <button class="adv-skip-btn" onclick="app.skipDialogue()">スキップ ▶▶</button>
+                                    </div>
+                                    <div class="adv-body">
+                                        <p id="adv-text" class="text-autowrap">「準備はいいニャ？勝負開始ニャ！」</p>
+                                    </div>
+                                    <div class="adv-footer" onclick="app.nextDialogue()">
+                                        <span class="blink-prompt">クリック / ボタンで次へ 💬</span>
+                                    </div>
+                                </div>
+
+                                <!-- Magic Roulette Display -->
+                                <div id="magic-roulette-modal" class="roulette-modal glass-panel" style="display:none;">
+                                    <div class="roulette-title">✨ 魔法ルーレット！</div>
+                                    <div class="roulette-reels">
+                                        <div id="roulette-display-box" class="roulette-box">
+                                            <span id="roulette-text">LV0: はずれ</span>
+                                        </div>
+                                    </div>
+                                    <div class="roulette-sub" id="roulette-sub-desc">ルーレット回転中...</div>
+                                </div>
+
+                                <!-- Cutin Animation Banner -->
+                                <div id="cutin-banner" class="cutin-banner-overlay" style="display:none;">
+                                    <div class="cutin-text" id="cutin-text">気まぐれアタック！！</div>
+                                </div>
+
+                                <!-- Paused Overlay -->
+                                <div id="pause-modal" class="pause-modal glass-panel" style="display:none;">
+                                    <h2>⏸️ PAUSED</h2>
+                                    <button class="btn-primary" onclick="app.togglePause()">ゲーム再開</button>
+                                    <button class="btn-secondary" onclick="app.quitToTitle()">タイトルへ戻る</button>
+                                </div>
+                            </div>
+
+                            <!-- Player 2 / CPU Stage Box -->
+                            <div class="player-stage-box" id="p2-stage-box">
+                                <div class="stage-header">
+                                    <div class="player-meta text-right">
+                                        <div class="player-name" id="p2-name">イヌワン (CPU)</div>
+                                        <div class="player-score" id="p2-score">SCORE: 000000</div>
+                                    </div>
+                                    <div class="char-mini-portrait">
+                                        <canvas id="p2-face-canvas" width="60" height="60"></canvas>
+                                    </div>
+                                </div>
+
+                                <div class="stage-body">
+                                    <!-- Next Queue Area -->
+                                    <div class="side-panel-left">
+                                        <div class="panel-box next-box">
+                                            <div class="panel-label">NEXT</div>
+                                            <canvas id="p2-next-canvas" width="70" height="210"></canvas>
+                                        </div>
+                                    </div>
+
+                                    <!-- Main Canvas Board -->
+                                    <div class="board-canvas-wrapper">
+                                        <canvas id="p2-board-canvas" width="240" height="480"></canvas>
+
+                                        <!-- Garbage Warning Bar -->
+                                        <div class="garbage-bar-container right-side">
+                                            <div class="garbage-bar-fill" id="p2-garbage-bar"></div>
+                                        </div>
+
+                                        <!-- Magic Effect Overlay Canvas -->
+                                        <canvas id="p2-fx-canvas" class="fx-overlay-canvas" width="240" height="480"></canvas>
+                                    </div>
+
+                                    <!-- Hold Area & Stats -->
+                                    <div class="side-panel-right">
+                                        <div class="panel-box hold-box">
+                                            <div class="panel-label">HOLD</div>
+                                            <canvas id="p2-hold-canvas" width="70" height="70"></canvas>
+                                        </div>
+                                        <div class="panel-box stats-box">
+                                            <div class="stat-item">LINE: <span id="p2-lines">0</span></div>
+                                            <div class="stat-item">REN: <span id="p2-ren">0</span></div>
+                                            <div class="stat-item">LV: <span id="p2-level">1</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Magic Gauge Bar -->
+                                <div class="magic-control-bar">
+                                    <div class="magic-gauge-container">
+                                        <div class="magic-label">✨ MAGIC GAUGE</div>
+                                        <div class="magic-track">
+                                            <div class="magic-fill" id="p2-magic-fill" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="p2-magic-status" id="p2-magic-status-badge">READY</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- 5. スコア登録画面 (Score Result & Ranking Screen) -->
+                <section id="view-score-result" class="game-view">
+                    <div class="view-card glass-panel">
+                        <div class="result-header">
+                            <h1 id="result-title-banner">🎉 STAGE CLEAR!</h1>
+                            <p id="result-subtitle">素晴しいパズルプレイでした！</p>
+                        </div>
+
+                        <div class="result-content-grid">
+                            <!-- Stats & Name Form -->
+                            <div class="result-stats-card glass-panel-sub">
+                                <h3>📊 最終プレイ結果</h3>
+                                <div class="result-stat-row">
+                                    <span>最終スコア:</span>
+                                    <strong id="res-score">000000</strong>
+                                </div>
+                                <div class="result-stat-row">
+                                    <span>消去ライン数:</span>
+                                    <strong id="res-lines">0</strong>
+                                </div>
+                                <div class="result-stat-row">
+                                    <span>最大連続REN:</span>
+                                    <strong id="res-ren">0</strong>
+                                </div>
+                                <div class="result-stat-row">
+                                    <span>プレイ時間:</span>
+                                    <strong id="res-time">00:00</strong>
+                                </div>
+
+                                <!-- Name Input Form -->
+                                <div class="name-entry-box">
+                                    <label for="player-name-input">🏆 ランキング用ネーム登録</label>
+                                    <div class="input-inline">
+                                        <input type="text" id="player-name-input" maxlength="10" placeholder="なまえを入力" value="たびびと">
+                                        <button class="btn-primary" onclick="app.submitScore()">保存</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Local High Score Ranking Table -->
+                            <div class="ranking-card glass-panel-sub">
+                                <h3>🏆 ハイスコアランキング (TOP 5)</h3>
+                                <table class="ranking-table">
+                                    <thead>
+                                        <tr>
+                                            <th>順位</th>
+                                            <th>名前</th>
+                                            <th>スコア</th>
+                                            <th>モード</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ranking-tbody">
+                                        <!-- Dynamic Entries -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="screen-nav-bar">
+                            <button class="btn-secondary" onclick="app.showScreen('view-mode-select')">🌸 タイトル・モード選択へ</button>
+                            <button class="btn-primary pulse-btn" id="btn-replay" onclick="app.startGame()">🔁 もう一度プレイ</button>
+                        </div>
+                    </div>
+                </section>
+
+            </div><!-- /shake-wrapper -->
+        </div><!-- /game-viewport -->
+    </div><!-- /game-viewport-container -->
 
     <script src="script.js"></script>
 </body>
