@@ -36,6 +36,7 @@ const CHARACTERS = {
         id: 'nekonya',
         name: 'ネコニャー',
         animal: '猫',
+        img: 'assets/nekonya.jpg',
         color: '#FFB7C5',
         desc: '気まぐれだけどすばやいパズルが得意なニャンコ！',
         magicName: '『気まぐれアタック』',
@@ -45,6 +46,7 @@ const CHARACTERS = {
         id: 'inuwan',
         name: 'イヌワン',
         animal: '犬',
+        img: 'assets/inuwan.jpg',
         color: '#FFDF80',
         desc: '忠実で頼もしいワンコ！お邪魔ブロックを打ち返す！',
         magicName: '『カエシテク・アタック』',
@@ -54,6 +56,7 @@ const CHARACTERS = {
         id: 'torichun',
         name: 'トリチュン',
         animal: '鳥',
+        img: 'assets/torichun.jpg',
         color: '#A8E6CF',
         desc: 'パタパタお空を飛ぶ鳥の歌姫！上からお掃除！',
         magicName: '『ピーチクテイル』',
@@ -63,6 +66,7 @@ const CHARACTERS = {
         id: 'sarukkey',
         name: 'サルウッキー',
         animal: '猿',
+        img: 'assets/sarukkey.jpg',
         color: '#FFD3B6',
         desc: 'お調子者のサル！四角いテトリミノの嵐を起こす！',
         magicName: '『ウッキッキー・スクエア』',
@@ -72,6 +76,7 @@ const CHARACTERS = {
         id: 'tanupon',
         name: 'タヌポン',
         animal: 'タヌキ',
+        img: 'assets/tanupon.jpg',
         color: '#CBA6D7',
         desc: 'ドロンと化けるいたずらタヌキ！一瞬でリセット！',
         magicName: '『ドロンコ・リセット』',
@@ -81,6 +86,7 @@ const CHARACTERS = {
         id: 'kitsunekon',
         name: 'キツネコン',
         animal: '狐',
+        img: 'assets/kitsunekon.jpg',
         color: '#AEC6CF',
         desc: 'ミステリアスな忍者狐！相手と盤面をスワップ！',
         magicName: '『トリック・チェンジ』',
@@ -90,6 +96,7 @@ const CHARACTERS = {
         id: 'dragogon',
         name: 'ドラゴゴン',
         animal: '竜',
+        img: 'assets/dragogon.jpg',
         color: '#FF7B9C',
         desc: '伝説の小竜！強力なブレスで下部を焼き尽くす！',
         magicName: '『ドラゴン・ブレス』',
@@ -269,71 +276,7 @@ class SoundEngine {
 
 
 /* --------------------------------------------------------------------------
-   3. Character Face Canvas Engine
-   -------------------------------------------------------------------------- */
-function drawCharacterFace(canvas, charId, emotion = 'normal') {
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width;
-    const h = canvas.height;
-    ctx.clearRect(0, 0, w, h);
-
-    const char = CHARACTERS[charId] || CHARACTERS.nekonya;
-    const cx = w / 2;
-    const cy = h / 2;
-    const radius = w * 0.4;
-
-    // Background circle
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = char.color;
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.stroke();
-
-    // Eyes & Expression
-    ctx.fillStyle = '#4A4A68';
-    if (emotion === 'happy' || emotion === 'magic') {
-        ctx.beginPath();
-        ctx.arc(cx - radius * 0.35, cy - radius * 0.1, 6, Math.PI, 0);
-        ctx.arc(cx + radius * 0.35, cy - radius * 0.1, 6, Math.PI, 0);
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = '#4A4A68';
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(cx, cy + radius * 0.2, 8, 0, Math.PI);
-        ctx.fillStyle = '#FF7B9C';
-        ctx.fill();
-    } else if (emotion === 'sad') {
-        ctx.font = 'bold 16px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('＞＜', cx, cy - 4);
-
-        ctx.beginPath();
-        ctx.arc(cx, cy + radius * 0.35, 6, Math.PI, 0);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#4A4A68';
-        ctx.stroke();
-    } else {
-        ctx.beginPath();
-        ctx.arc(cx - radius * 0.35, cy - radius * 0.1, 5, 0, Math.PI * 2);
-        ctx.arc(cx + radius * 0.35, cy - radius * 0.1, 5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(cx, cy + radius * 0.2, 5, 0, Math.PI);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#4A4A68';
-        ctx.stroke();
-    }
-}
-
-
-/* --------------------------------------------------------------------------
-   4. Single Player Board Engine (Tetris Logic)
+   3. Single Player Board Engine (Tetris Logic)
    -------------------------------------------------------------------------- */
 class TetrisGame {
     constructor(playerId, isCpu = false) {
@@ -370,6 +313,9 @@ class TetrisGame {
         this.dropCounter = 0;
         this.dropInterval = 1000;
         this.lastTime = 0;
+
+        this.onLineClear = null;
+        this.onSendGarbage = null;
     }
 
     createGrid() {
@@ -573,6 +519,8 @@ class TetrisGame {
         const cleared = this.clearLines();
         if (cleared > 0) {
             this.ren++;
+            if (this.onLineClear) this.onLineClear(cleared);
+
             let sentGarbage = 0;
             if (cleared === 2) sentGarbage = 1;
             else if (cleared === 3) sentGarbage = 2;
@@ -641,7 +589,7 @@ class TetrisGame {
 
 
 /* --------------------------------------------------------------------------
-   5. CPU AI Logic Engine
+   4. CPU AI Logic Engine
    -------------------------------------------------------------------------- */
 class CpuAI {
     constructor(game, difficulty = 'normal') {
@@ -764,7 +712,7 @@ class CpuAI {
 
 
 /* --------------------------------------------------------------------------
-   6. Main Application Controller (UI & Flow)
+   5. Main Application Controller (UI & Flow)
    -------------------------------------------------------------------------- */
 class TetrisunApp {
     constructor() {
@@ -805,6 +753,9 @@ class TetrisunApp {
         this.updateRankingTable();
         this.startMagicGaugeTimer();
 
+        // Select initial story mode settings panel
+        this.selectMode('story', document.querySelector('.mode-btn[data-mode="story"]'));
+
         console.log("🐾 Tetrisun initialized successfully.");
     }
 
@@ -838,13 +789,26 @@ class TetrisunApp {
         this.sound.init();
     }
 
+    /* Dynamic Settings Panel Switch per Selected Mode */
     selectMode(mode, btnEl) {
         this.selectedMode = mode;
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         if (btnEl) btnEl.classList.add('active');
 
-        const cpuWrapper = document.getElementById('cpu-select-wrapper');
-        if (cpuWrapper) cpuWrapper.style.display = (mode === 'versus') ? 'flex' : 'none';
+        const grpStory = document.getElementById('grp-story-settings');
+        const grpVersus = document.getElementById('grp-versus-settings');
+        const grpScore = document.getElementById('grp-scoreattack-settings');
+        const titleEl = document.getElementById('settings-title');
+
+        if (grpStory) grpStory.style.display = (mode === 'story') ? 'flex' : 'none';
+        if (grpVersus) grpVersus.style.display = (mode === 'versus') ? 'flex' : 'none';
+        if (grpScore) grpScore.style.display = (mode === 'scoreattack') ? 'flex' : 'none';
+
+        if (titleEl) {
+            if (mode === 'story') titleEl.textContent = '📖 ストーリーモード設定';
+            else if (mode === 'versus') titleEl.textContent = '⚔️ シングル対戦モード設定';
+            else if (mode === 'scoreattack') titleEl.textContent = '🏆 スコアアタック設定';
+        }
     }
 
     updateSettings() {
@@ -864,7 +828,7 @@ class TetrisunApp {
 
     initCharSelectGrid() {
         const grid = document.getElementById('char-grid');
-        const cpuSelect = document.getElementById('cpu-char-select');
+        const cpuSelect = document.getElementById('setting-cpu-char');
         if (!grid) return;
         grid.innerHTML = '';
         if (cpuSelect) cpuSelect.innerHTML = '';
@@ -872,24 +836,17 @@ class TetrisunApp {
         Object.keys(CHARACTERS).forEach(id => {
             const char = CHARACTERS[id];
 
+            // Character Card with Illustration Image
             const card = document.createElement('div');
             card.className = `char-card ${id === this.playerChar ? 'selected' : ''}`;
             card.onclick = () => this.selectPlayerChar(id);
             card.innerHTML = `
-                <div class="char-card-avatar" id="avatar-mini-${id}"></div>
+                <img class="char-card-img" src="${char.img}" alt="${char.name}">
                 <div class="char-card-name">${char.name}</div>
             `;
             grid.appendChild(card);
 
-            setTimeout(() => {
-                const miniCanvas = document.createElement('canvas');
-                miniCanvas.width = 60;
-                miniCanvas.height = 60;
-                drawCharacterFace(miniCanvas, id, 'normal');
-                const box = document.getElementById(`avatar-mini-${id}`);
-                if (box) box.appendChild(miniCanvas);
-            }, 50);
-
+            // CPU Select Options in Settings
             if (cpuSelect) {
                 const opt = document.createElement('option');
                 opt.value = id;
@@ -920,8 +877,8 @@ class TetrisunApp {
         document.getElementById('magic-name').textContent = char.magicName;
         document.getElementById('magic-desc').textContent = char.magicDesc;
 
-        const canvas = document.getElementById('char-preview-canvas');
-        if (canvas) drawCharacterFace(canvas, id, 'normal');
+        const previewImg = document.getElementById('char-preview-img');
+        if (previewImg) previewImg.src = char.img;
     }
 
     proceedFromModeSelect() {
@@ -977,6 +934,13 @@ class TetrisunApp {
         this.p1Game = new TetrisGame('p1', false);
         this.p1Game.reset();
 
+        // Line Clear Excitement Shake Callback
+        this.p1Game.onLineClear = (lines) => {
+            this.sound.playLineClearSE(lines);
+            if (lines >= 4) this.triggerScreenShake('large');
+            else if (lines >= 1) this.triggerScreenShake('small');
+        };
+
         this.p1Game.onSendGarbage = (lines) => {
             if (this.p2Game) this.p2Game.receiveGarbage(lines);
             if (this.peerConn) this.peerConn.send({ type: 'GARBAGE', amount: lines });
@@ -991,14 +955,23 @@ class TetrisunApp {
             this.cpuChar = enemyCharId;
             this.p2Game = new TetrisGame('p2', true);
             this.p2Game.reset();
+
+            this.p2Game.onLineClear = (lines) => {
+                this.sound.playLineClearSE(lines);
+            };
+
             this.p2Game.onSendGarbage = (lines) => {
                 if (this.p1Game) this.p1Game.receiveGarbage(lines);
             };
             this.cpuAI = new CpuAI(this.p2Game, this.difficulty);
         }
 
+        // Update Portraits & Names
         document.getElementById('p1-name').textContent = `${CHARACTERS[this.playerChar].name} (1P)`;
         document.getElementById('p2-name').textContent = `${CHARACTERS[this.cpuChar].name} (CPU)`;
+        document.getElementById('p1-face-img').src = CHARACTERS[this.playerChar].img;
+        document.getElementById('p2-face-img').src = CHARACTERS[this.cpuChar].img;
+
         document.getElementById('game-stage-info').textContent = (this.selectedMode === 'story') ? `STAGE ${this.storyStage}: ${CHARACTERS[this.cpuChar].name}戦` : 'SINGLE VERSUS';
 
         if (this.selectedMode === 'story') {
@@ -1097,7 +1070,6 @@ class TetrisunApp {
         const gp = gamepads[0];
         if (!gp || !this.p1Game || this.p1Game.isGameOver) return;
 
-        // Button Mapping: 0: A (Rotate), 1: B (Rotate), 2: X (Hard drop), 3: Y (Hard drop), 4: L1 (Hold), 5: R1 (Hold), 7: R2 (Magic)
         if (gp.buttons[0].pressed || gp.buttons[1].pressed) {
             if (!this.gpPrevRotate) { this.p1Game.rotatePiece(1); this.sound.playRotateSE(); }
             this.gpPrevRotate = true;
@@ -1118,7 +1090,6 @@ class TetrisunApp {
             this.gpPrevMagic = true;
         } else { this.gpPrevMagic = false; }
 
-        // D-Pad / Axis
         if (gp.axes[0] < -0.5 || gp.buttons[14].pressed) this.p1Game.moveLeft();
         else if (gp.axes[0] > 0.5 || gp.buttons[15].pressed) this.p1Game.moveRight();
         if (gp.axes[1] > 0.5 || gp.buttons[13].pressed) this.p1Game.softDrop();
@@ -1287,7 +1258,6 @@ class TetrisunApp {
             document.getElementById('p1-level').textContent = this.p1Game.level;
             document.getElementById('p1-magic-fill').style.width = `${this.p1Game.magicGauge}%`;
             document.getElementById('p1-garbage-bar').style.height = `${Math.min(100, this.p1Game.garbageQueue * 10)}%`;
-            drawCharacterFace(document.getElementById('p1-face-canvas'), this.playerChar, this.p1Game.garbageQueue > 2 ? 'sad' : 'normal');
         }
 
         if (this.p2Game) {
@@ -1300,7 +1270,6 @@ class TetrisunApp {
             document.getElementById('p2-level').textContent = this.p2Game.level;
             document.getElementById('p2-magic-fill').style.width = `${this.p2Game.magicGauge}%`;
             document.getElementById('p2-garbage-bar').style.height = `${Math.min(100, this.p2Game.garbageQueue * 10)}%`;
-            drawCharacterFace(document.getElementById('p2-face-canvas'), this.cpuChar, this.p2Game.garbageQueue > 2 ? 'sad' : 'normal');
         }
     }
 
@@ -1312,6 +1281,7 @@ class TetrisunApp {
         const cellH = 24;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Locked Grid Blocks
         for (let r = 0; r < game.rows; r++) {
             for (let c = 0; c < game.cols; c++) {
                 if (game.grid[r][c]) {
@@ -1320,22 +1290,29 @@ class TetrisunApp {
             }
         }
 
+        // Active Piece & Ghost Block
         if (game.currentPiece && !game.isGameOver) {
             const ghostY = game.getGhostY();
             const shape = game.currentPiece.shape;
 
+            // Ghost Block (Rounded outline & soft fill)
             for (let r = 0; r < shape.length; r++) {
                 for (let c = 0; c < shape[r].length; c++) {
                     if (shape[r][c]) {
                         const gx = (game.currentX + c) * cellW;
                         const gy = (ghostY + r) * cellH;
-                        ctx.strokeStyle = 'rgba(150, 150, 180, 0.4)';
+                        ctx.fillStyle = 'rgba(180, 190, 220, 0.15)';
+                        ctx.beginPath();
+                        ctx.roundRect(gx + 1, gy + 1, cellW - 2, cellH - 2, 5);
+                        ctx.fill();
                         ctx.lineWidth = 2;
-                        ctx.strokeRect(gx + 2, gy + 2, cellW - 4, cellH - 4);
+                        ctx.strokeStyle = 'rgba(160, 170, 210, 0.5)';
+                        ctx.stroke();
                     }
                 }
             }
 
+            // Current Active Piece
             for (let r = 0; r < shape.length; r++) {
                 for (let c = 0; c < shape[r].length; c++) {
                     if (shape[r][c]) {
@@ -1421,7 +1398,7 @@ class TetrisunApp {
                 case 'ArrowUp':
                     this.p1Game.hardDrop();
                     this.sound.playDropSE();
-                    this.triggerScreenShake('small');
+                    // Note: Drop shake removed per request
                     break;
                 case 'KeyA':
                     this.p1Game.rotatePiece(-1);
@@ -1448,7 +1425,7 @@ class TetrisunApp {
         const wrapper = document.getElementById('shake-wrapper');
         if (!wrapper) return;
         wrapper.className = (type === 'large') ? 'shake-large' : 'shake-small';
-        setTimeout(() => wrapper.className = '', 300);
+        setTimeout(() => wrapper.className = '', 450);
     }
 
     togglePause() {

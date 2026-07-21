@@ -112,21 +112,55 @@
                                 </div>
                             </div>
 
-                            <!-- Right: Detailed Settings Panel -->
+                            <!-- Right: Dynamic Settings Panel (Changes per selected mode) -->
                             <div class="settings-column">
-                                <h3>⚙️ オプション設定</h3>
+                                <h3 id="settings-title">⚙️ ストーリーモード設定</h3>
                                 <div class="settings-form">
-                                    <div class="setting-row">
-                                        <label for="setting-difficulty">🌟 難易度設定</label>
-                                        <select id="setting-difficulty" onchange="app.updateSettings()">
-                                            <option value="easy">Easy (初級 / 3ステージ)</option>
-                                            <option value="normal" selected>Normal (中級 / 5ステージ)</option>
-                                            <option value="hard">Hard (上級 / 7ステージ)</option>
-                                        </select>
+                                    
+                                    <!-- Dynamic Group: Story Settings -->
+                                    <div class="setting-group" id="grp-story-settings">
+                                        <div class="setting-row">
+                                            <label for="setting-difficulty">🌟 ストーリー難易度</label>
+                                            <select id="setting-difficulty" onchange="app.updateSettings()">
+                                                <option value="easy">Easy (全3ステージ)</option>
+                                                <option value="normal" selected>Normal (全5ステージ)</option>
+                                                <option value="hard">Hard (全7ステージ)</option>
+                                            </select>
+                                        </div>
                                     </div>
 
-                                    <div class="setting-row">
-                                        <label for="setting-challenger">⚡ オンライン乱入設定</label>
+                                    <!-- Dynamic Group: Versus Settings -->
+                                    <div class="setting-group" id="grp-versus-settings" style="display:none;">
+                                        <div class="setting-row">
+                                            <label for="setting-cpu-level">🤖 CPU強さレベル</label>
+                                            <select id="setting-cpu-level" onchange="app.updateSettings()">
+                                                <option value="easy">Easy (やさしい)</option>
+                                                <option value="normal" selected>Normal (ふつう)</option>
+                                                <option value="hard">Hard (つよい)</option>
+                                            </select>
+                                        </div>
+                                        <div class="setting-row">
+                                            <label for="setting-cpu-char">⚔️ 対戦相手キャラクター</label>
+                                            <select id="setting-cpu-char" onchange="app.selectCpuCharacter(this.value)">
+                                                <!-- Dynamic JS Populate -->
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Dynamic Group: Score Attack Settings -->
+                                    <div class="setting-group" id="grp-scoreattack-settings" style="display:none;">
+                                        <div class="setting-row">
+                                            <label for="setting-speed-rate">🚀 落下スピード上昇速度</label>
+                                            <select id="setting-speed-rate" onchange="app.updateSettings()">
+                                                <option value="normal" selected>標準スピード</option>
+                                                <option value="fast">ハイスピード</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Common Settings: Audio & P2P -->
+                                    <div class="setting-row" id="row-p2p">
+                                        <label for="setting-challenger">⚡ オンライン乱入受付</label>
                                         <select id="setting-challenger" onchange="app.updateSettings()">
                                             <option value="on" selected>乱入ON (P2P待受・対戦対応)</option>
                                             <option value="off">乱入OFF (シングルに集中)</option>
@@ -168,7 +202,7 @@
                         </div>
 
                         <div class="char-select-container">
-                            <!-- Character Grid (7 Characters) -->
+                            <!-- Character Grid (7 Characters with Generated Illustrations) -->
                             <div class="char-grid" id="char-grid">
                                 <!-- Dynamic Generated JS Cards -->
                             </div>
@@ -176,7 +210,7 @@
                             <!-- Selected Character Detail View -->
                             <div class="char-detail-card glass-panel-sub" id="char-detail">
                                 <div class="char-avatar-container">
-                                    <canvas id="char-preview-canvas" width="120" height="120"></canvas>
+                                    <img id="char-preview-img" class="char-large-img" src="assets/nekonya.jpg" alt="Character Illustration">
                                     <div id="char-emotion-badge" class="emotion-badge">NORMAL</div>
                                 </div>
                                 <div class="char-detail-info">
@@ -190,14 +224,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- CPU selection for versus mode -->
-                        <div id="cpu-select-wrapper" class="cpu-select-bar" style="display:none;">
-                            <label for="cpu-char-select">🤖 CPUキャラクター:</label>
-                            <select id="cpu-char-select" onchange="app.selectCpuCharacter(this.value)">
-                                <!-- Dynamic Options -->
-                            </select>
                         </div>
 
                         <div class="screen-nav-bar">
@@ -226,7 +252,7 @@
                             <div class="player-stage-box" id="p1-stage-box">
                                 <div class="stage-header">
                                     <div class="char-mini-portrait">
-                                        <canvas id="p1-face-canvas" width="60" height="60"></canvas>
+                                        <img id="p1-face-img" class="char-mini-img" src="assets/nekonya.jpg" alt="P1 Avatar">
                                     </div>
                                     <div class="player-meta">
                                         <div class="player-name" id="p1-name">ネコニャー (1P)</div>
@@ -333,7 +359,7 @@
                                         <div class="player-score" id="p2-score">SCORE: 000000</div>
                                     </div>
                                     <div class="char-mini-portrait">
-                                        <canvas id="p2-face-canvas" width="60" height="60"></canvas>
+                                        <img id="p2-face-img" class="char-mini-img" src="assets/inuwan.jpg" alt="P2 Avatar">
                                     </div>
                                 </div>
 
