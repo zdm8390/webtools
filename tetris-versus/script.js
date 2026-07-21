@@ -868,7 +868,7 @@
                     }
                     sound.rainbowClear();
                     this.triggerShake(true);
-                    this.showAnnouncer('⚡ MEGA CLEAR!\n下5行一気消し！', true);
+                    this.showAnnouncer('⚡ [Lv.1] MEGA CLEAR ⚡\n下5行一気消し！', true);
                     break;
 
                 case 2:
@@ -876,7 +876,7 @@
                     this.iRushTurns = 5;
                     this.nextQueue = ['I', 'I', 'I', 'I', 'I', ...this.nextQueue];
                     sound.clear();
-                    this.showAnnouncer('🗡️ BLADE OF I!\n5連縦棒ラッシュ！', true);
+                    this.showAnnouncer('🗡️ [Lv.2] BLADE OF I 🗡️\n5連縦棒ラッシュ！', true);
                     break;
 
                 case 3:
@@ -885,13 +885,13 @@
                     this.shieldTimer = 5000;
                     if (this.shieldIndicatorEl) this.shieldIndicatorEl.style.display = 'block';
                     sound.shield();
-                    this.showAnnouncer('🛡️ ABSOLUTE SHIELD!\n5秒お邪魔無効！', true);
+                    this.showAnnouncer('🛡️ [Lv.3] ABSOLUTE SHIELD 🛡️\n5秒間お邪魔無効化！', true);
                     break;
 
                 case 4:
-                    // 💥 [MISFIRE] 呪文不発
+                    // 💥 [Lv.4] MISFIRE
                     sound.fizzle();
-                    this.showAnnouncer('💥 MISFIRE...\n呪文不発！(ハズレ)', false);
+                    this.showAnnouncer('💥 [Lv.4] MISFIRE 💥\n呪文不発！(ハズレ)', false);
                     break;
 
                 case 5:
@@ -908,7 +908,7 @@
                     this.queuedGarbage = 0;
                     sound.transmute();
                     this.triggerShake(false);
-                    this.showAnnouncer('🔮 TRANSMUTE!\nお邪魔全浄化！', true);
+                    this.showAnnouncer('🔮 [Lv.MAX] TRANSMUTE 🔮\nお邪魔全浄化！', true);
                     break;
             }
         }
@@ -1292,8 +1292,14 @@
                 matrix.forEach((row, y) => {
                     row.forEach((val, x) => {
                         if (val !== 0) {
+                            const bx = offsetX + x * size;
+                            const by = offsetY + y * size;
+                            this.holdCtx.beginPath();
+                            this.holdCtx.roundRect(bx, by, size - 2, size - 2, 4);
                             this.holdCtx.fillStyle = spec.color;
-                            this.holdCtx.fillRect(offsetX + x * size, offsetY + y * size, size - 1, size - 1);
+                            this.holdCtx.fill();
+                            this.holdCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+                            this.holdCtx.fillRect(bx + 1, by + 1, size - 4, 2);
                         }
                     });
                 });
@@ -1311,8 +1317,14 @@
                 matrix.forEach((row, y) => {
                     row.forEach((val, x) => {
                         if (val !== 0) {
+                            const bx = offsetX + x * size;
+                            const by = offsetY + y * size;
+                            this.nextCtx.beginPath();
+                            this.nextCtx.roundRect(bx, by, size - 2, size - 2, 4);
                             this.nextCtx.fillStyle = spec.color;
-                            this.nextCtx.fillRect(offsetX + x * size, offsetY + y * size, size - 1, size - 1);
+                            this.nextCtx.fill();
+                            this.nextCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+                            this.nextCtx.fillRect(bx + 1, by + 1, size - 4, 2);
                         }
                     });
                 });
@@ -1322,24 +1334,45 @@
         drawBlock(ctx, x, y, color, isGhost = false) {
             const px = x * BLOCK_SIZE;
             const py = y * BLOCK_SIZE;
+            const size = BLOCK_SIZE - 2;
+            const radius = 6; // 可愛く丸まらせた丸っこいテトリミノ角丸
 
+            ctx.save();
             if (isGhost) {
-                ctx.strokeStyle = color.replace('0.25', '0.8');
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(px + 1, py + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
+                ctx.strokeStyle = color.replace('0.25', '0.7');
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(px + 1, py + 1, size, size, radius);
+                ctx.stroke();
+                ctx.restore();
                 return;
             }
 
+            // ぷっくり丸いキャンディ・マカロンテトリミノ本体
+            ctx.beginPath();
+            ctx.roundRect(px + 1, py + 1, size, size, radius);
             ctx.fillStyle = color;
-            ctx.fillRect(px + 1, py + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
+            ctx.fill();
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-            ctx.fillRect(px + 1, py + 1, BLOCK_SIZE - 2, 3);
-            ctx.fillRect(px + 1, py + 1, 3, BLOCK_SIZE - 2);
+            // 上部ぷっくり光沢ハイライト
+            ctx.beginPath();
+            ctx.roundRect(px + 2, py + 2, size - 2, size / 2.2, [radius - 1, radius - 1, 2, 2]);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+            ctx.fill();
 
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-            ctx.fillRect(px + 1, py + BLOCK_SIZE - 4, BLOCK_SIZE - 2, 3);
-            ctx.fillRect(px + BLOCK_SIZE - 4, py + 1, 3, BLOCK_SIZE - 2);
+            // ドロップキャンディ光沢スポット
+            ctx.beginPath();
+            ctx.arc(px + 7, py + 7, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.fill();
+
+            // 下部立体シャドウ
+            ctx.beginPath();
+            ctx.roundRect(px + 2, py + size / 2, size - 2, size / 2 - 1, [2, 2, radius - 1, radius - 1]);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+            ctx.fill();
+
+            ctx.restore();
         }
 
         updateUI() {
@@ -1944,31 +1977,38 @@
             this.p2TouchGroup.style.display = 'none';
 
             if (this.mode === 'story') {
-                this.modeBadge.textContent = '📖 ストーリーモード';
+                this.targetWins = 1; // ストーリーモードは1本先取！
+                this.modeBadge.textContent = '📖 ストーリーモード (1本先取)';
                 document.getElementById('story-diff-select-group').style.display = 'flex';
                 this.p1NameEl.textContent = 'PLAYER 1';
                 if (window.storyApp) window.storyApp.updateCurrentBossUI();
             } else if (this.mode === 'p1vscpu') {
+                this.targetWins = 2;
                 this.modeBadge.textContent = '1P vs CPU';
                 this.p1NameEl.textContent = 'PLAYER 1';
                 this.p2NameEl.textContent = `CPU (${this.cpuDifficulty.toUpperCase()})`;
                 this.cpuDiffGroup.style.display = 'flex';
             } else if (this.mode === 'p1vsp2') {
+                this.targetWins = 2;
                 this.modeBadge.textContent = '1P vs 2P';
                 this.p1NameEl.textContent = 'PLAYER 1';
                 this.p2NameEl.textContent = 'PLAYER 2';
                 this.p2TouchGroup.style.display = 'flex';
             } else if (this.mode === 'online') {
+                this.targetWins = 2;
                 this.modeBadge.textContent = 'オンライン対戦';
                 this.p1NameEl.textContent = this.peerMgr.isHost ? 'YOU (P1/Host)' : 'YOU (P2/Guest)';
                 this.p2NameEl.textContent = this.peerMgr.isHost ? 'ENEMY (P2)' : 'ENEMY (P1)';
                 this.onlineStatusPill.style.display = 'flex';
             } else if (this.mode === 'cpuvscpu') {
+                this.targetWins = 2;
                 this.modeBadge.textContent = 'CPU vs CPU';
                 this.p1NameEl.textContent = 'CPU 1 (MASTER)';
                 this.p2NameEl.textContent = `CPU 2 (${this.cpuDifficulty.toUpperCase()})`;
                 this.cpuDiffGroup.style.display = 'flex';
             }
+
+            this.updateWinDots();
         }
 
         onOnlineConnected(isHost) {
@@ -2871,10 +2911,12 @@
                 const isSelected = char.id === this.selectedCharId;
                 const card = document.createElement('div');
                 card.className = `char-pop-card ${isSelected ? 'selected-pop-card' : ''}`;
+                card.dataset.charid = char.id;
+                card.setAttribute('onclick', `window.selectChar('${char.id}')`);
 
                 const imgHtml = charImages[char.id] 
                     ? `<img src="${charImages[char.id]}" alt="${char.name}">`
-                    : `<span>${char.avatar}</span>`;
+                    : `<span style="font-size:3rem; display:block; text-align:center;">${char.avatar}</span>`;
 
                 card.innerHTML = `
                     <div class="char-img-frame">
@@ -2885,26 +2927,44 @@
                     <div class="unique-spell-box" style="margin-top:6px; width:100%;">
                         <div class="unique-spell-header">
                             <span class="unique-spell-badge">🔮個別魔法スキル</span>
-                            <span class="unique-spell-name" style="font-size:0.8rem;">${char.uniqueSpell.name}</span>
+                            <span class="unique-spell-name">${char.uniqueSpell.name}</span>
                         </div>
                         <p class="unique-spell-desc">${char.uniqueSpell.desc}</p>
                     </div>
                 `;
-
-                card.addEventListener('click', () => {
-                    this.selectedCharId = char.id;
-                    const selectEl = document.getElementById('player-character');
-                    if (selectEl) selectEl.value = char.id;
-                    if (this.matchManager) this.matchManager.initRoundBoards();
-                    this.renderCharCards();
-                });
 
                 container.appendChild(card);
             });
         }
     }
 
-    // Global Navigation Handlers for Guaranteed Button Click Responsiveness
+    // Global Navigation & Character Handlers for Guaranteed Responsiveness
+    window.selectChar = function(charId) {
+        if (sound) {
+            sound.init();
+            sound.hold();
+        }
+
+        const cards = document.querySelectorAll('.char-pop-card');
+        cards.forEach(card => {
+            if (card.dataset.charid === charId) {
+                card.classList.add('selected-pop-card');
+            } else {
+                card.classList.remove('selected-pop-card');
+            }
+        });
+
+        if (window.viewApp) {
+            window.viewApp.selectedCharId = charId;
+        }
+        if (window.matchApp) {
+            window.matchApp.playerCharId = charId;
+        }
+
+        const selectEl = document.getElementById('player-character');
+        if (selectEl) selectEl.value = charId;
+    };
+
     window.selectMode = function(modeName, btnEl) {
         document.querySelectorAll('.mode-card-btn').forEach(b => b.classList.remove('active'));
         if (btnEl) btnEl.classList.add('active');
@@ -2924,6 +2984,7 @@
         if (sound) sound.init();
         if (window.viewApp) {
             window.viewApp.showView('char-select');
+            window.viewApp.renderCharCards();
         } else {
             const menu = document.getElementById('view-main-menu');
             const charScreen = document.getElementById('view-char-select');
@@ -2933,6 +2994,9 @@
     };
 
     window.backToMainMenu = function() {
+        if (sound) sound.stopBGM();
+        if (window.matchApp) window.matchApp.resetMatch(true);
+
         if (window.viewApp) {
             window.viewApp.showView('main-menu');
         } else {
@@ -2946,7 +3010,9 @@
     };
 
     window.startGameFromChar = function() {
-        if (window.viewApp) {
+        if (sound) sound.init();
+        if (window.viewApp && window.matchApp) {
+            window.matchApp.playerCharId = window.viewApp.selectedCharId || 'hero';
             window.viewApp.showView('gameplay');
         } else {
             const charScreen = document.getElementById('view-char-select');
@@ -2954,6 +3020,36 @@
             if (charScreen) charScreen.style.display = 'none';
             if (gameplay) gameplay.style.display = 'flex';
             if (window.matchApp) window.matchApp.startRound(true);
+        }
+    };
+
+    window.startMatch = function() {
+        if (sound) sound.init();
+        if (window.matchApp && !window.matchApp.isRunning) {
+            window.matchApp.startRound(true);
+        }
+    };
+
+    window.pauseMatch = function() {
+        if (!window.matchApp) return;
+        window.matchApp.isPaused = !window.matchApp.isPaused;
+        const btnPause = document.getElementById('btn-pause-match');
+        if (btnPause) {
+            const label = btnPause.querySelector('span');
+            if (label) label.textContent = window.matchApp.isPaused ? 'RESUME' : 'PAUSE';
+        }
+        if (window.matchApp.isPaused) {
+            if (sound) sound.stopBGM();
+        } else {
+            if (sound) sound.startBGM();
+        }
+    };
+
+    window.restartMatch = function() {
+        if (sound) sound.init();
+        if (window.matchApp) {
+            window.matchApp.resetMatch(true);
+            window.matchApp.startRound(true);
         }
     };
 

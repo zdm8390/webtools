@@ -1981,39 +1981,44 @@ kbd {
 /* --- CHAR SELECT SCREEN (画面②) --- */
 .char-select-screen-container {
     max-width: 1100px;
+    width: 100%;
     margin: 0 auto;
-    padding: 20px;
+    padding: 14px 16px;
     height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    overflow-x: hidden !important;
     overflow-y: auto;
 }
 
 .char-screen-header {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .char-screen-header h2 {
     font-family: var(--font-heading);
-    font-size: 2rem;
+    font-size: 1.8rem;
     color: #0284c7;
     text-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .char-cards-full-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 12px;
+    overflow-x: hidden !important;
     overflow-y: auto;
-    padding: 8px;
-    max-height: 72vh;
+    padding: 6px;
+    max-height: 75vh;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .char-pop-card {
     background: #ffffff;
-    border: 2px solid #e2e8f0;
+    border: 2.5px solid #e2e8f0;
     border-radius: var(--radius-lg);
     padding: 16px;
     display: flex;
@@ -2022,9 +2027,14 @@ kbd {
     gap: 10px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
     box-shadow: 0 8px 20px rgba(148, 163, 184, 0.15);
+    user-select: none;
+}
+
+.char-pop-card * {
+    pointer-events: none;
 }
 
 .char-pop-card:hover {
@@ -2033,11 +2043,15 @@ kbd {
     box-shadow: 0 12px 25px rgba(56, 189, 248, 0.25);
 }
 
+.char-pop-card:active {
+    transform: scale(0.98);
+}
+
 .char-pop-card.selected-pop-card {
-    border-color: #fbbf24;
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
-    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
-    transform: scale(1.03);
+    border: 3.5px solid #f59e0b !important;
+    background: linear-gradient(135deg, #fffbeb, #fef3c7) !important;
+    box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4) !important;
+    transform: scale(1.04) !important;
 }
 
 .char-pop-card.selected-pop-card::after {
@@ -2077,14 +2091,15 @@ kbd {
 
 .char-pop-name {
     font-family: var(--font-heading);
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 900;
-    color: #ffffff;
+    color: #0f172a;
 }
 
 .char-pop-title {
-    font-size: 0.76rem;
-    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #475569;
 }
 
 .game-header {
