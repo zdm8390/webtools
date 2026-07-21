@@ -24,6 +24,9 @@
     <div id="game-viewport-container">
         <div id="game-viewport">
             
+            <!-- Global Version Badge (Small in Bottom-Right Corner) -->
+            <div class="version-tag">ver 1.2.0</div>
+
             <!-- Notification / Alert Overlay (P2P Challenger & Global Messages) -->
             <div id="global-toast-container"></div>
 
@@ -36,7 +39,7 @@
                         <div class="logo-header">
                             <span class="logo-badge">🐾 POP ANIMAL MAGIC TETRIS</span>
                             <h1 class="game-title">テトリスン</h1>
-                            <p class="game-subtitle">〜 魔法の動物たちとパステルテトリス対戦！ 〜</p>
+                            <p class="game-subtitle">〜 魔法の動物たちとパステルテトリス対戦！ 〜 <span class="header-ver-text">v1.2.0</span></p>
                         </div>
 
                         <div class="howto-content">
@@ -112,7 +115,7 @@
                                 </div>
                             </div>
 
-                            <!-- Right: Dynamic Settings Panel (Changes per selected mode) -->
+                            <!-- Right: Dynamic Settings Panel -->
                             <div class="settings-column">
                                 <h3 id="settings-title">⚙️ ストーリーモード設定</h3>
                                 <div class="settings-form">
@@ -202,26 +205,33 @@
                         </div>
 
                         <div class="char-select-container">
-                            <!-- Character Grid (7 Characters with Generated Illustrations) -->
-                            <div class="char-grid" id="char-grid">
-                                <!-- Dynamic Generated JS Cards -->
+                            <!-- Left: Character Selection Grid Area -->
+                            <div class="char-select-left">
+                                <div class="char-grid-title">キャラクター一覧（クリックで選択）</div>
+                                <div class="char-grid" id="char-grid">
+                                    <!-- Dynamic Generated JS Cards -->
+                                </div>
                             </div>
 
-                            <!-- Selected Character Detail View -->
+                            <!-- Right: Selected Character Detailed Card -->
                             <div class="char-detail-card glass-panel-sub" id="char-detail">
-                                <div class="char-avatar-container">
-                                    <img id="char-preview-img" class="char-large-img" src="assets/nekonya.jpg" alt="Character Illustration">
-                                    <div id="char-emotion-badge" class="emotion-badge">NORMAL</div>
-                                </div>
-                                <div class="char-detail-info">
-                                    <h3 id="char-name">ネコニャー</h3>
-                                    <div class="char-animal" id="char-animal">モチーフ: 猫</div>
-                                    <p class="char-desc" id="char-desc">気まぐれだけど素早いパズルが得意！</p>
-                                    <div class="magic-info-box">
-                                        <div class="magic-title">✨ LV4 独自魔法</div>
-                                        <div class="magic-name" id="magic-name">『気まぐれアタック』</div>
-                                        <div class="magic-desc" id="magic-desc">自身の盤面の奇数行（1, 3, 5行目等）からランダムに3行分を消去する。</div>
+                                <div class="char-detail-top">
+                                    <div class="char-avatar-container">
+                                        <img id="char-preview-img" class="char-large-img" src="assets/nekonya.jpg" alt="Character Illustration">
+                                        <div id="char-emotion-badge" class="emotion-badge">NORMAL</div>
                                     </div>
+                                    <div class="char-header-text">
+                                        <h3 id="char-name">ネコニャー</h3>
+                                        <div class="char-animal" id="char-animal">モチーフ: 猫</div>
+                                    </div>
+                                </div>
+                                
+                                <p class="char-desc" id="char-desc">気まぐれだけど素早いパズルが得意！</p>
+                                
+                                <div class="magic-info-box">
+                                    <div class="magic-title">✨ LV4 独自魔法</div>
+                                    <div class="magic-name" id="magic-name">『気まぐれアタック』</div>
+                                    <div class="magic-desc" id="magic-desc">自身の盤面の奇数行（1, 3, 5行目等）からランダムに3行分を消去する。</div>
                                 </div>
                             </div>
                         </div>
