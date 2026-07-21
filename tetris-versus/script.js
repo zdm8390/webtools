@@ -29,77 +29,84 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 }
 
 /* --------------------------------------------------------------------------
-   1. Data Specifications: Characters & Magic Definitions
+   1. Data Specifications: Characters & Magic Definitions (Effects Only)
    -------------------------------------------------------------------------- */
 const CHARACTERS = {
     nekonya: {
         id: 'nekonya',
         name: 'ネコニャー',
         animal: '猫',
+        emoji: '🐱',
         img: 'assets/nekonya.jpg',
         color: '#FFB7C5',
         desc: '気まぐれだけどすばやいパズルが得意なニャンコ！',
-        magicName: '『気まぐれアタック』',
-        magicDesc: '自身の盤面の奇数行（1, 3, 5, 7, 9行目等）からランダムに3行分を消去する。'
+        magicEffectText: '奇数行からランダム3行を消去！',
+        magicDesc: '自身の盤面の奇数行（1, 3, 5行目等）からランダムに3行分を消去する。'
     },
     inuwan: {
         id: 'inuwan',
         name: 'イヌワン',
         animal: '犬',
+        emoji: '🐶',
         img: 'assets/inuwan.jpg',
         color: '#FFDF80',
         desc: '忠実で頼もしいワンコ！お邪魔ブロックを打ち返す！',
-        magicName: '『カエシテク・アタック』',
+        magicEffectText: 'お邪魔ブロックを相手に3行押し戻す！',
         magicDesc: '現在自分の盤面にあるお邪魔行をそのまま相手に押し戻す（最大3行）。'
     },
     torichun: {
         id: 'torichun',
         name: 'トリチュン',
         animal: '鳥',
+        emoji: '🐤',
         img: 'assets/torichun.jpg',
         color: '#A8E6CF',
         desc: 'パタパタお空を飛ぶ鳥の歌姫！上からお掃除！',
-        magicName: '『ピーチクテイル』',
+        magicEffectText: '盤面の最上段から3行を消去！',
         magicDesc: '自身の盤面の最上段から3行分のブロックを消去する。'
     },
     sarukkey: {
         id: 'sarukkey',
         name: 'サルウッキー',
         animal: '猿',
+        emoji: '🐵',
         img: 'assets/sarukkey.jpg',
         color: '#FFD3B6',
         desc: 'お調子者のサル！四角いテトリミノの嵐を起こす！',
-        magicName: '『ウッキッキー・スクエア』',
+        magicEffectText: '3回連続で O型（四角）出現！',
         magicDesc: '次に出現するテトリミノが3回連続で「O型（四角）」に固定化される。'
     },
     tanupon: {
         id: 'tanupon',
         name: 'タヌポン',
         animal: 'タヌキ',
+        emoji: '🦝',
         img: 'assets/tanupon.jpg',
         color: '#CBA6D7',
         desc: 'ドロンと化けるいたずらタヌキ！一瞬でリセット！',
-        magicName: '『ドロンコ・リセット』',
+        magicEffectText: 'お互いの盤面を完全リセット！',
         magicDesc: 'お互い（自分と相手）のステージ盤面を完全に空の初期状態へ戻す。'
     },
     kitsunekon: {
         id: 'kitsunekon',
         name: 'キツネコン',
         animal: '狐',
+        emoji: '🦊',
         img: 'assets/kitsunekon.jpg',
         color: '#AEC6CF',
         desc: 'ミステリアスな忍者狐！相手と盤面をスワップ！',
-        magicName: '『トリック・チェンジ』',
+        magicEffectText: '自分と相手の盤面を丸ごと交換！',
         magicDesc: '自分の盤面状態と相手の盤面状態をそのまま入れ替える。'
     },
     dragogon: {
         id: 'dragogon',
         name: 'ドラゴゴン',
         animal: '竜',
+        emoji: '🐲',
         img: 'assets/dragogon.jpg',
         color: '#FF7B9C',
         desc: '伝説の小竜！強力なブレスで下部を焼き尽くす！',
-        magicName: '『ドラゴン・ブレス』',
+        magicEffectText: '盤面の下部から5行を豪快消去！',
         magicDesc: '自身の盤面の下部から5行分のブロックを強力に消去する。'
     }
 };
@@ -241,6 +248,20 @@ class SoundEngine {
         osc.stop(now + 0.4);
     }
 
+    playCountdownSE(pitch = 1) {
+        if (!this.ctx || this.seVolume <= 0) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440 * pitch, this.ctx.currentTime);
+        gain.gain.setValueAtTime(this.seVolume * 0.4, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.15);
+    }
+
     startBgm() {
         if (this.isPlayingBgm) return;
         this.init();
@@ -276,7 +297,7 @@ class SoundEngine {
 
 
 /* --------------------------------------------------------------------------
-   3. Single Player Board Engine (Tetris Logic)
+   3. Single Player Board Engine (Tetris Logic + Snappy Flash Clear Duration)
    -------------------------------------------------------------------------- */
 class TetrisGame {
     constructor(playerId, isCpu = false) {
@@ -306,6 +327,14 @@ class TetrisGame {
         this.barrierTimer = 0;
         this.forceIPieces = 0;
         this.forceOPieces = 0;
+
+        this.lockDelay = 700;
+        this.lockTimer = 0;
+        this.lockResetCount = 0;
+        this.isGrounded = false;
+
+        this.animatingClearRows = [];
+        this.clearAnimTimer = 0;
 
         this.isGameOver = false;
         this.isPaused = false;
@@ -337,6 +366,11 @@ class TetrisGame {
         this.barrierTimer = 0;
         this.forceIPieces = 0;
         this.forceOPieces = 0;
+        this.lockTimer = 0;
+        this.lockResetCount = 0;
+        this.isGrounded = false;
+        this.animatingClearRows = [];
+        this.clearAnimTimer = 0;
         this.isGameOver = false;
         this.isPaused = false;
         this.dropInterval = 1000;
@@ -386,6 +420,10 @@ class TetrisGame {
         this.currentY = 0;
         this.canHold = true;
 
+        this.lockTimer = 0;
+        this.lockResetCount = 0;
+        this.isGrounded = this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY + 1);
+
         if (this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY)) {
             this.isGameOver = true;
         }
@@ -405,8 +443,15 @@ class TetrisGame {
         return false;
     }
 
+    onPieceManipulated() {
+        if (this.isGrounded && this.lockResetCount < 10) {
+            this.lockTimer = 0;
+            this.lockResetCount++;
+        }
+    }
+
     rotatePiece(dir = 1) {
-        if (!this.currentPiece) return false;
+        if (!this.currentPiece || this.clearAnimTimer > 0) return false;
         const oldShape = this.currentPiece.shape;
         const size = oldShape.length;
         const newShape = Array.from({ length: size }, () => Array(size).fill(0));
@@ -430,6 +475,8 @@ class TetrisGame {
                 this.currentX += dx;
                 this.currentY -= dy;
                 this.rotationState = newRotation;
+                this.isGrounded = this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY + 1);
+                this.onPieceManipulated();
                 return true;
             }
         }
@@ -437,32 +484,42 @@ class TetrisGame {
     }
 
     moveLeft() {
+        if (this.clearAnimTimer > 0) return false;
         if (!this.checkCollision(this.currentPiece.shape, this.currentX - 1, this.currentY)) {
             this.currentX--;
+            this.isGrounded = this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY + 1);
+            this.onPieceManipulated();
             return true;
         }
         return false;
     }
 
     moveRight() {
+        if (this.clearAnimTimer > 0) return false;
         if (!this.checkCollision(this.currentPiece.shape, this.currentX + 1, this.currentY)) {
             this.currentX++;
+            this.isGrounded = this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY + 1);
+            this.onPieceManipulated();
             return true;
         }
         return false;
     }
 
     softDrop() {
+        if (this.clearAnimTimer > 0) return false;
         if (!this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY + 1)) {
             this.currentY++;
             this.score += 1;
+            this.isGrounded = this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY + 1);
             return true;
+        } else {
+            this.isGrounded = true;
         }
-        this.lockPiece();
         return false;
     }
 
     hardDrop() {
+        if (this.clearAnimTimer > 0) return;
         let droppedLines = 0;
         while (!this.checkCollision(this.currentPiece.shape, this.currentX, this.currentY + 1)) {
             this.currentY++;
@@ -482,7 +539,7 @@ class TetrisGame {
     }
 
     hold() {
-        if (!this.canHold || !this.currentPiece) return;
+        if (!this.canHold || !this.currentPiece || this.clearAnimTimer > 0) return;
         const currentType = this.currentPiece.type;
         if (!this.holdPiece) {
             this.holdPiece = currentType;
@@ -503,6 +560,7 @@ class TetrisGame {
     }
 
     lockPiece() {
+        if (!this.currentPiece) return;
         const shape = this.currentPiece.shape;
         for (let r = 0; r < shape.length; r++) {
             for (let c = 0; c < shape[r].length; c++) {
@@ -516,16 +574,52 @@ class TetrisGame {
             }
         }
 
-        const cleared = this.clearLines();
+        const fullRows = [];
+        for (let r = this.rows - 1; r >= 0; r--) {
+            if (this.grid[r].every(cell => cell !== null)) {
+                fullRows.push(r);
+            }
+        }
+
+        if (fullRows.length > 0) {
+            // Snappy Line Clear Flash (400ms duration)
+            this.startRowClearAnimation(fullRows, 400);
+        } else {
+            this.ren = 0;
+            if (this.garbageQueue > 0) {
+                this.riseGarbage(this.garbageQueue);
+                this.garbageQueue = 0;
+            }
+            this.spawnPiece();
+        }
+    }
+
+    startRowClearAnimation(rows, duration = 400) {
+        this.animatingClearRows = rows;
+        this.clearAnimTimer = duration;
+    }
+
+    finishRowClearAnimation() {
+        const cleared = this.animatingClearRows.length;
         if (cleared > 0) {
+            this.animatingClearRows.sort((a, b) => a - b);
+            this.animatingClearRows.forEach(r => {
+                this.grid.splice(r, 1);
+                this.grid.unshift(Array(this.cols).fill(null));
+            });
+
             this.ren++;
+            this.lines += cleared;
+            this.score += [0, 100, 300, 500, 800][Math.min(4, cleared)] * this.level;
+            this.level = Math.floor(this.lines / 10) + 1;
+            this.dropInterval = Math.max(100, 1000 - (this.level - 1) * 80);
+
             if (this.onLineClear) this.onLineClear(cleared);
 
             let sentGarbage = 0;
             if (cleared === 2) sentGarbage = 1;
             else if (cleared === 3) sentGarbage = 2;
-            else if (cleared === 4) sentGarbage = 4;
-
+            else if (cleared >= 4) sentGarbage = 4;
             if (this.ren > 1) sentGarbage += (this.ren - 1);
 
             if (this.garbageQueue > 0) {
@@ -541,34 +635,11 @@ class TetrisGame {
             if (sentGarbage > 0 && this.onSendGarbage) {
                 this.onSendGarbage(sentGarbage);
             }
-        } else {
-            this.ren = 0;
-            if (this.garbageQueue > 0) {
-                this.riseGarbage(this.garbageQueue);
-                this.garbageQueue = 0;
-            }
         }
 
+        this.animatingClearRows = [];
+        this.clearAnimTimer = 0;
         this.spawnPiece();
-    }
-
-    clearLines() {
-        let cleared = 0;
-        for (let r = this.rows - 1; r >= 0; r--) {
-            if (this.grid[r].every(cell => cell !== null)) {
-                this.grid.splice(r, 1);
-                this.grid.unshift(Array(this.cols).fill(null));
-                cleared++;
-                r++;
-            }
-        }
-        if (cleared > 0) {
-            this.lines += cleared;
-            this.score += [0, 100, 300, 500, 800][cleared] * this.level;
-            this.level = Math.floor(this.lines / 10) + 1;
-            this.dropInterval = Math.max(100, 1000 - (this.level - 1) * 80);
-        }
-        return cleared;
     }
 
     riseGarbage(count) {
@@ -600,7 +671,7 @@ class CpuAI {
     }
 
     update(now) {
-        if (!this.game || this.game.isGameOver || !this.game.currentPiece) return;
+        if (!this.game || this.game.isGameOver || !this.game.currentPiece || this.game.clearAnimTimer > 0) return;
 
         const interval = this.difficulty === 'easy' ? 450 : (this.difficulty === 'hard' ? 120 : 250);
         if (now - this.lastMoveTime < interval) return;
@@ -712,7 +783,7 @@ class CpuAI {
 
 
 /* --------------------------------------------------------------------------
-   5. Main Application Controller (UI & Flow)
+   5. Main Application Controller (Animated Mascot Cheer Squad & Snappy Clear)
    -------------------------------------------------------------------------- */
 class TetrisunApp {
     constructor() {
@@ -733,12 +804,18 @@ class TetrisunApp {
         this.peerConn = null;
 
         this.storyStage = 1;
+        this.storyTotalTime = 0;
+        this.isDialogueActive = false;
+        this.isCountdownActive = false;
+        this.magicFreezeTimer = 0;
+
         this.storyYamlData = null;
         this.storyDialogues = [];
         this.currentDialogueIdx = 0;
 
         this.highScores = JSON.parse(localStorage.getItem('tetrisun_scores') || '[]');
         this.isLoopRunning = false;
+        this.animFrameId = null;
         this.lastTime = 0;
     }
 
@@ -753,7 +830,6 @@ class TetrisunApp {
         this.updateRankingTable();
         this.startMagicGaugeTimer();
 
-        // Select initial story mode settings panel
         this.selectMode('story', document.querySelector('.mode-btn[data-mode="story"]'));
 
         console.log("🐾 Tetrisun initialized successfully.");
@@ -783,13 +859,24 @@ class TetrisunApp {
     }
 
     showScreen(screenId) {
+        if (screenId !== 'view-game') {
+            this.stopGameLoop();
+        }
+
         document.querySelectorAll('.game-view').forEach(v => v.classList.remove('active'));
         const target = document.getElementById(screenId);
         if (target) target.classList.add('active');
         this.sound.init();
     }
 
-    /* Dynamic Settings Panel Switch per Selected Mode */
+    stopGameLoop() {
+        this.isLoopRunning = false;
+        if (this.animFrameId) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+        }
+    }
+
     selectMode(mode, btnEl) {
         this.selectedMode = mode;
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -809,6 +896,8 @@ class TetrisunApp {
             else if (mode === 'versus') titleEl.textContent = '⚔️ シングル対戦モード設定';
             else if (mode === 'scoreattack') titleEl.textContent = '🏆 スコアアタック設定';
         }
+
+        this.updateRankingTable();
     }
 
     updateSettings() {
@@ -836,7 +925,6 @@ class TetrisunApp {
         Object.keys(CHARACTERS).forEach(id => {
             const char = CHARACTERS[id];
 
-            // Character Card with Illustration Image
             const card = document.createElement('div');
             card.className = `char-card ${id === this.playerChar ? 'selected' : ''}`;
             card.onclick = () => this.selectPlayerChar(id);
@@ -846,7 +934,6 @@ class TetrisunApp {
             `;
             grid.appendChild(card);
 
-            // CPU Select Options in Settings
             if (cpuSelect) {
                 const opt = document.createElement('option');
                 opt.value = id;
@@ -874,7 +961,7 @@ class TetrisunApp {
         document.getElementById('char-name').textContent = char.name;
         document.getElementById('char-animal').textContent = `モチーフ: ${char.animal}`;
         document.getElementById('char-desc').textContent = char.desc;
-        document.getElementById('magic-name').textContent = char.magicName;
+        document.getElementById('magic-name').textContent = `✨ ${char.magicEffectText}`;
         document.getElementById('magic-desc').textContent = char.magicDesc;
 
         const previewImg = document.getElementById('char-preview-img');
@@ -927,18 +1014,34 @@ class TetrisunApp {
         setTimeout(() => toast.remove(), 4000);
     }
 
+    startStoryGameNew() {
+        this.storyStage = 1;
+        this.storyTotalTime = 0;
+        this.startGame();
+    }
+
     startGame() {
+        this.stopGameLoop();
+
         this.showScreen('view-game');
         this.sound.startBgm();
 
         this.p1Game = new TetrisGame('p1', false);
         this.p1Game.reset();
 
-        // Line Clear Excitement Shake Callback
         this.p1Game.onLineClear = (lines) => {
             this.sound.playLineClearSE(lines);
-            if (lines >= 4) this.triggerScreenShake('large');
-            else if (lines >= 1) this.triggerScreenShake('small');
+            if (lines >= 4) {
+                this.triggerScreenShake('large');
+                this.triggerMascotCheer('テトリス達成！🎉大勝利ニャ！', true);
+            } else if (lines >= 1) {
+                this.triggerScreenShake('small');
+                if (this.p1Game.ren > 1) {
+                    this.triggerMascotCheer(`${this.p1Game.ren} REN連鎖！！🔥`, true);
+                } else {
+                    this.triggerMascotCheer('ナイス消去！✨', false);
+                }
+            }
         };
 
         this.p1Game.onSendGarbage = (lines) => {
@@ -966,7 +1069,6 @@ class TetrisunApp {
             this.cpuAI = new CpuAI(this.p2Game, this.difficulty);
         }
 
-        // Update Portraits & Names
         document.getElementById('p1-name').textContent = `${CHARACTERS[this.playerChar].name} (1P)`;
         document.getElementById('p2-name').textContent = `${CHARACTERS[this.cpuChar].name} (CPU)`;
         document.getElementById('p1-face-img').src = CHARACTERS[this.playerChar].img;
@@ -974,16 +1076,42 @@ class TetrisunApp {
 
         document.getElementById('game-stage-info').textContent = (this.selectedMode === 'story') ? `STAGE ${this.storyStage}: ${CHARACTERS[this.cpuChar].name}戦` : 'SINGLE VERSUS';
 
+        const charEmoji = CHARACTERS[this.playerChar].emoji || '🐱';
+        const mascotAvatar = document.getElementById('mascot-avatar');
+        if (mascotAvatar) {
+            mascotAvatar.innerHTML = `<span class="mascot-emoji">${charEmoji}</span><span class="mascot-flag left">🚩</span><span class="mascot-flag right">🏳️</span>`;
+        }
+        this.triggerMascotCheer('ふぁいとー！📣', false);
+
         if (this.selectedMode === 'story') {
+            this.isDialogueActive = true;
+            this.isCountdownActive = false;
             this.loadStoryDialogue();
         } else {
+            this.isDialogueActive = false;
             document.getElementById('adv-dialogue-box').style.display = 'none';
+            this.startCountdown();
         }
 
-        if (!this.isLoopRunning) {
-            this.isLoopRunning = true;
-            this.lastTime = performance.now();
-            requestAnimationFrame((time) => this.gameLoop(time));
+        this.isLoopRunning = true;
+        this.lastTime = performance.now();
+        this.animFrameId = requestAnimationFrame((time) => this.gameLoop(time));
+    }
+
+    triggerMascotCheer(text, isFever = false) {
+        const cheerText = document.getElementById('mascot-cheer-text');
+        const mascotAvatar = document.getElementById('mascot-avatar');
+        if (cheerText) cheerText.textContent = text;
+
+        if (mascotAvatar) {
+            if (isFever) {
+                mascotAvatar.className = 'mascot-avatar cheer-fever';
+                setTimeout(() => {
+                    mascotAvatar.className = 'mascot-avatar bounce-anim';
+                }, 1600);
+            } else {
+                mascotAvatar.className = 'mascot-avatar bounce-anim';
+            }
         }
     }
 
@@ -1016,13 +1144,13 @@ class TetrisunApp {
 
         this.storyDialogues = dialogues;
         this.currentDialogueIdx = 0;
-        dialogBox.style.display = 'block';
+        dialogBox.style.display = 'flex';
         this.renderDialogueStep();
     }
 
     renderDialogueStep() {
         if (this.currentDialogueIdx >= this.storyDialogues.length) {
-            document.getElementById('adv-dialogue-box').style.display = 'none';
+            this.finishDialogue();
             return;
         }
         const d = this.storyDialogues[this.currentDialogueIdx];
@@ -1036,22 +1164,92 @@ class TetrisunApp {
     }
 
     skipDialogue() {
+        this.finishDialogue();
+    }
+
+    finishDialogue() {
         document.getElementById('adv-dialogue-box').style.display = 'none';
+        this.isDialogueActive = false;
+        this.startCountdown();
+    }
+
+    startCountdown() {
+        this.isCountdownActive = true;
+        const modal = document.getElementById('countdown-modal');
+        const txt = document.getElementById('countdown-text');
+        if (!modal || !txt) {
+            this.isCountdownActive = false;
+            return;
+        }
+
+        modal.style.display = 'flex';
+        txt.textContent = 'READY...';
+        this.sound.playCountdownSE(1);
+
+        setTimeout(() => {
+            txt.textContent = 'SET...';
+            this.sound.playCountdownSE(1.2);
+        }, 700);
+
+        setTimeout(() => {
+            txt.textContent = 'GO!';
+            this.sound.playCountdownSE(1.8);
+        }, 1300);
+
+        setTimeout(() => {
+            modal.style.display = 'none';
+            this.isCountdownActive = false;
+        }, 1800);
     }
 
     gameLoop(time) {
+        if (!this.isLoopRunning) return;
         const dt = time - this.lastTime;
         this.lastTime = time;
 
-        this.pollGamepad();
+        if (this.magicFreezeTimer > 0) {
+            this.magicFreezeTimer -= dt;
+        } else if (!this.isDialogueActive && !this.isCountdownActive) {
+            
+            if (this.selectedMode === 'story' && this.p1Game && !this.p1Game.isPaused && !this.p1Game.isGameOver) {
+                this.storyTotalTime += dt;
+            }
 
-        if (this.p1Game && !this.p1Game.isPaused && !this.p1Game.isGameOver) {
-            this.updatePlayerGame(this.p1Game, dt);
-        }
+            if (this.p1Game && !this.p1Game.isPaused && !this.p1Game.isGameOver) {
+                if (this.p1Game.clearAnimTimer > 0) {
+                    this.p1Game.clearAnimTimer -= dt;
+                    if (this.p1Game.clearAnimTimer <= 0) {
+                        this.p1Game.finishRowClearAnimation();
+                    }
+                } else {
+                    if (this.p1Game.isGrounded) {
+                        this.p1Game.lockTimer += dt;
+                        if (this.p1Game.lockTimer >= this.p1Game.lockDelay) {
+                            this.p1Game.lockPiece();
+                        }
+                    }
+                    this.updatePlayerGame(this.p1Game, dt);
+                    this.pollGamepad();
+                }
+            }
 
-        if (this.p2Game && !this.p2Game.isPaused && !this.p2Game.isGameOver) {
-            this.updatePlayerGame(this.p2Game, dt);
-            if (this.cpuAI) this.cpuAI.update(time);
+            if (this.p2Game && !this.p2Game.isPaused && !this.p2Game.isGameOver) {
+                if (this.p2Game.clearAnimTimer > 0) {
+                    this.p2Game.clearAnimTimer -= dt;
+                    if (this.p2Game.clearAnimTimer <= 0) {
+                        this.p2Game.finishRowClearAnimation();
+                    }
+                } else {
+                    if (this.p2Game.isGrounded) {
+                        this.p2Game.lockTimer += dt;
+                        if (this.p2Game.lockTimer >= this.p2Game.lockDelay) {
+                            this.p2Game.lockPiece();
+                        }
+                    }
+                    this.updatePlayerGame(this.p2Game, dt);
+                    if (this.cpuAI) this.cpuAI.update(time);
+                }
+            }
         }
 
         this.renderAll();
@@ -1059,9 +1257,9 @@ class TetrisunApp {
         if (this.p1Game && this.p1Game.isGameOver) {
             this.handleGameOver(false);
         } else if (this.p2Game && this.p2Game.isGameOver) {
-            this.handleGameOver(true);
+            this.handleStageVictory();
         } else {
-            requestAnimationFrame((t) => this.gameLoop(t));
+            this.animFrameId = requestAnimationFrame((t) => this.gameLoop(t));
         }
     }
 
@@ -1109,6 +1307,7 @@ class TetrisunApp {
 
     startMagicGaugeTimer() {
         setInterval(() => {
+            if (this.isDialogueActive || this.isCountdownActive || !this.isLoopRunning) return;
             if (this.p1Game && !this.p1Game.isGameOver) {
                 this.p1Game.magicGauge = Math.min(100, this.p1Game.magicGauge + 2);
                 const btn = document.getElementById('p1-magic-btn');
@@ -1134,83 +1333,98 @@ class TetrisunApp {
 
         const modal = document.getElementById('magic-roulette-modal');
         const textEl = document.getElementById('roulette-text');
+        const titleEl = document.getElementById('roulette-title-text');
+        if (!modal || !textEl) return;
+
+        modal.className = `roulette-modal glass-panel ${playerId === 'p1' ? 'roulette-red' : 'roulette-blue'}`;
+        if (titleEl) titleEl.textContent = playerId === 'p1' ? '✨ 1P 魔法発動！' : '✨ 2P 魔法発動！';
+
         modal.style.display = 'block';
+        this.triggerMascotCheer('魔法発動ニャ！✨', true);
 
         let spins = 0;
         const timer = setInterval(() => {
             spins++;
-            const randLv = Math.floor(Math.random() * 5);
-            textEl.textContent = `LV${randLv}: 魔法ルーレット回転中...`;
+            textEl.textContent = '✨ 魔法スロット回転中...';
             if (spins > 10) {
                 clearInterval(timer);
                 const finalLv = Math.floor(Math.random() * 5);
-                this.applyMagicEffect(finalLv, game, opponent, charId);
-                setTimeout(() => { modal.style.display = 'none'; }, 1000);
+                this.applyMagicEffect(finalLv, game, opponent, charId, playerId);
+                setTimeout(() => { modal.style.display = 'none'; }, 1600);
             }
         }, 80);
     }
 
-    applyMagicEffect(lv, game, opponent, charId) {
-        const textEl = document.getElementById('roulette-text');
+    applyMagicEffect(lv, game, opponent, charId, playerId) {
+        const char = CHARACTERS[charId];
+        this.magicFreezeTimer = 850; // 0.85s Magic Freeze
+        this.triggerScreenShake('large');
+
+        let effectTitle = '';
         switch (lv) {
             case 0:
-                textEl.textContent = 'LV0: はずれ (効果なし)';
+                effectTitle = 'ざんねん... はずれ！';
                 break;
             case 1:
-                textEl.textContent = 'LV1: 全お邪魔ブロック消去！';
-                game.grid.forEach(row => {
-                    row.forEach((cell, c) => {
-                        if (cell && cell.isGarbage) row[c] = null;
-                    });
+                effectTitle = '自陣の全お邪魔ブロックを消去！';
+                const garbageRows = [];
+                game.grid.forEach((row, r) => {
+                    if (row.some(cell => cell && cell.isGarbage)) garbageRows.push(r);
                 });
+                if (garbageRows.length > 0) game.startRowClearAnimation(garbageRows, 850);
                 break;
             case 2:
-                textEl.textContent = 'LV2: 5秒間お邪魔無効バリア！';
+                effectTitle = '5秒間相手のお邪魔攻撃を完全ガード！';
                 game.barrierTimer = 5;
                 break;
             case 3:
-                textEl.textContent = 'LV3: 次の5回「I型」固定！';
+                effectTitle = '5回連続で「I型（縦棒）」出現！';
                 game.forceIPieces = 5;
                 break;
             case 4:
-                textEl.textContent = `LV4: ${CHARACTERS[charId].magicName}！`;
+                effectTitle = char.magicEffectText;
                 this.executeCharacterMagic(charId, game, opponent);
                 break;
         }
-        this.showCutinBanner(`${CHARACTERS[charId].name}: LV${lv} 魔法発動！`);
+
+        const textEl = document.getElementById('roulette-text');
+        if (textEl) textEl.textContent = effectTitle;
+        this.showCutinBanner(`${playerId === 'p1' ? '1P' : '2P'} 魔法: ${effectTitle}`, playerId);
     }
 
     executeCharacterMagic(charId, game, opponent) {
         switch (charId) {
             case 'nekonya':
-                let clearedCount = 0;
+                const oddRows = [];
                 for (let r = 1; r < game.rows; r += 2) {
-                    if (clearedCount < 3) {
-                        game.grid[r] = Array(game.cols).fill(null);
-                        clearedCount++;
+                    if (game.grid[r].some(c => c !== null) && oddRows.length < 3) {
+                        oddRows.push(r);
                     }
                 }
+                if (oddRows.length > 0) game.startRowClearAnimation(oddRows, 850);
                 break;
 
             case 'inuwan':
-                let pushed = 0;
+                const garbageRows = [];
                 for (let r = game.rows - 1; r >= 0; r--) {
-                    if (game.grid[r].some(c => c && c.isGarbage) && pushed < 3) {
-                        game.grid[r] = Array(game.cols).fill(null);
-                        pushed++;
+                    if (game.grid[r].some(c => c && c.isGarbage) && garbageRows.length < 3) {
+                        garbageRows.push(r);
                     }
                 }
-                if (pushed > 0 && opponent) opponent.receiveGarbage(pushed);
+                if (garbageRows.length > 0) {
+                    game.startRowClearAnimation(garbageRows, 850);
+                    if (opponent) opponent.receiveGarbage(garbageRows.length);
+                }
                 break;
 
             case 'torichun':
-                let topCleared = 0;
+                const topRows = [];
                 for (let r = 0; r < game.rows; r++) {
-                    if (game.grid[r].some(c => c !== null) && topCleared < 3) {
-                        game.grid[r] = Array(game.cols).fill(null);
-                        topCleared++;
+                    if (game.grid[r].some(c => c !== null) && topRows.length < 3) {
+                        topRows.push(r);
                     }
                 }
+                if (topRows.length > 0) game.startRowClearAnimation(topRows, 850);
                 break;
 
             case 'sarukkey':
@@ -1218,8 +1432,12 @@ class TetrisunApp {
                 break;
 
             case 'tanupon':
-                game.grid = game.createGrid();
-                if (opponent) opponent.grid = opponent.createGrid();
+                const allRows1 = Array.from({length: 20}, (_, i) => i);
+                game.startRowClearAnimation(allRows1, 850);
+                if (opponent) {
+                    const allRows2 = Array.from({length: 20}, (_, i) => i);
+                    opponent.startRowClearAnimation(allRows2, 850);
+                }
                 break;
 
             case 'kitsunekon':
@@ -1231,20 +1449,31 @@ class TetrisunApp {
                 break;
 
             case 'dragogon':
+                const botRows = [];
                 for (let r = game.rows - 1; r >= game.rows - 5; r--) {
-                    game.grid[r] = Array(game.cols).fill(null);
+                    if (game.grid[r].some(c => c !== null)) botRows.push(r);
                 }
+                if (botRows.length > 0) game.startRowClearAnimation(botRows, 850);
                 break;
         }
     }
 
-    showCutinBanner(text) {
+    showCutinBanner(text, playerId = 'p1') {
         const banner = document.getElementById('cutin-banner');
         const txt = document.getElementById('cutin-text');
         if (!banner || !txt) return;
         txt.textContent = text;
+        banner.className = `cutin-banner-overlay ${playerId === 'p1' ? 'cutin-red' : 'cutin-blue'}`;
         banner.style.display = 'block';
-        setTimeout(() => { banner.style.display = 'none'; }, 1200);
+        setTimeout(() => { banner.style.display = 'none'; }, 1500);
+    }
+
+    formatTime(ms) {
+        const totalSec = Math.floor(ms / 1000);
+        const min = Math.floor(totalSec / 60);
+        const sec = totalSec % 60;
+        const tenths = Math.floor((ms % 1000) / 100);
+        return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${tenths}`;
     }
 
     renderAll() {
@@ -1252,7 +1481,13 @@ class TetrisunApp {
             this.renderBoard('p1-board-canvas', this.p1Game);
             this.renderHold('p1-hold-canvas', this.p1Game.holdPiece);
             this.renderNext('p1-next-canvas', this.p1Game.nextQueue);
-            document.getElementById('p1-score').textContent = `SCORE: ${String(this.p1Game.score).padStart(6, '0')}`;
+
+            if (this.selectedMode === 'story') {
+                document.getElementById('p1-score').textContent = `TIME: ${this.formatTime(this.storyTotalTime)}`;
+            } else {
+                document.getElementById('p1-score').textContent = `SCORE: ${String(this.p1Game.score).padStart(6, '0')}`;
+            }
+
             document.getElementById('p1-lines').textContent = this.p1Game.lines;
             document.getElementById('p1-ren').textContent = this.p1Game.ren;
             document.getElementById('p1-level').textContent = this.p1Game.level;
@@ -1281,21 +1516,29 @@ class TetrisunApp {
         const cellH = 24;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Locked Grid Blocks
+        const isBlinkingNow = (Math.floor(Date.now() / 40) % 2 === 0);
+
         for (let r = 0; r < game.rows; r++) {
+            const isBlinkRow = game.animatingClearRows.includes(r);
             for (let c = 0; c < game.cols; c++) {
-                if (game.grid[r][c]) {
+                if (isBlinkRow) {
+                    if (isBlinkingNow) {
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
+                    } else {
+                        ctx.fillStyle = (game.playerId === 'p1') ? '#FFD1DC' : '#93C5FD';
+                        ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
+                    }
+                } else if (game.grid[r][c]) {
                     this.drawRoundedBlock(ctx, c * cellW, r * cellH, cellW, cellH, game.grid[r][c].color);
                 }
             }
         }
 
-        // Active Piece & Ghost Block
-        if (game.currentPiece && !game.isGameOver) {
+        if (game.currentPiece && !game.isGameOver && game.clearAnimTimer <= 0) {
             const ghostY = game.getGhostY();
             const shape = game.currentPiece.shape;
 
-            // Ghost Block (Rounded outline & soft fill)
             for (let r = 0; r < shape.length; r++) {
                 for (let c = 0; c < shape[r].length; c++) {
                     if (shape[r][c]) {
@@ -1312,7 +1555,6 @@ class TetrisunApp {
                 }
             }
 
-            // Current Active Piece
             for (let r = 0; r < shape.length; r++) {
                 for (let c = 0; c < shape[r].length; c++) {
                     if (shape[r][c]) {
@@ -1382,7 +1624,7 @@ class TetrisunApp {
 
     bindEvents() {
         window.addEventListener('keydown', (e) => {
-            if (!this.p1Game || this.p1Game.isGameOver || this.p1Game.isPaused) return;
+            if (!this.p1Game || this.p1Game.isGameOver || this.p1Game.isPaused || this.isDialogueActive || this.isCountdownActive) return;
             switch (e.code) {
                 case 'ArrowLeft':
                     this.p1Game.moveLeft();
@@ -1398,7 +1640,6 @@ class TetrisunApp {
                 case 'ArrowUp':
                     this.p1Game.hardDrop();
                     this.sound.playDropSE();
-                    // Note: Drop shake removed per request
                     break;
                 case 'KeyA':
                     this.p1Game.rotatePiece(-1);
@@ -1436,20 +1677,43 @@ class TetrisunApp {
     }
 
     quitToTitle() {
+        this.stopGameLoop();
         this.sound.stopBgm();
         this.showScreen('view-mode-select');
     }
 
+    handleStageVictory() {
+        const maxStage = (this.difficulty === 'easy') ? 3 : (this.difficulty === 'normal' ? 5 : 7);
+        if (this.selectedMode === 'story' && this.storyStage < maxStage) {
+            this.storyStage++;
+            this.showToast(`🎉 STAGE ${this.storyStage - 1} クリア！ 次のステージへ進みます！`);
+            this.startGame();
+        } else {
+            this.handleGameOver(true);
+        }
+    }
+
     handleGameOver(isWin) {
+        this.stopGameLoop();
         this.sound.stopBgm();
         this.showScreen('view-score-result');
 
         const titleBanner = document.getElementById('result-title-banner');
         if (titleBanner) {
-            titleBanner.textContent = isWin ? '🎉 VICTORY! クリア成功！' : '💀 GAME OVER';
+            titleBanner.textContent = isWin ? '🎉 STORY ALL CLEAR!' : '💀 GAME OVER';
         }
 
-        document.getElementById('res-score').textContent = String(this.p1Game ? this.p1Game.score : 0).padStart(6, '0');
+        const lblMain = document.getElementById('lbl-res-main');
+        const resScore = document.getElementById('res-score');
+
+        if (this.selectedMode === 'story') {
+            if (lblMain) lblMain.textContent = '⏱️ 累積クリアタイム:';
+            if (resScore) resScore.textContent = this.formatTime(this.storyTotalTime);
+        } else {
+            if (lblMain) lblMain.textContent = '最終スコア:';
+            if (resScore) resScore.textContent = String(this.p1Game ? this.p1Game.score : 0).padStart(6, '0');
+        }
+
         document.getElementById('res-lines').textContent = this.p1Game ? this.p1Game.lines : 0;
         document.getElementById('res-ren').textContent = this.p1Game ? this.p1Game.ren : 0;
     }
@@ -1459,20 +1723,32 @@ class TetrisunApp {
         const rawName = nameInput ? nameInput.value.trim() : 'たびびと';
         const safeName = this.escapeHTML(rawName || 'たびびと');
 
+        const isStory = (this.selectedMode === 'story');
+        const val = isStory ? this.storyTotalTime : (this.p1Game ? this.p1Game.score : 0);
+
         const entry = {
             name: safeName,
-            score: this.p1Game ? this.p1Game.score : 0,
+            score: val,
+            formattedVal: isStory ? this.formatTime(this.storyTotalTime) : String(val),
             mode: this.selectedMode.toUpperCase(),
+            isTime: isStory,
             date: new Date().toLocaleDateString('ja-JP')
         };
 
         this.highScores.push(entry);
-        this.highScores.sort((a, b) => b.score - a.score);
+
+        this.highScores.sort((a, b) => {
+            if (a.mode === 'STORY' && b.mode === 'STORY') return a.score - b.score;
+            if (a.mode === 'STORY') return -1;
+            if (b.mode === 'STORY') return 1;
+            return b.score - a.score;
+        });
+
         this.highScores = this.highScores.slice(0, 5);
 
         localStorage.setItem('tetrisun_scores', JSON.stringify(this.highScores));
         this.updateRankingTable();
-        this.showToast('🏆 ランキングスコアを登録しました！');
+        this.showToast('🏆 ランキング記録を登録しました！');
     }
 
     updateRankingTable() {
@@ -1487,10 +1763,11 @@ class TetrisunApp {
 
         this.highScores.forEach((item, idx) => {
             const tr = document.createElement('tr');
+            const displayScore = item.formattedVal || (item.isTime ? this.formatTime(item.score) : String(item.score));
             tr.innerHTML = `
                 <td><strong>#${idx + 1}</strong></td>
                 <td>${item.name}</td>
-                <td>${item.score}</td>
+                <td><strong>${displayScore}</strong></td>
                 <td>${item.mode}</td>
             `;
             tbody.appendChild(tr);
