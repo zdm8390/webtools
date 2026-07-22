@@ -259,29 +259,34 @@ kbd {
     align-items: center;
     justify-content: space-between;
     text-align: center;
+    padding: 24px 36px;
+}
+
+.logo-header {
+    margin-bottom: 6px;
 }
 
 .logo-header .logo-badge {
     background: var(--pastel-pink-light);
     color: var(--primary-color);
-    padding: 6px 16px;
+    padding: 4px 14px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 800;
     letter-spacing: 1px;
 }
 
 .logo-header .game-title {
-    font-size: 3.5rem;
+    font-size: 2.2rem;
     font-weight: 900;
     color: #4A4A68;
-    margin: 10px 0 5px;
-    letter-spacing: 2px;
+    margin: 4px 0 2px;
+    letter-spacing: 1.5px;
     text-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 .logo-header .game-subtitle {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     color: var(--text-muted);
 }
 
@@ -289,15 +294,16 @@ kbd {
     width: 100%;
     max-width: 1000px;
     background: rgba(255,255,255,0.7);
-    padding: 20px 30px;
-    border-radius: 18px;
+    padding: 12px 24px;
+    border-radius: 16px;
 }
 
 .howto-content h2 {
-    font-size: 1.4rem;
-    margin-bottom: 15px;
+    font-size: 1.15rem;
+    margin-bottom: 8px;
     color: var(--primary-color);
 }
+
 
 .controls-grid {
     display: grid;
@@ -1495,6 +1501,200 @@ kbd {
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
+
+/* Dedicated YOU WIN Fullscreen Popup Modal */
+.win-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(16px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: anim-fade-in 0.3s ease;
+}
+
+.win-modal-card {
+    background: linear-gradient(135deg, #1C1A08, #3D350F);
+    border: 3px solid #FFDF80;
+    box-shadow: 0 0 50px rgba(255, 223, 128, 0.7), 0 0 20px rgba(255, 90, 130, 0.5);
+    border-radius: 24px;
+    padding: 36px 48px;
+    text-align: center;
+    color: #FFF;
+    transform: scale(1);
+    animation: anim-win-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.win-icon {
+    font-size: 3.8rem;
+    margin-bottom: 8px;
+    animation: anim-trophy-bounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite alternate;
+}
+
+.win-title {
+    font-size: 2.8rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #FFDF80, #A8E6CF, #FF5A82);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(255, 223, 128, 0.6);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+
+.win-subtitle {
+    font-size: 1.1rem;
+    color: #FEF08A;
+    margin-bottom: 20px;
+}
+
+.win-timer-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.win-timer-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #FFDF80, #A8E6CF);
+    animation: anim-win-fill 3s linear forwards;
+}
+
+@keyframes anim-win-pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes anim-trophy-bounce {
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-12px) scale(1.1); }
+}
+
+@keyframes anim-win-fill {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+/* Dedicated YOU LOSE Fullscreen Popup Modal */
+
+.lose-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(16px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: anim-fade-in 0.3s ease;
+}
+
+.lose-modal-card {
+    background: linear-gradient(135deg, #2A0812, #4A0E1C);
+    border: 3px solid #FF4757;
+    box-shadow: 0 0 50px rgba(255, 71, 87, 0.6), 0 0 20px rgba(0, 0, 0, 0.8);
+    border-radius: 24px;
+    padding: 36px 48px;
+    text-align: center;
+    color: #FFF;
+    transform: scale(1);
+    animation: anim-lose-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.lose-icon {
+    font-size: 3.5rem;
+    margin-bottom: 8px;
+    animation: anim-skull-shake 0.8s ease infinite alternate;
+}
+
+.lose-title {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: #FF4757;
+    text-shadow: 0 0 16px rgba(255, 71, 87, 0.8), 0 2px 4px rgba(0,0,0,0.5);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+
+.lose-subtitle {
+    font-size: 1.1rem;
+    color: #FFD1DC;
+    margin-bottom: 20px;
+}
+
+.lose-timer-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.lose-timer-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #FF4757, #FF7B9C);
+    animation: anim-lose-fill 3s linear forwards;
+}
+
+@keyframes anim-lose-pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes anim-skull-shake {
+    0% { transform: translateY(0) rotate(-4deg); }
+    100% { transform: translateY(-8px) rotate(4deg); }
+}
+
+@keyframes anim-lose-fill {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+/* Game Logo Image Styles */
+.logo-img-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 6px;
+}
+
+.game-logo-img {
+    width: 170px;
+    height: auto;
+    max-height: 80px;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(255, 90, 130, 0.3), 0 0 10px rgba(255, 223, 128, 0.35);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    animation: anim-logo-float 4s ease-in-out infinite alternate;
+}
+
+@keyframes anim-logo-float {
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-4px) scale(1.02); }
+}
+
+
+.game-title .en-sub {
+    font-size: 1.4rem;
+    color: #60A5FA;
+    opacity: 0.9;
+    margin-left: 6px;
+}
+
+
 
 
 

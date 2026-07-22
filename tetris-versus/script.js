@@ -1676,13 +1676,38 @@ class TetrisunApp {
         this.renderAll();
 
         if (this.p1Game && this.p1Game.isGameOver) {
-            this.handleGameOver(false);
+            if (!this.isGameOverHandling) {
+                this.isGameOverHandling = true;
+                this.triggerMascotCheer('💀 がっくし... 負けてしまったニャ...', false);
+                this.triggerScreenShake('large');
+
+                // Render the filled board fully before bringing up the modal
+                setTimeout(() => {
+                    this.renderAll();
+                    const loseModal = document.getElementById('lose-modal');
+                    if (loseModal) loseModal.style.display = 'flex';
+                }, 250);
+
+                setTimeout(() => {
+                    const loseModal = document.getElementById('lose-modal');
+                    if (loseModal) loseModal.style.display = 'none';
+                    this.handleGameOver(false);
+                    this.isGameOverHandling = false;
+                }, 3250);
+            }
         } else if (this.p2Game && this.p2Game.isGameOver) {
-            this.handleStageVictory();
+            if (!this.isGameOverHandling) {
+                this.isGameOverHandling = true;
+                this.handleStageVictory();
+                this.isGameOverHandling = false;
+            }
         } else {
             this.animFrameId = requestAnimationFrame((t) => this.gameLoop(t));
         }
     }
+
+
+
 
     pollGamepad(dt) {
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -1824,10 +1849,11 @@ class TetrisunApp {
             case 3:
                 effectTitle = '5回連続で「I型（縦棒）」出現！';
                 game.forceIPieces = 5;
+                this.applyImmediatePieceTransformation(game, 'I', 5);
                 break;
             case 4:
                 effectTitle = char.magicEffectText;
-                this.executeCharacterMagic(charId, game, opponent);
+                this.executeCharacterMagic(charId, game, opponent, playerId);
                 break;
         }
 
@@ -1836,7 +1862,20 @@ class TetrisunApp {
         this.showCutinBanner(`${char.quote || ''}\n${playerId === 'p1' ? '1P' : '2P'} 魔法: ${effectTitle}`, playerId);
     }
 
-    executeCharacterMagic(charId, game, opponent) {
+    applyImmediatePieceTransformation(game, type, count) {
+        if (!game) return;
+        const template = TETRIMINOS[type];
+        if (template && game.currentPiece) {
+            game.currentPiece.type = type;
+            game.currentPiece.color = template.color;
+            game.currentPiece.shape = template.shape.map(r => [...r]);
+        }
+        for (let i = 0; i < Math.min(count, game.nextQueue.length); i++) {
+            game.nextQueue[i] = type;
+        }
+    }
+
+    executeCharacterMagic(charId, game, opponent, playerId = 'p1') {
         switch (charId) {
             case 'nekonya':
                 const oddRows = [];
@@ -1873,6 +1912,7 @@ class TetrisunApp {
 
             case 'sarukkey':
                 game.forceOPieces = 3;
+                this.applyImmediatePieceTransformation(game, 'O', 3);
                 break;
 
             case 'tanupon':
@@ -1886,9 +1926,10 @@ class TetrisunApp {
 
             case 'kitsunekon':
                 if (opponent) {
-                    const temp = game.grid;
-                    game.grid = opponent.grid;
-                    opponent.grid = temp;
+                    const tempGrid = game.grid.map(row => row.map(cell => cell ? { ...cell } : null));
+                    game.grid = opponent.grid.map(row => row.map(cell => cell ? { ...cell } : null));
+                    opponent.grid = tempGrid;
+                    this.triggerScreenShake('large');
                 }
                 break;
 
@@ -1901,6 +1942,7 @@ class TetrisunApp {
                 break;
         }
     }
+
 
     showCutinBanner(text, playerId = 'p1') {
         const banner = document.getElementById('cutin-banner');
@@ -2256,16 +2298,41 @@ class TetrisunApp {
 
     handleStageVictory() {
         this.sound.playVictorySE();
+        this.triggerMascotCheer('🎉 大勝利ニャ！！おめでとう！', true);
+        this.triggerScreenShake('large');
+
+        const winModal = document.getElementById('win-modal');
+        const subTitle = document.getElementById('win-modal-subtitle');
         const maxStage = (this.difficulty === 'easy') ? 3 : (this.difficulty === 'normal' ? 5 : 7);
-        if (this.selectedMode === 'story' && this.storyStage < maxStage) {
-            this.storyStage++;
-            this.showToast(`🎉 STAGE ${this.storyStage - 1} VICTORY! 次のステージへ進みます！`);
-            this.startGame();
-        } else {
-            this.unlockAchievement('story_all_clear', '全ステージ制覇');
-            this.handleGameOver(true);
+
+        if (subTitle) {
+            if (this.selectedMode === 'story') {
+                if (this.storyStage < maxStage) {
+                    subTitle.textContent = `STAGE ${this.storyStage} 突破！ 次のステージへ進むニャ！`;
+                } else {
+                    subTitle.textContent = '🎉 全ステージ完全制覇！素晴らしいニャ！！';
+                }
+            } else {
+                subTitle.textContent = '見事な勝利ニャ！！おめでとう！';
+            }
         }
+
+        if (winModal) winModal.style.display = 'flex';
+
+        setTimeout(() => {
+            if (winModal) winModal.style.display = 'none';
+
+            if (this.selectedMode === 'story' && this.storyStage < maxStage) {
+                this.storyStage++;
+                this.startGame();
+            } else {
+                this.unlockAchievement('story_all_clear', '全ステージ制覇');
+                this.handleGameOver(true);
+            }
+            this.isGameOverHandling = false;
+        }, 3000);
     }
+
 
     handleGameOver(isWin) {
         this.stopGameLoop();
