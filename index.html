@@ -276,8 +276,9 @@
             gap: 20px;
         }
 
-        /* App Card */
-        .app-card {
+        /* App Card Wrapper (HTML5 Compliant Non-Nested Structure) */
+        .card-wrapper {
+            position: relative;
             background: var(--card-bg);
             backdrop-filter: blur(14px);
             border: 1px solid var(--card-border);
@@ -287,12 +288,9 @@
             flex-direction: column;
             gap: 14px;
             transition: all 0.25s ease;
-            position: relative;
-            text-decoration: none;
-            color: inherit;
         }
 
-        .app-card:hover {
+        .card-wrapper:hover {
             border-color: var(--accent-primary);
             transform: translateY(-4px);
             box-shadow: 0 12px 30px rgba(99, 102, 241, 0.2);
@@ -324,12 +322,22 @@
             font-weight: 700;
             text-decoration: none;
             transition: all 0.2s ease;
-            z-index: 10;
+            position: relative;
+            z-index: 5;
         }
 
         .notice-link:hover {
             background: var(--accent-primary);
             color: white;
+        }
+
+        .app-main-link {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
         }
 
         .app-name {
@@ -361,7 +369,7 @@
             transition: all 0.2s ease;
         }
 
-        .app-card:hover .launch-btn {
+        .card-wrapper:hover .launch-btn {
             background: var(--accent-primary);
             color: white;
         }
@@ -371,10 +379,16 @@
             grid-template-columns: 1fr;
         }
 
-        .apps-grid.list-view .app-card {
+        .apps-grid.list-view .card-wrapper {
             flex-direction: row;
             align-items: center;
             padding: 16px 24px;
+        }
+
+        .apps-grid.list-view .app-main-link {
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
         }
 
         .apps-grid.list-view .app-desc {
@@ -449,35 +463,41 @@
             </div>
             <div class="apps-grid" id="grid-ai">
 
-                <a href="./cocoron/" class="app-card" data-keywords="cocoron ココロン ai チャット メンタル 癒し 寄り添い 相談">
+                <div class="card-wrapper" data-keywords="cocoron ココロン ai チャット メンタル 癒し 寄り添い 相談">
                     <div class="card-top">
                         <span class="app-icon">🌸</span>
                         <a href="./cocoron/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">AIフレンド ココロン</div>
-                    <div class="app-desc">何でも優しく肯定し、愚痴や悩みに寄り添うヒーリングAIチャットボット。現代のストレス社会で頑張るあなたを応援。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./cocoron/" class="app-main-link">
+                        <div class="app-name">AIフレンド ココロン</div>
+                        <div class="app-desc">何でも優しく肯定し、愚痴や悩みに寄り添うヒーリングAIチャットボット。現代のストレス社会で頑張るあなたを応援。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./sambot/" class="app-card" data-keywords="sambot サンボット ai ロック ライブ 激熱 熱血 肯定 サンボマスター">
+                <div class="card-wrapper" data-keywords="sambot サンボット ai ロック ライブ 激熱 熱血 肯定 サンボマスター">
                     <div class="card-top">
                         <span class="app-icon">🔥</span>
                         <a href="./sambot/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">熱叫肯定AI サンボット</div>
-                    <div class="app-desc">サンボマスター山口さんのような激熱ライブMC口調で全肯定するAI！愛とシャウトでエネルギーを注入。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./sambot/" class="app-main-link">
+                        <div class="app-name">熱叫肯定AI サンボット</div>
+                        <div class="app-desc">サンボマスター山口さんのような激熱ライブMC口調で全肯定するAI！愛とシャウトでエネルギーを注入。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./CCG/" class="app-card" data-keywords="shitcommit ccg ミーム コミット メッセージ 変換 haruki">
+                <div class="card-wrapper" data-keywords="shitcommit ccg ミーム コミット メッセージ 変換 haruki">
                     <div class="card-top">
                         <span class="app-icon">💩</span>
                         <a href="./CCG/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">ShitCommit.js</div>
-                    <div class="app-desc">真面目なコミットメッセージをネットミーム風・村上春樹風・パプリカ風の文体へ面白変換するジェネレーター。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./CCG/" class="app-main-link">
+                        <div class="app-name">ShitCommit.js</div>
+                        <div class="app-desc">真面目なコミットメッセージをネットミーム風・村上春樹風・パプリカ風の文体へ面白変換するジェネレーター。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
             </div>
         </section>
@@ -490,85 +510,101 @@
             </div>
             <div class="apps-grid" id="grid-utility">
 
-                <a href="./char-counter/" class="app-card" data-keywords="文字数 カウンター 計測 リアルタイム 空白 改行 原稿用紙 読了時間 char-counter">
+                <div class="card-wrapper" data-keywords="文字数 カウンター 計測 リアルタイム 空白 改行 原稿用紙 読了時間 char-counter">
                     <div class="card-top">
                         <span class="app-icon">📏</span>
                         <a href="./char-counter/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">文字数カウンタースタジオ</div>
-                    <div class="app-desc">貼り付け＆ファイルアップロード対応の高速文字数リアルタイム計測ツール！空白・改行の有無、原稿用紙枚数、読了時間をワンクリック切替。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./char-counter/" class="app-main-link">
+                        <div class="app-name">文字数カウンタースタジオ</div>
+                        <div class="app-desc">貼り付け＆ファイルアップロード対応の高速文字数リアルタイム計測ツール！空白・改行の有無、原稿用紙枚数、読了時間をワンクリック切替。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./diet-search/" class="app-card" data-keywords="国会議事録 国会 発言 検索 保護猫 議事録 API e-gov 法令 diet-search">
+                <div class="card-wrapper" data-keywords="国会議事録 国会 発言 検索 保護猫 議事録 API e-gov 法令 diet-search">
                     <div class="card-top">
                         <span class="app-icon">🏛️</span>
                         <a href="./diet-search/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">国会議事録サーチ</div>
-                    <div class="app-desc">「保護猫」「生成AI」等のキーで国会での過去の議論をリアルタイム検索！e-Gov法令自動検出＆SNS共有対応。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./diet-search/" class="app-main-link">
+                        <div class="app-name">国会議事録サーチ</div>
+                        <div class="app-desc">「保護猫」「生成AI」等のキーで国会での過去の議論をリアルタイム検索！e-Gov法令自動検出＆SNS共有対応。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./wareki-converter/" class="app-card" data-keywords="和暦 西暦 変換 年号 令和 平成 昭和 明治 干支 ニュース 年表 出来事 wareki-converter">
+                <div class="card-wrapper" data-keywords="和暦 西暦 変換 年号 令和 平成 昭和 明治 干支 ニュース 年表 出来事 wareki-converter">
                     <div class="card-top">
                         <span class="app-icon">🌸</span>
                         <a href="./wareki-converter/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">年号・和暦ニュース変換器</div>
-                    <div class="app-desc">西暦↔和暦（令和・平成・昭和・大正・明治）の相互変換！干支・年齢算出およびその年の重大ニュースを年表で自動表示。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./wareki-converter/" class="app-main-link">
+                        <div class="app-name">年号・和暦ニュース変換器</div>
+                        <div class="app-desc">西暦↔和暦（令和・平成・昭和・大正・明治）の相互変換！干支・年齢算出およびその年の重大ニュースを年表で自動表示。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./text-diff/" class="app-card" data-keywords="diff text 差分 比較 コピペ ツール text-diff">
+                <div class="card-wrapper" data-keywords="diff text 差分 比較 コピペ ツール text-diff">
                     <div class="card-top">
                         <span class="app-icon">🔄</span>
                         <a href="./text-diff/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">Text Diff Studio</div>
-                    <div class="app-desc">2つのテキストをコピペして「比較実行」を押すだけ！行単位・文字単位で追加・削除・変更箇所を高速ハイライト比較。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./text-diff/" class="app-main-link">
+                        <div class="app-name">Text Diff Studio</div>
+                        <div class="app-desc">2つのテキストをコピペして「比較実行」を押すだけ！行単位・文字単位で追加・削除・変更箇所を高速ハイライト比較。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./flowchart/" class="app-card" data-keywords="flowchart フローチャート 作図 ノード 接続 図形 プロセス">
+                <div class="card-wrapper" data-keywords="flowchart フローチャート 作図 ノード 接続 図形 プロセス">
                     <div class="card-top">
                         <span class="app-icon">📊</span>
                         <a href="./flowchart/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">Flowchart Studio</div>
-                    <div class="app-desc">ブラウザ上で直感的にノードを追加・接続し、美しくフローチャートをドラッグ＆ドロップで構築できる作図ツール。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./flowchart/" class="app-main-link">
+                        <div class="app-name">Flowchart Studio</div>
+                        <div class="app-desc">ブラウザ上で直感的にノードを追加・接続し、美しくフローチャートをドラッグ＆ドロップで構築できる作図ツール。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./ndl-checker/" class="app-card" data-keywords="ndl 国立国会図書館 デジタルコレクション 書籍 検索">
+                <div class="card-wrapper" data-keywords="ndl 国立国会図書館 デジタルコレクション 書籍 検索">
                     <div class="card-top">
                         <span class="app-icon">📚</span>
                         <a href="./ndl-checker/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">NDL公開状況チェッカー</div>
-                    <div class="app-desc">国立国会図書館デジタルコレクションの各書籍・資料のインターネット公開範囲・送信利用状況を判定・検索。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./ndl-checker/" class="app-main-link">
+                        <div class="app-name">NDL公開状況チェッカー</div>
+                        <div class="app-desc">国立国会図書館デジタルコレクションの各書籍・資料のインターネット公開範囲・送信利用状況を判定・検索。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./ChimeOut/" class="app-card" data-keywords="chime-out radar 定時 退勤 レーダー 不穏検知">
+                <div class="card-wrapper" data-keywords="chime-out radar 定時 退勤 レーダー 不穏検知">
                     <div class="card-top">
                         <span class="app-icon">📡</span>
                         <a href="./ChimeOut/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">Chime-Out Radar</div>
-                    <div class="app-desc">不穏な空気や定時退勤の気配を警告アラートでお知らせするユーモラスな退勤支援システム。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./ChimeOut/" class="app-main-link">
+                        <div class="app-name">Chime-Out Radar</div>
+                        <div class="app-desc">不穏な空気や定時退勤の気配を警告アラートでお知らせするユーモラスな退勤支援システム。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./teams/" class="app-card" data-keywords="teams チーム シャッフル ランダム 分割 チーム戦">
+                <div class="card-wrapper" data-keywords="teams チーム シャッフル ランダム 分割 チーム戦">
                     <div class="card-top">
                         <span class="app-icon">👥</span>
                         <a href="./teams/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">チーム戦メイカー</div>
-                    <div class="app-desc">メンバー名リストから、偏りなくランダムに公平なチーム切り分けを行うシャッフルツール。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./teams/" class="app-main-link">
+                        <div class="app-name">チーム戦メイカー</div>
+                        <div class="app-desc">メンバー名リストから、偏りなくランダムに公平なチーム切り分けを行うシャッフルツール。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
             </div>
         </section>
@@ -581,35 +617,41 @@
             </div>
             <div class="apps-grid" id="grid-game">
 
-                <a href="./element-chain/" class="app-card" data-keywords="elemental fusion エレメンタル フュージョン 属性 宝珠 連鎖 パズル 落ち物 element-chain">
+                <div class="card-wrapper" data-keywords="elemental fusion エレメンタル フュージョン 属性 宝珠 連鎖 パズル 落ち物 element-chain">
                     <div class="card-top">
                         <span class="app-icon">🔮</span>
                         <a href="./element-chain/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">エレメンタル・フュージョン</div>
-                    <div class="app-desc">属性宝珠を合成・進化させる落ち物ファンタジーパズル！同種の魔法エレメントを融合させて連鎖を起こし創世の神玉を目指せ！</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./element-chain/" class="app-main-link">
+                        <div class="app-name">エレメンタル・フュージョン</div>
+                        <div class="app-desc">属性宝珠を合成・進化させる落ち物ファンタジーパズル！同種の魔法エレメントを融合させて連鎖を起こし創世の神玉を目指せ！</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./tetris-versus/" class="app-card" data-keywords="tetrisun テトリスン パズル 対戦 ストーリー 魔法">
+                <div class="card-wrapper" data-keywords="tetrisun テトリスン パズル 対戦 ストーリー 魔法">
                     <div class="card-top">
                         <span class="app-icon">🐾</span>
                         <a href="./tetris-versus/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">テトリスン (Tetrisun)</div>
-                    <div class="app-desc">7匹の魔法動物たちと繰り広げるパステル対戦パズル！対戦・CPU戦・ストーリー会話劇・個別の魔法効果・P2P待機対戦対応。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./tetris-versus/" class="app-main-link">
+                        <div class="app-name">テトリスン (Tetrisun)</div>
+                        <div class="app-desc">7匹の魔法動物たちと繰り広げるパステル対戦パズル！対戦・CPU戦・ストーリー会話劇・個別の魔法効果・P2P待機対戦対応。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./10min-sv/" class="app-card" data-keywords="10min-sv 10分サバイバーズ vampire survivors ヴァンサバ アクション">
+                <div class="card-wrapper" data-keywords="10min-sv 10分サバイバーズ vampire survivors ヴァンサバ アクション">
                     <div class="card-top">
                         <span class="app-icon">⚔️</span>
                         <a href="./10min-sv/gemini-code-1784772433816.md" class="notice-link" target="_blank">📖 Spec MD</a>
                     </div>
-                    <div class="app-name">10分サバイバーズ</div>
-                    <div class="app-desc">画面を埋め尽くす大量のモンスターを薙ぎ払え！迷宮ダンジョンを探索し最奥の出口ポータルから脱出する2Dサバイバル。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./10min-sv/" class="app-main-link">
+                        <div class="app-name">10分サバイバーズ</div>
+                        <div class="app-desc">画面を埋め尽くす大量のモンスターを薙ぎ払え！迷宮ダンジョンを探索し最奥の出口ポータルから脱出する2Dサバイバル。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
             </div>
         </section>
@@ -622,25 +664,29 @@
             </div>
             <div class="apps-grid" id="grid-joke">
 
-                <a href="./hondafy/" class="app-card" data-keywords="hondafy エドモンド本田 どすこい 変換">
+                <div class="card-wrapper" data-keywords="hondafy エドモンド本田 どすこい 変換">
                     <div class="card-top">
                         <span class="app-icon">✋</span>
                         <a href="./hondafy/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">E. HONDAFY</div>
-                    <div class="app-desc">あらゆる文章を格闘ゲーム「ストリートファイター」のエドモンド本田の豪快な相撲・どすこい語調に変換するエンタメツール。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./hondafy/" class="app-main-link">
+                        <div class="app-name">E. HONDAFY</div>
+                        <div class="app-desc">あらゆる文章を格闘ゲーム「ストリートファイター」のエドモンド本田の豪快な相撲・どすこい語調に変換するエンタメツール。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
-                <a href="./honda-cipher/" class="app-card" data-keywords="honda cipher 本田 暗号 可逆 エンコード デコード">
+                <div class="card-wrapper" data-keywords="honda cipher 本田 暗号 可逆 エンコード デコード">
                     <div class="card-top">
                         <span class="app-icon">🔐</span>
                         <a href="./honda-cipher/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                    <div class="app-name">E. HONDA CIPHER</div>
-                    <div class="app-desc">テキストを本田語の暗号文（「ホンダ」「ドスコーイ」など）に相互可逆エンコード/デコードできる100%復元可逆暗号ツール。</div>
-                    <div class="launch-btn">アプリを起動 ➔</div>
-                </a>
+                    <a href="./honda-cipher/" class="app-main-link">
+                        <div class="app-name">E. HONDA CIPHER</div>
+                        <div class="app-desc">テキストを本田語の暗号文（「ホンダ」「ドスコーイ」など）に相互可逆エンコード/デコードできる100%復元可逆暗号ツール。</div>
+                        <div class="launch-btn">アプリを起動 ➔</div>
+                    </a>
+                </div>
 
             </div>
         </section>
@@ -661,7 +707,7 @@
             const viewGridBtn = document.getElementById('view-grid-btn');
             const viewListBtn = document.getElementById('view-list-btn');
             const grids = document.querySelectorAll('.apps-grid');
-            const appCards = document.querySelectorAll('.app-card');
+            const cardWrappers = document.querySelectorAll('.card-wrapper');
             const sections = document.querySelectorAll('.group-section');
 
             let currentFilter = 'all';
@@ -684,22 +730,22 @@
 
                 sections.forEach(sec => {
                     const group = sec.getAttribute('data-group');
-                    const cards = sec.querySelectorAll('.app-card');
+                    const wrappers = sec.querySelectorAll('.card-wrapper');
                     let visibleCount = 0;
 
-                    cards.forEach(card => {
-                        const keywords = (card.getAttribute('data-keywords') || '').toLowerCase();
-                        const title = card.querySelector('.app-name').textContent.toLowerCase();
-                        const desc = card.querySelector('.app-desc').textContent.toLowerCase();
+                    wrappers.forEach(wrapper => {
+                        const keywords = (wrapper.getAttribute('data-keywords') || '').toLowerCase();
+                        const title = (wrapper.querySelector('.app-name')?.textContent || '').toLowerCase();
+                        const desc = (wrapper.querySelector('.app-desc')?.textContent || '').toLowerCase();
 
                         const matchesFilter = (currentFilter === 'all' || currentFilter === group);
                         const matchesQuery = (!q || keywords.includes(q) || title.includes(q) || desc.includes(q));
 
                         if (matchesFilter && matchesQuery) {
-                            card.style.display = 'flex';
+                            wrapper.style.display = 'flex';
                             visibleCount++;
                         } else {
-                            card.style.display = 'none';
+                            wrapper.style.display = 'none';
                         }
                     });
 
