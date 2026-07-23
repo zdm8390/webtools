@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>エレメンタル・フュージョン | 属性宝珠合体落ち物パズル</title>
+    <meta name="description" content="同種の魔法エレメントを隣り合わせ、神秘の精霊宝珠へとシンカ（合体）させよ！連鎖で創世の神玉を目指す本格落ち物パズル。" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Press+Start+2P&family=M+PLUS+1p:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #070914;
+            --card-bg: rgba(15, 23, 42, 0.88);
+            --card-border: rgba(99, 102, 241, 0.3);
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --accent-gold: #f59e0b;
+            --accent-pink: #ec4899;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            --font-sans: 'Outfit', 'M PLUS 1p', -apple-system, sans-serif;
+            --font-pixel: 'Press Start 2P', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+        }
+
+        #app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #030712 100%);
+            position: relative;
+        }
+
+        /* Ambient Blobs */
+        .ambient-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.25;
+            pointer-events: none;
+        }
+        .blob-1 { background: #8b5cf6; width: 400px; height: 400px; top: 10%; left: 15%; }
+        .blob-2 { background: #06b6d4; width: 450px; height: 450px; bottom: 10%; right: 15%; }
+
+        /* Layout Grid */
+        .game-layout {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            z-index: 10;
+            max-width: 1100px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        /* Side Info Panels */
+        .side-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 230px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .panel-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .panel-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .panel-value {
+            font-size: 1.6rem;
+            font-weight: 900;
+            font-family: var(--font-pixel);
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Evolution Line Chart */
+        .evo-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .evo-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.72rem;
+        }
+
+        .evo-icon {
+            font-size: 1.1rem;
+        }
+
+        /* Canvas Arena Container */
+        .canvas-container {
+            position: relative;
+            background: rgba(10, 10, 26, 0.92);
+            border: 3px solid rgba(139, 92, 246, 0.4);
+            border-radius: 24px;
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.25), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Chain Combo Overlay Animation */
+        .combo-overlay {
+            position: absolute;
+            top: 38%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            font-family: var(--font-pixel);
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.8), 0 4px 0 #000;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 50;
+            white-space: nowrap;
+        }
+
+        .combo-overlay.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        /* Screen Overlays & Modals */
+        .screen-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(8, 6, 18, 0.85);
+            backdrop-filter: blur(14px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            border-radius: 24px;
+            padding: 32px 36px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .title-heading {
+            font-size: 32px;
+            font-weight: 900;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), #6366f1);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 32px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 12px 24px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .controls-guide {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        kbd {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 900px) {
+            .game-layout {
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+            }
+            .side-panel {
+                width: 100%;
+                max-width: 400px;
+                flex-direction: row;
+                justify-content: space-around;
+            }
+            .evo-chart { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div class="ambient-blob blob-1"></div>
+        <div class="ambient-blob blob-2"></div>
+        
+        <div class="game-layout">
+            <!-- Left Info Panel -->
+            <div class="side-panel">
+                <div class="panel-box">
+                    <span class="panel-label">SCORE</span>
+                    <span id="score-display" class="panel-value">0</span>
+                </div>
+                <div class="panel-box">
+                    <span class="panel-label">HIGH SCORE</span>
+                    <span id="hi-score-display" class="panel-value">0</span>
+                </div>
+                <div class="panel-box">
+                    <span class="panel-label">MAX CHAIN</span>
+                    <span id="max-chain-display" class="panel-value" style="color: var(--accent-cyan);">0</span>
+                </div>
+
+                <!-- Elemental Fusion Evolution Line -->
+                <div class="evo-chart">
+                    <div class="panel-label">ELEMENT SYNTHESIS</div>
+                    <div class="evo-item"><span>1. 水の雫</span><span class="evo-icon">💧</span></div>
+                    <div class="evo-item"><span>2. 葉の芽</span><span class="evo-icon">🌱</span></div>
+                    <div class="evo-item"><span>3. 炎の火花</span><span class="evo-icon">🔥</span></div>
+                    <div class="evo-item"><span>4. 雷の結晶</span><span class="evo-icon">⚡</span></div>
+                    <div class="evo-item"><span>5. 幻の宝珠</span><span class="evo-icon">🔮</span></div>
+                    <div class="evo-item"><span>6. 月の結晶</span><span class="evo-icon">🌙</span></div>
+                    <div class="evo-item"><span>7. 太陽の宝珠</span><span class="evo-icon">☀️</span></div>
+                    <div class="evo-item"><span>8. 彗星の星片</span><span class="evo-icon">🌟</span></div>
+                    <div class="evo-item"><span>9. 銀河の輝石</span><span class="evo-icon">🌌</span></div>
+                    <div class="evo-item" style="border: 1px solid var(--accent-gold);"><span>10. 創世の神玉</span><span class="evo-icon">👑</span></div>
+                </div>
+            </div>
+
+            <!-- Canvas Arena -->
+            <div class="canvas-container">
+                <canvas id="game-canvas" width="380" height="620"></canvas>
+                <!-- Chain Combo Banner -->
+                <div id="combo-banner" class="combo-overlay">1 CHAIN!</div>
+            </div>
+
+            <!-- Right Info Panel -->
+            <div class="side-panel">
+                <div class="panel-box">
+                    <span class="panel-label">NEXT ELEMENT</span>
+                    <canvas id="next-canvas" width="100" height="100"></canvas>
+                </div>
+
+                <div class="controls-guide">
+                    <strong>操作方法:</strong><br>
+                    <kbd>A</kbd>/<kbd>D</kbd> or <kbd>←</kbd>/<kbd>→</kbd> : 左右移動<br>
+                    <kbd>W</kbd> or <kbd>↑</kbd> or <kbd>Space</kbd> : 宝珠回転<br>
+                    <kbd>S</kbd> or <kbd>↓</kbd> : 高速落下<br>
+                    <br>
+                    <strong>ルール:</strong><br>
+                    落ちてくる魔法エレメントを操作！同じ属性の宝珠がくっつくと融合（フュージョン）して1つ上の高位宝珠へシンカ！連鎖で創世の神玉を目指せ！
+                </div>
+
+                <button id="sound-btn" class="btn-secondary" style="margin-top: auto;">🔊 サウンド: ON</button>
+            </div>
+        </div>
+
+        <!-- Title Screen Overlay -->
+        <div id="title-modal" class="screen-overlay">
+            <div class="modal-card">
+                <div style="font-size: 48px;">🔮⚡👑</div>
+                <h1 class="title-heading">エレメンタル・フュージョン</h1>
+                <p style="color: var(--text-muted); font-size: 0.88rem;">属性宝珠の合体シンカ × 落ち物パズル！連鎖を起こして究極の神玉 👑 を召喚せよ！</p>
+                <button id="start-btn" class="btn-primary">ゲーム開始 (START)</button>
+                <a href="../" class="btn-secondary" style="text-decoration:none; display:inline-block;">🏠 ポータルへ戻る</a>
+                <footer style="margin-top:10px; font-size:0.75rem; color:var(--text-muted);">zdm8390/webtools</footer>
+            </div>
+        </div>
+
+        <!-- Game Over Modal Overlay -->
+        <div id="gameover-modal" class="screen-overlay hidden">
+            <div class="modal-card">
+                <div style="font-size: 48px;">💥🔮</div>
+                <h2 style="font-size: 28px; font-weight: 900; color: #ef4444;">GAME OVER</h2>
+                <p style="color: var(--text-muted);">魔力が溢れかえってしまった！</p>
+                
+                <div style="width: 100%; background: rgba(0,0,0,0.3); padding: 14px; border-radius: 12px;">
+                    <div>獲得スコア: <strong id="res-score" style="color: var(--accent-gold); font-size: 1.4rem;">0</strong></div>
+                    <div>最大連鎖数: <strong id="res-chain" style="color: var(--accent-cyan);">0</strong></div>
+                </div>
+
+                <button id="restart-btn" class="btn-primary">もう一度挑戦</button>
+                <button id="title-btn" class="btn-secondary">タイトルへ</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Game Engine Script -->
+    <script>
+        // --- Web Audio Synthesizer ---
+        class AudioSynth {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AC();
+                }
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+            }
+
+            playPop(freq = 440) {
+                if (this.muted || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq * 1.5, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playMerge(level) {
+                if (this.muted || !this.ctx) return;
+                const baseFreq = 260 + level * 65;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq * 2.2, this.ctx.currentTime + 0.16);
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.16);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.16);
+            }
+
+            playChain(chainNum) {
+                if (this.muted || !this.ctx) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
+                const freq = notes[Math.min(notes.length - 1, chainNum - 1)] || 880;
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(freq * 1.25, this.ctx.currentTime + 0.28);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.28);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.28);
+            }
+        }
+
+        // Elemental Orbs Definition (Levels 0 to 9)
+        const ELEMENTS = [
+            { level: 0, name: '水の雫',       symbol: '💧', score: 10,   color: '#06b6d4' },
+            { level: 1, name: '葉の芽',       symbol: '🌱', score: 20,   color: '#10b981' },
+            { level: 2, name: '炎の火花',     symbol: '🔥', score: 40,   color: '#f97316' },
+            { level: 3, name: '雷の結晶',     symbol: '⚡', score: 80,   color: '#eab308' },
+            { level: 4, name: '幻の宝珠',     symbol: '🔮', score: 160,  color: '#a855f7' },
+            { level: 5, name: '月の結晶',     symbol: '🌙', score: 320,  color: '#38bdf8' },
+            { level: 6, name: '太陽の宝珠',   symbol: '☀️', score: 640,  color: '#fbbf24' },
+            { level: 7, name: '彗星の星片',   symbol: '🌟', score: 1280, color: '#f43f5e' },
+            { level: 8, name: '銀河の輝石',   symbol: '🌌', score: 2560, color: '#818cf8' },
+            { level: 9, name: '創世の神玉',   symbol: '👑', score: 5120, color: '#f59e0b' }
+        ];
+
+        // --- Main Game Engine ---
+        class ElementChainGame {
+            constructor() {
+                this.canvas = document.getElementById('game-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.nextCanvas = document.getElementById('next-canvas');
+                this.nextCtx = this.nextCanvas.getContext('2d');
+                
+                this.sound = new AudioSynth();
+                this.cols = 6;
+                this.rows = 11;
+                this.cellSize = 60;
+
+                this.grid = Array(this.rows).fill(null).map(() => Array(this.cols).fill(null));
+                
+                this.score = 0;
+                this.hiScore = parseInt(localStorage.getItem('element_chain_hi') || '0', 10);
+                this.maxChain = 0;
+                this.currentChain = 0;
+
+                this.fallingPair = null;
+                this.nextPair = null;
+
+                this.dropCounter = 0;
+                this.dropInterval = 45;
+                this.gameState = 'TITLE';
+
+                this.keys = {};
+                this.setupEventListeners();
+                this.updateUI();
+            }
+
+            setupEventListeners() {
+                window.addEventListener('keydown', (e) => {
+                    if (this.gameState !== 'PLAYING' || !this.fallingPair) return;
+                    
+                    if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+                        this.movePair(-1);
+                    } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+                        this.movePair(1);
+                    } else if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp' || e.key === ' ') {
+                        this.rotatePair();
+                    } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
+                        this.softDrop();
+                    }
+                });
+
+                document.getElementById('start-btn').addEventListener('click', () => {
+                    this.sound.init();
+                    this.startGame();
+                });
+                document.getElementById('restart-btn').addEventListener('click', () => {
+                    this.startGame();
+                });
+                document.getElementById('title-btn').addEventListener('click', () => {
+                    document.getElementById('gameover-modal').classList.add('hidden');
+                    document.getElementById('title-modal').classList.remove('hidden');
+                    this.gameState = 'TITLE';
+                });
+                document.getElementById('sound-btn').addEventListener('click', (e) => {
+                    this.sound.muted = !this.sound.muted;
+                    e.target.textContent = this.sound.muted ? '🔇 サウンド: OFF' : '🔊 サウンド: ON';
+                });
+            }
+
+            startGame() {
+                this.grid = Array(this.rows).fill(null).map(() => Array(this.cols).fill(null));
+                this.score = 0;
+                this.maxChain = 0;
+                this.currentChain = 0;
+
+                this.nextPair = this.generateRandomPair();
+                this.spawnNextPair();
+
+                document.getElementById('title-modal').classList.add('hidden');
+                document.getElementById('gameover-modal').classList.add('hidden');
+
+                this.gameState = 'PLAYING';
+                this.updateUI();
+                requestAnimationFrame(() => this.loop());
+            }
+
+            generateRandomPair() {
+                const lvl1 = Math.floor(Math.random() * 4);
+                const lvl2 = Math.floor(Math.random() * 4);
+                return { t1: lvl1, t2: lvl2 };
+            }
+
+            spawnNextPair() {
+                const pair = this.nextPair || this.generateRandomPair();
+                this.nextPair = this.generateRandomPair();
+                this.drawNextPair();
+
+                this.fallingPair = {
+                    r1: 0, c1: 2, t1: pair.t1,
+                    r2: 0, c2: 3, t2: pair.t2,
+                    rotation: 0
+                };
+
+                if (this.grid[0][2] || this.grid[0][3]) {
+                    this.gameOver();
+                }
+            }
+
+            drawNextPair() {
+                this.nextCtx.clearRect(0, 0, this.nextCanvas.width, this.nextCanvas.height);
+                if (!this.nextPair) return;
+
+                const e1 = ELEMENTS[this.nextPair.t1];
+                const e2 = ELEMENTS[this.nextPair.t2];
+
+                this.nextCtx.font = '28px sans-serif';
+                this.nextCtx.textAlign = 'center';
+                this.nextCtx.textBaseline = 'middle';
+
+                this.nextCtx.fillText(e1.symbol, 32, 50);
+                this.nextCtx.fillText(e2.symbol, 68, 50);
+            }
+
+            movePair(dir) {
+                const p = this.fallingPair;
+                const newC1 = p.c1 + dir;
+                const newC2 = p.c2 + dir;
+
+                if (newC1 >= 0 && newC1 < this.cols && newC2 >= 0 && newC2 < this.cols) {
+                    if (!this.grid[p.r1][newC1] && !this.grid[p.r2][newC2]) {
+                        p.c1 = newC1;
+                        p.c2 = newC2;
+                        this.sound.playPop(350);
+                    }
+                }
+            }
+
+            rotatePair() {
+                const p = this.fallingPair;
+                const nextRot = (p.rotation + 1) % 4;
+
+                const offsets = [
+                    { dr: 0, dc: 1 },  // 0: Right
+                    { dr: 1, dc: 0 },  // 1: Down
+                    { dr: 0, dc: -1 }, // 2: Left
+                    { dr: -1, dc: 0 }  // 3: Up
+                ];
+
+                const targetOffset = offsets[nextRot];
+                const targetR2 = p.r1 + targetOffset.dr;
+                const targetC2 = p.c1 + targetOffset.dc;
+
+                if (targetC2 >= 0 && targetC2 < this.cols && targetR2 >= 0 && targetR2 < this.rows) {
+                    if (!this.grid[targetR2][targetC2]) {
+                        p.r2 = targetR2;
+                        p.c2 = targetC2;
+                        p.rotation = nextRot;
+                        this.sound.playPop(520);
+                    }
+                }
+            }
+
+            softDrop() {
+                if (!this.fallingPair) return;
+                if (this.canMoveDown()) {
+                    this.fallingPair.r1++;
+                    this.fallingPair.r2++;
+                    this.score += 1;
+                    this.updateUI();
+                } else {
+                    this.lockPair();
+                }
+            }
+
+            canMoveDown() {
+                const p = this.fallingPair;
+                const nextR1 = p.r1 + 1;
+                const nextR2 = p.r2 + 1;
+
+                if (nextR1 >= this.rows || nextR2 >= this.rows) return false;
+                if (this.grid[nextR1][p.c1] || this.grid[nextR2][p.c2]) return false;
+
+                return true;
+            }
+
+            lockPair() {
+                const p = this.fallingPair;
+                this.grid[p.r1][p.c1] = { level: p.t1 };
+                this.grid[p.r2][p.c2] = { level: p.t2 };
+                this.fallingPair = null;
+
+                this.sound.playPop(300);
+
+                this.gameState = 'PROCESSING';
+                this.currentChain = 0;
+                this.processGridStep();
+            }
+
+            async processGridStep() {
+                let moved = this.applyGravity();
+                let merged = await this.checkEvolutionMerges();
+
+                if (moved || merged) {
+                    setTimeout(() => this.processGridStep(), 140);
+                } else {
+                    if (this.grid[0].some(cell => cell !== null)) {
+                        this.gameOver();
+                        return;
+                    }
+
+                    this.gameState = 'PLAYING';
+                    this.spawnNextPair();
+                }
+            }
+
+            applyGravity() {
+                let moved = false;
+                for (let c = 0; c < this.cols; c++) {
+                    for (let r = this.rows - 2; r >= 0; r--) {
+                        if (this.grid[r][c] && !this.grid[r + 1][c]) {
+                            this.grid[r + 1][c] = this.grid[r][c];
+                            this.grid[r][c] = null;
+                            moved = true;
+                        }
+                    }
+                }
+                return moved;
+            }
+
+            async checkEvolutionMerges() {
+                let mergedCount = 0;
+                const visited = Array(this.rows).fill(null).map(() => Array(this.cols).fill(false));
+
+                for (let r = this.rows - 1; r >= 0; r--) {
+                    for (let c = 0; c < this.cols; c++) {
+                        const cell = this.grid[r][c];
+                        if (!cell || visited[r][c]) continue;
+
+                        const neighbors = this.getMatchingNeighbors(r, c, cell.level);
+                        if (neighbors.length >= 2) {
+                            this.currentChain++;
+                            if (this.currentChain > this.maxChain) this.maxChain = this.currentChain;
+
+                            const nextLvl = Math.min(ELEMENTS.length - 1, cell.level + 1);
+                            const bonusScore = ELEMENTS[nextLvl].score * Math.pow(2, this.currentChain - 1);
+                            this.score += bonusScore;
+
+                            let targetR = r, targetC = c;
+                            neighbors.forEach(pos => {
+                                visited[pos.r][pos.c] = true;
+                                this.grid[pos.r][pos.c] = null;
+                                if (pos.r > targetR) { targetR = pos.r; targetC = pos.c; }
+                            });
+
+                            this.grid[targetR][targetC] = { level: nextLvl };
+                            mergedCount++;
+
+                            this.sound.playMerge(nextLvl);
+                            if (this.currentChain > 1) {
+                                this.sound.playChain(this.currentChain);
+                                this.showComboBanner(`${this.currentChain} CHAIN!`);
+                            }
+                            this.updateUI();
+                        }
+                    }
+                }
+                return mergedCount > 0;
+            }
+
+            getMatchingNeighbors(r, c, level) {
+                const matches = [];
+                const queue = [{ r, c }];
+                const seen = new Set([`${r},${c}`]);
+
+                while (queue.length > 0) {
+                    const curr = queue.shift();
+                    matches.push(curr);
+
+                    const dirs = [{ r: -1, c: 0 }, { r: 1, c: 0 }, { r: 0, c: -1 }, { r: 0, c: 1 }];
+                    dirs.forEach(d => {
+                        const nr = curr.r + d.r;
+                        const nc = curr.c + d.c;
+                        const key = `${nr},${nc}`;
+
+                        if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols && !seen.has(key)) {
+                            if (this.grid[nr][nc] && this.grid[nr][nc].level === level) {
+                                seen.add(key);
+                                queue.push({ r: nr, c: nc });
+                            }
+                        }
+                    });
+                }
+                return matches;
+            }
+
+            showComboBanner(text) {
+                const banner = document.getElementById('combo-banner');
+                banner.textContent = text;
+                banner.classList.add('show');
+                setTimeout(() => banner.classList.remove('show'), 900);
+            }
+
+            loop() {
+                if (this.gameState === 'TITLE') return;
+
+                if (this.gameState === 'PLAYING' && this.fallingPair) {
+                    this.dropCounter++;
+                    if (this.dropCounter >= this.dropInterval) {
+                        this.dropCounter = 0;
+                        if (this.canMoveDown()) {
+                            this.fallingPair.r1++;
+                            this.fallingPair.r2++;
+                        } else {
+                            this.lockPair();
+                        }
+                    }
+                }
+
+                this.render();
+                requestAnimationFrame(() => this.loop());
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                this.ctx.lineWidth = 1;
+                for (let c = 0; c <= this.cols; c++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(c * this.cellSize, 0);
+                    this.ctx.lineTo(c * this.cellSize, this.canvas.height);
+                    this.ctx.stroke();
+                }
+                for (let r = 0; r <= this.rows; r++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, r * this.cellSize);
+                    this.ctx.lineTo(this.canvas.width, r * this.cellSize);
+                    this.ctx.stroke();
+                }
+
+                this.ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, this.cellSize);
+                this.ctx.lineTo(this.canvas.width, this.cellSize);
+                this.ctx.stroke();
+
+                for (let r = 0; r < this.rows; r++) {
+                    for (let c = 0; c < this.cols; c++) {
+                        const cell = this.grid[r][c];
+                        if (cell) {
+                            this.drawOrbCell(r, c, cell.level);
+                        }
+                    }
+                }
+
+                if (this.fallingPair) {
+                    const p = this.fallingPair;
+                    this.drawOrbCell(p.r1, p.c1, p.t1);
+                    this.drawOrbCell(p.r2, p.c2, p.t2);
+                }
+            }
+
+            drawOrbCell(r, c, level) {
+                const elem = ELEMENTS[level];
+                const x = c * this.cellSize;
+                const y = r * this.cellSize;
+                const center = this.cellSize / 2;
+
+                this.ctx.save();
+                
+                this.ctx.fillStyle = elem.color;
+                this.ctx.globalAlpha = 0.25;
+                this.ctx.beginPath();
+                this.ctx.arc(x + center, y + center, center - 4, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                this.ctx.globalAlpha = 1.0;
+                this.ctx.font = `${28 + level * 2}px sans-serif`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.shadowColor = elem.color;
+                this.ctx.shadowBlur = 10;
+                this.ctx.fillText(elem.symbol, x + center, y + center);
+
+                this.ctx.restore();
+            }
+
+            updateUI() {
+                document.getElementById('score-display').textContent = this.score.toLocaleString();
+                document.getElementById('max-chain-display').textContent = `${this.maxChain} 連鎖`;
+
+                if (this.score > this.hiScore) {
+                    this.hiScore = this.score;
+                    localStorage.setItem('element_chain_hi', this.hiScore.toString());
+                }
+                document.getElementById('hi-score-display').textContent = this.hiScore.toLocaleString();
+            }
+
+            gameOver() {
+                this.gameState = 'GAMEOVER';
+                document.getElementById('res-score').textContent = this.score.toLocaleString();
+                document.getElementById('res-chain').textContent = `${this.maxChain} 連鎖`;
+                document.getElementById('gameover-modal').classList.remove('hidden');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            window.gameInstance = new ElementChainGame();
+        });
+    </script>
+</body>
+</html>

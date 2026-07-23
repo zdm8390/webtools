@@ -1,0 +1,181 @@
+# ==========================================================================
+# 『テトリスン』 - スーパーシナリオライター版 ストーリー会話劇 (YAML)
+#  - 世界観: パステリア王国と星詠みのレインボーピースの秘宝
+# ==========================================================================
+
+easy:
+  - stage: 1
+    enemy: inuwan
+    title: "Stage 1: 誓いの警備犬 イヌワン"
+    dialogue:
+      - speaker: "p1"
+        emotion: "excited"
+        text: "「いよいよ『パステル・グランプリ』の開幕ニャ！一番目指して風のように駆け抜けるニャ！」"
+      - speaker: "enemy"
+        emotion: "confident"
+        text: "「待ったワン！ボクは街の警備犬イヌワン！ネコニャー、君の危なっかしい冒険はボクが止めるワン！」"
+      - speaker: "p1"
+        emotion: "happy"
+        text: "「イヌワンのお邪魔カウンターは頼もしいけど、今日は絶対に譲れないニャ！真っ向勝負ニャ！」"
+
+  - stage: 2
+    enemy: torichun
+    title: "Stage 2: 蒼空のアリア トリチュン"
+    dialogue:
+      - speaker: "p1"
+        emotion: "surprised"
+        text: "「トリチュンちゃん！次の相手は天空の歌姫の君ニャ！」"
+      - speaker: "enemy"
+        emotion: "happy"
+        text: "「ピーチクパーチク♪ 美しいアリアとともに、乱れた盤面は最上段からお掃除チュン♪」"
+      - speaker: "p1"
+        emotion: "excited"
+        text: "「清らかな歌声の魔法ニャ！美しく爽快な連鎖で応えてみせるニャ！」"
+
+  - stage: 3
+    enemy: tanupon
+    title: "Final Stage: 試練のドロン師匠 タヌポン"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "confident"
+        text: "「ポンポコリン！ボクの化かし魔法でお互いの盤面を完全リセットポン！何度失敗してもやり直せばいいポン！」"
+      - speaker: "p1"
+        emotion: "surprised"
+        text: "「盤面リセットだなんて大逆転の予感ニャ！初級最後の試練、タヌポン師匠を超えるニャ！」"
+      - speaker: "enemy"
+        emotion: "excited"
+        text: "「見事な気迫ポン！さあ、覚悟を決めてかかってくるポンよ！」"
+
+normal:
+  - stage: 1
+    enemy: inuwan
+    title: "Stage 1: 幼馴染の絆 イヌワン"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "confident"
+        text: "「ノーマル大会へようこそワン！ボクの正義の盾でお邪魔攻撃をそのまま返し切ってみせるワン！」"
+      - speaker: "p1"
+        emotion: "angry"
+        text: "「イヌワンの相殺カウンターは超強力ニャ！冷静にラインを組み立てて突破するニャ！」"
+
+  - stage: 2
+    enemy: torichun
+    title: "Stage 2: 翼のハーモニー トリチュン"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "happy"
+        text: "「パタパタ♪ どんなに高く積み上がろうと、翼の舞で上段3行をスッキリ消去チュン！」"
+      - speaker: "p1"
+        emotion: "confident"
+        text: "「ピンチの時に何度でも蘇るお掃除魔法ニャ！スキを与えずにスピード勝負ニャ！」"
+
+  - stage: 3
+    enemy: sarukkey
+    title: "Stage 3: 夢追う大道芸人 サルウッキー"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "excited"
+        text: "「ウッキッキー！おいらの魔法は、四角いO型ブロックが3回連続で降ってくる特製ステージウキ！」"
+      - speaker: "p1"
+        emotion: "surprised"
+        text: "「四角の連続ラッシュニャ！？隙間を作らないように美しく埋めてみせるニャ！」"
+
+  - stage: 4
+    enemy: kitsunekon
+    title: "Stage 4: 影の空蝉 キツネコン"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "cool"
+        text: "「コンコン… 狐の空蝉、我が魔法はお互いの盤面を丸ごと入れ替える極意コン…」"
+      - speaker: "p1"
+        emotion: "surprised"
+        text: "「自分が高く積み上がると盤面を奪われるニャ！？恐ろしいスワップの術ニャ…！」"
+
+  - stage: 5
+    enemy: dragogon
+    title: "Final Stage: 覇王の試練 ドラゴゴン"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "angry"
+        text: "「ガオーッ！我が熱々ドラゴンブレスは、盤面の下部5行を豪快に焼き尽くすゴン！」"
+      - speaker: "p1"
+        emotion: "confident"
+        text: "「ドラゴゴン兄貴の圧倒的火力ニャ！でもここまで来たら退かないニャ、勝負ニャ！」"
+
+hard:
+  - stage: 1
+    enemy: nekonya
+    title: "Stage 1: 試練の風 ネコニャー"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "excited"
+        text: "「ニャン！最高峰ハードモードの開幕ニャ！奇数行を消去する気まぐれな風で翻弄するニャ！」"
+      - speaker: "p1"
+        emotion: "confident"
+        text: "「自分自身の気まぐれと勝負ニャ！一秒の遅れもなく極限の連鎖を組むニャ！」"
+
+  - stage: 2
+    enemy: inuwan
+    title: "Stage 2: 鉄壁の誓い イヌワン"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "angry"
+        text: "「ハードのボクはお邪魔返しを極めたワン！君のどんな強い攻めも絶対に受け止めるワン！」"
+      - speaker: "p1"
+        emotion: "confident"
+        text: "「カウンターの隙を見極めて、一撃必殺の大連鎖をたたき込むニャ！」"
+
+  - stage: 3
+    enemy: torichun
+    title: "Stage 3: 天空の祝福 トリチュン"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "happy"
+        text: "「チュン♪ どんな危険な盤面になろうと、最上段消去の祈りで何度でも奇跡を起こすチュン！」"
+      - speaker: "p1"
+        emotion: "excited"
+        text: "「驚異の粘り強さニャ！風のような超速パズルで押し切るニャ！」"
+
+  - stage: 4
+    enemy: sarukkey
+    title: "Stage 4: 四角の極意 サルウッキー"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "excited"
+        text: "「ウッキー！怒涛の四角テトリミノラッシュ！この歓喜の渦に耐えられるウキ！？」"
+      - speaker: "p1"
+        emotion: "confident"
+        text: "「四角の波を乗りこなして、こちらからもパーフェクトな連鎖をお見舞いするニャ！」"
+
+  - stage: 5
+    enemy: tanupon
+    title: "Stage 5: 覚悟の再始動 タヌポン"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "confident"
+        text: "「ポンポコ！究極のドロンリセット！ゼロからのスタートを乗り越えて見せるポン！」"
+      - speaker: "p1"
+        emotion: "surprised"
+        text: "「何度リセットされても諦めないニャ！諦めない心が最高の魔法ニャ！」"
+
+  - stage: 6
+    enemy: kitsunekon
+    title: "Stage 6: 影の奥義 キツネコン"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "cool"
+        text: "「コンコン… 命を賭した盤面スワップ、我が影の奥義を破れるかしらコン…？」"
+      - speaker: "p1"
+        emotion: "confident"
+        text: "「仕掛けられた術を見破り、仲間の想いを背負って勝利を掴むニャ！」"
+
+  - stage: 7
+    enemy: dragogon
+    title: "Final Stage: 究極守護竜 ドラゴゴン"
+    dialogue:
+      - speaker: "enemy"
+        emotion: "angry"
+        text: "「グォォォ！千年の全力を解き放つ！下部5行焼失のブレスを越え、星詠みの秘宝を掴めゴン！」"
+      - speaker: "p1"
+        emotion: "excited"
+        text: "「これが最高の最終決戦ニャ！みんなの夢とすべての魔法を込めて…いざ決戦ニャ！！」"

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="エドモンド本田モチーフの100%可逆暗号通信アプリ。テキストを「ホンダ」「ドスコーイ」「百裂張り手」暗号文へ相互可逆変換（エンコード／デコード）します。">
+  <meta name="keywords" content="エドモンド本田, 可逆変換, 暗号化, デコード, ストリートファイター, ドスコイ, 暗号通信">
+  <title>E. HONDA CIPHER - エドモンド本田 可逆暗号通信機</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔐</text></svg>">
+</head>
+<body>
+
+  <!-- Particle Canvas -->
+  <canvas id="particle-canvas"></canvas>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div style="display:flex; justify-content:flex-end; padding:8px 0;">
+        <a href="../" style="text-decoration:none; background:#d97706; color:white; padding:6px 14px; border-radius:8px; font-weight:bold; font-size:0.85rem;">🏠 ポータルへ戻る</a>
+      </div>
+      <div class="title-wrap">
+        <h1 class="app-title">E. HONDA CIPHER <span class="badge">REVERSIBLE v1.0</span></h1>
+      </div>
+      <p class="app-subtitle">「文章を本田暗号へ暗号化＆本田暗号から元の文章へ100%完全復元できる可逆通信機」</p>
+    </header>
+
+    <!-- Mode Switch Tabs -->
+    <nav class="tabs-wrap" aria-label="暗号モード切替">
+      <button class="tab-btn active" id="tab-encode">
+        <span>🔐 暗号化 (ENCODE)</span>
+      </button>
+      <button class="tab-btn" id="tab-decode">
+        <span>🔓 解読 (DECODE)</span>
+      </button>
+    </nav>
+
+    <!-- Main Grid Workspace -->
+    <main class="app-grid">
+      <!-- Input Panel -->
+      <section class="panel" id="input-panel">
+        <div class="panel-header">
+          <h2 class="panel-title"><span>01.</span> 入力データ (INPUT)</h2>
+          <span class="char-counter" id="char-count">0 文字</span>
+        </div>
+
+        <textarea id="input-text" placeholder="暗号化したい原文を入力してください..."></textarea>
+
+        <!-- Presets -->
+        <div class="presets-wrap">
+          <button class="preset-btn" data-preset="秘密のどすこい暗号テスト！可逆変換成功！">暗号テスト1</button>
+          <button class="preset-btn" data-preset="今夜8時にちゃんお鍋屋で待ち合わせじゃい！">秘密の合図</button>
+          <button class="preset-btn" data-preset="Street Fighter E. Honda Reversible Cipher Engine!">英語メッセージ</button>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="action-btn">
+            <span>🔐 本田暗号化 (ENCODE)</span>
+          </button>
+          <button class="btn btn-secondary btn-icon" id="clear-btn" title="クリア">
+            🗑️
+          </button>
+          <button class="sound-toggle active" id="sound-toggle" title="効果音切替">🔊</button>
+        </div>
+      </section>
+
+      <!-- Output Panel -->
+      <section class="panel" id="output-panel">
+        <div class="panel-header">
+          <h2 class="panel-title"><span>02.</span> 変換・復元結果 (OUTPUT)</h2>
+        </div>
+
+        <div class="output-box" id="output-text">
+          <span class="output-placeholder">ここに本田暗号文（可逆）が表示されます...</span>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="copy-btn">
+            <span>📋 ごっつぁんコピー</span>
+          </button>
+          <button class="btn btn-secondary" id="speak-btn" title="本田朗読">
+            <span>🔊 朗読</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <p>E. HONDA CIPHER Engine &copy; 100% Reversible Algorithm</p>
+      <p style="font-size:0.75rem; color:#aaa; margin-top:4px;">zdm8390/webtools</p>
+    </footer>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">コピーしました！</div>
+
+  <script src="app.js"></script>
+</body>
+</html>

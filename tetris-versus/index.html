@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>テトリスン | Tetrisun - パステル対戦パズル</title>
+    <meta name="description" content="パステルカラーの可愛い魔法動物たちが対戦するポップな対戦型テトリスゲーム『テトリスン』！独自魔法ルーレット、ストーリーモード、オンライン乱入対応。" />
+
+    <!-- Google Fonts: M PLUS Rounded 1c & Fredoka for Pop UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- PeerJS for Serverless WebRTC P2P Multiplayer & Challenger Entry -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+    <!-- JS-YAML Parser CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Scalable 16:9 Viewport Box -->
+    <div id="game-viewport-container">
+        <div id="game-viewport">
+            
+            <!-- Global Version Badge (Small in Bottom-Right Corner) -->
+            <div class="version-tag">ver 3.0.0 Master Edition</div>
+
+            <!-- Notification / Alert Overlay (P2P Challenger & Global Messages) -->
+            <div id="global-toast-container"></div>
+
+            <!-- Screen Shake Wrapper -->
+            <div id="shake-wrapper">
+
+                <!-- 1. 操作説明画面 (Tutorial & Keybindings Screen) -->
+                <section id="view-howto" class="game-view active">
+                    <div class="view-card glass-panel intro-panel">
+                        <div class="logo-header">
+                            <div class="logo-img-wrapper">
+                                <img src="assets/tetrisun_logo.jpg" alt="テトリスン Tetrisun Logo" class="game-logo-img">
+                            </div>
+                            <span class="logo-badge">🐾 POP ANIMAL MAGIC TETRIS</span>
+                            <h1 class="game-title">テトリスン <span class="en-sub font-mono">Tetrisun</span></h1>
+                            <p class="game-subtitle">〜 魔法の動物たちとパステルテトリス対戦！ 〜 <span class="header-ver-text">v3.0.0</span></p>
+                        </div>
+
+
+
+                        <div class="howto-content">
+                            <h2>🎮 操作方法のご案内</h2>
+                            <div class="controls-grid">
+                                <div class="control-box">
+                                    <h3>⌨️ キーボード操作</h3>
+                                    <ul>
+                                        <li><kbd>←</kbd> <kbd>→</kbd> : 左右移動</li>
+                                        <li><kbd>↓</kbd> : ソフトドロップ (高速落下)</li>
+                                        <li><kbd>↑</kbd> : ハードドロップ (一瞬で固定)</li>
+                                        <li><kbd>A</kbd> / <kbd>Z</kbd> : ブロック左回転 / 右回転</li>
+                                        <li><kbd>Shift</kbd> / <kbd>C</kbd> : ホールド (キープ)</li>
+                                        <li><kbd>Space</kbd> : 魔法ルーレット発動！</li>
+                                    </ul>
+                                </div>
+                                <div class="control-box">
+                                    <h3>🎮 ゲームコントローラー (Gamepad)</h3>
+                                    <ul>
+                                        <li><span class="pad-btn">十字キー / Lスティック</span> : 左右移動・下落下</li>
+                                        <li><span class="pad-btn">A / B ボタン</span> : 回転操作</li>
+                                        <li><span class="pad-btn">X / Y ボタン</span> : ハードドロップ</li>
+                                        <li><span class="pad-btn">L1 / R1 ボタン</span> : ホールド</li>
+                                        <li><span class="pad-btn">R2 / Trigger</span> : 魔法ルーレット発動！</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="howto-footer">
+                            <button id="btn-howto-next" class="btn-primary pulse-btn" onclick="app.showScreen('view-mode-select')">
+                                ボタンを押してモード選択へ ➔
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- 2. モードセレクト＆設定画面 (Mode Select & Settings Screen) -->
+                <section id="view-mode-select" class="game-view">
+                    <div class="view-card glass-panel">
+                        <div class="header-small">
+                            <h2>🌸 モード選択 ＆ 設定</h2>
+                            <p>プレイしたいモードとゲームルールを設定してください</p>
+                        </div>
+
+                        <div class="mode-settings-layout">
+                            <!-- Left: Mode Selection Buttons -->
+                            <div class="mode-select-column">
+                                <h3>ゲームモードを選択</h3>
+                                <div class="mode-buttons-list">
+                                    <button class="mode-btn active" data-mode="story" onclick="app.selectMode('story', this)">
+                                        <div class="mode-icon">📖</div>
+                                        <div class="mode-info">
+                                            <div class="mode-name">ストーリーモード (タイムアタック)</div>
+                                            <div class="mode-desc">会話劇と全ステージの最速タイムに挑む！</div>
+                                        </div>
+                                    </button>
+                                    <button class="mode-btn" data-mode="versus" onclick="app.selectMode('versus', this)">
+                                        <div class="mode-icon">⚔️</div>
+                                        <div class="mode-info">
+                                            <div class="mode-name">シングル対戦モード</div>
+                                            <div class="mode-desc">好きなキャラとCPU対戦！</div>
+                                        </div>
+                                    </button>
+                                    <button class="mode-btn" data-mode="scoreattack" onclick="app.selectMode('scoreattack', this)">
+                                        <div class="mode-icon">🏆</div>
+                                        <div class="mode-info">
+                                            <div class="mode-name">スコアアタックモード</div>
+                                            <div class="mode-desc">限界に挑む一人用エンドレス！</div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Right: Dynamic Settings Panel -->
+                            <div class="settings-column">
+                                <h3 id="settings-title">⚙️ ストーリーモード設定</h3>
+                                <div class="settings-form">
+                                    
+                                    <!-- Dynamic Group: Story Settings -->
+                                    <div class="setting-group" id="grp-story-settings">
+                                        <div class="setting-row">
+                                            <label for="setting-difficulty">🌟 ストーリー難易度</label>
+                                            <select id="setting-difficulty" onchange="app.updateSettings()">
+                                                <option value="easy">Easy (全3ステージ)</option>
+                                                <option value="normal" selected>Normal (全5ステージ)</option>
+                                                <option value="hard">Hard (全7ステージ)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Dynamic Group: Versus Settings -->
+                                    <div class="setting-group" id="grp-versus-settings" style="display:none;">
+                                        <div class="setting-row">
+                                            <label for="setting-cpu-level">🤖 CPU強さレベル</label>
+                                            <select id="setting-cpu-level" onchange="app.updateSettings()">
+                                                <option value="easy">Easy (やさしい)</option>
+                                                <option value="normal" selected>Normal (ふつう)</option>
+                                                <option value="hard">Hard (つよい)</option>
+                                            </select>
+                                        </div>
+                                        <div class="setting-row">
+                                            <label for="setting-cpu-char">⚔️ 対戦相手キャラクター</label>
+                                            <select id="setting-cpu-char" onchange="app.selectCpuCharacter(this.value)">
+                                                <!-- Dynamic JS Populate -->
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Dynamic Group: Score Attack Settings -->
+                                    <div class="setting-group" id="grp-scoreattack-settings" style="display:none;">
+                                        <div class="setting-row">
+                                            <label for="setting-speed-rate">🚀 落下スピード上昇速度</label>
+                                            <select id="setting-speed-rate" onchange="app.updateSettings()">
+                                                <option value="normal" selected>標準スピード</option>
+                                                <option value="fast">ハイスピード</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Common Settings: Audio & P2P -->
+                                    <div class="setting-row" id="row-p2p">
+                                        <label for="setting-challenger">⚡ オンライン乱入受付</label>
+                                        <select id="setting-challenger" onchange="app.updateSettings()">
+                                            <option value="on" selected>乱入ON (P2P待受・対戦対応)</option>
+                                            <option value="off">乱入OFF (シングルに集中)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="setting-row">
+                                        <label for="setting-bgm">🎵 BGM 音量</label>
+                                        <input type="range" id="setting-bgm" min="0" max="100" value="70" oninput="app.updateAudioVolume()">
+                                    </div>
+
+                                    <div class="setting-row">
+                                        <label for="setting-se">🔔 SE 音量</label>
+                                        <input type="range" id="setting-se" min="0" max="100" value="80" oninput="app.updateAudioVolume()">
+                                    </div>
+                                </div>
+
+                                <div class="p2p-status-box" id="p2p-info">
+                                    <span class="status-dot online"></span>
+                                    <span id="p2p-status-text">乱入待受中 (Peer ID 取得中...)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="screen-nav-bar">
+                            <button class="btn-secondary" onclick="app.showScreen('view-howto')">⬅️ 操作説明へ戻る</button>
+                            <button class="btn-primary" onclick="app.proceedFromModeSelect()">キャラクター選択へ ➔</button>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- 3. キャラセレクト画面 (Character Selection Screen) -->
+                <section id="view-character-select" class="game-view">
+                    <div class="view-card glass-panel">
+                        <div class="header-small">
+                            <h2>✨ キャラクター選択</h2>
+                            <p>共に戦う魔法の動物を選んでください</p>
+                        </div>
+
+                        <div class="char-select-container">
+                            <!-- Left: Character Selection Grid Area -->
+                            <div class="char-select-left">
+                                <div class="char-grid-title">キャラクター一覧（クリックで選択）</div>
+                                <div class="char-grid" id="char-grid">
+                                    <!-- Dynamic Generated JS Cards -->
+                                </div>
+                            </div>
+
+                            <!-- Right: Selected Character Detailed Card -->
+                            <div class="char-detail-card glass-panel-sub" id="char-detail">
+                                <div class="char-detail-top">
+                                    <div class="char-avatar-container">
+                                        <img id="char-preview-img" class="char-large-img" src="assets/nekonya.jpg" alt="Character Illustration">
+                                        <div id="char-emotion-badge" class="emotion-badge">NORMAL</div>
+                                    </div>
+                                    <div class="char-header-text">
+                                        <h3 id="char-name">ネコニャー</h3>
+                                        <div class="char-animal" id="char-animal">モチーフ: 猫</div>
+                                    </div>
+                                </div>
+                                
+                                <p class="char-desc" id="char-desc">気まぐれだけど素早いパズルが得意！</p>
+                                
+                                <div class="magic-info-box">
+                                    <div class="magic-title">✨ 魔法効果</div>
+                                    <div class="magic-name" id="magic-name">奇数行からランダム3行を消去！</div>
+                                    <div class="magic-desc" id="magic-desc">自身の盤面の奇数行（1, 3, 5行目等）からランダムに3行分を消去する。</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="screen-nav-bar">
+                            <button class="btn-secondary" onclick="app.showScreen('view-mode-select')">⬅️ モード選択へ</button>
+                            <button class="btn-primary pulse-btn" id="btn-start-game" onclick="app.startStoryGameNew()">ゲームスタート！ 🚀</button>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- 4. ゲーム本編画面 (Main Gameplay Screen) -->
+                <section id="view-game" class="game-view">
+                    <div class="game-layout">
+
+                        <!-- Header Info Bar -->
+                        <div class="game-header-bar">
+                            <div class="game-stage-info" id="game-stage-info">STAGE 1: ぽちまる戦</div>
+                            <div class="game-mode-badge" id="game-mode-badge">STORY - TIME ATTACK</div>
+                            <button class="btn-pause" onclick="app.togglePause()">⏸️ 一時停止</button>
+                        </div>
+
+                        <!-- Main Playfield Area (P1 Red Stage, Center Cheering Stage, P2 Blue Stage) -->
+                        <div class="playfield-container">
+                            
+                            <!-- Player 1 Stage Box (Red Base Theme) -->
+                            <div class="player-stage-box p1-theme-red" id="p1-stage-box">
+                                <div class="stage-header">
+                                    <div class="char-mini-portrait portrait-p1">
+                                        <img id="p1-face-img" class="char-mini-img" src="assets/nekonya.jpg" alt="P1 Avatar">
+                                    </div>
+                                    <div class="player-meta">
+                                        <div class="player-name p1-text" id="p1-name">ネコニャー (1P)</div>
+                                        <div class="player-score p1-score-text" id="p1-score">TIME: 00:00.0</div>
+                                    </div>
+                                </div>
+
+                                <div class="stage-body">
+                                    <!-- Hold Area & Stats -->
+                                    <div class="side-panel-left">
+                                        <div class="panel-box hold-box">
+                                            <div class="panel-label">HOLD</div>
+                                            <canvas id="p1-hold-canvas" width="70" height="70"></canvas>
+                                        </div>
+                                        <div class="panel-box stats-box">
+                                            <div class="stat-item">LINE: <span id="p1-lines">0</span></div>
+                                            <div class="stat-item">REN: <span id="p1-ren">0</span></div>
+                                            <div class="stat-item">LV: <span id="p1-level">1</span></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Main Canvas Board (P1 Red Border) -->
+                                    <div class="board-canvas-wrapper p1-board-border">
+                                        <canvas id="p1-board-canvas" width="240" height="480"></canvas>
+
+                                        <!-- Garbage Warning Bar -->
+                                        <div class="garbage-bar-container">
+                                            <div class="garbage-bar-fill" id="p1-garbage-bar"></div>
+                                        </div>
+
+                                        <!-- Magic Effect Overlay Canvas -->
+                                        <canvas id="p1-fx-canvas" class="fx-overlay-canvas" width="240" height="480"></canvas>
+                                    </div>
+
+                                    <!-- Next Queue Area -->
+                                    <div class="side-panel-right">
+                                        <div class="panel-box next-box">
+                                            <div class="panel-label">NEXT</div>
+                                            <canvas id="p1-next-canvas" width="70" height="210"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Magic Gauge & Roulette Box (Red Theme) -->
+                                <div class="magic-control-bar">
+                                    <div class="magic-gauge-container">
+                                        <div class="magic-label p1-text">✨ 1P MAGIC GAUGE</div>
+                                        <div class="magic-track">
+                                            <div class="magic-fill fill-p1" id="p1-magic-fill" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                    <button id="p1-magic-btn" class="magic-trigger-btn p1-btn-theme" disabled onclick="app.triggerMagic('p1')">
+                                        <span class="btn-glow"></span>
+                                        <span class="btn-text">1P 魔法スロット起動 (Space)</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Center Stage Overlays & Cheering Mascot Stage -->
+                            <div class="center-stage-area">
+                                
+                                <!-- Animated Mascot Cheering Squad (Always Active in Center Space) -->
+                                <div id="cheering-mascot-box" class="cheering-mascot-box">
+                                    <div class="mascot-sparkle-bg">
+                                        <span class="floating-note n1">🎵</span>
+                                        <span class="floating-note n2">✨</span>
+                                        <span class="floating-note n3">💖</span>
+                                        <span class="floating-note n4">⭐</span>
+                                    </div>
+                                    <div class="mascot-character-wrapper">
+                                        <div class="mascot-banner-text" id="mascot-cheer-text">ふぁいとー！📣</div>
+                                        <div class="mascot-avatar bounce-anim" id="mascot-avatar">
+                                            <span class="mascot-emoji">🐱</span>
+                                            <span class="mascot-flag left">🚩</span>
+                                            <span class="mascot-flag right">🏳️</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- START COUNTDOWN OVERLAY (READY... SET... GO!) -->
+                                <div id="countdown-modal" class="countdown-modal" style="display:none;">
+                                    <div id="countdown-text" class="countdown-text">READY...</div>
+                                </div>
+
+                                <!-- Large Pop-up ADV Dialogue Modal -->
+                                <div id="adv-dialogue-box" class="adv-dialogue-modal glass-panel" style="display:none;" onclick="app.nextDialogue()">
+                                    <div class="adv-large-header">
+                                        <div class="adv-speaker-left">
+                                            <div class="adv-speaker-avatar-wrapper" id="adv-avatar-wrapper">
+                                                <img id="adv-speaker-img" class="adv-speaker-img" src="assets/nekonya.jpg" alt="Speaker Avatar">
+                                                <div id="adv-emotion-badge" class="adv-emotion-badge">😊</div>
+                                            </div>
+                                            <div class="adv-speaker-tag" id="adv-speaker-name">ネコニャー</div>
+                                        </div>
+                                        <button class="adv-skip-btn" onclick="event.stopPropagation(); app.skipDialogue();">スキップ ▶▶</button>
+                                    </div>
+                                    <div class="adv-large-body">
+                                        <p id="adv-text" class="adv-dialogue-text text-autowrap">「準備はいいニャ？勝負開始ニャ！」</p>
+                                    </div>
+                                    <div class="adv-large-footer">
+                                        <span class="blink-prompt">画面のどこでもクリック / ボタンで次へ進む 💬</span>
+                                    </div>
+                                </div>
+
+
+
+                                <!-- Magic Roulette Display Modal -->
+                                <div id="magic-roulette-modal" class="roulette-modal glass-panel" style="display:none;">
+                                    <div class="roulette-title" id="roulette-title-text">✨ 魔法効果</div>
+                                    <div class="roulette-reels">
+                                        <div id="roulette-display-box" class="roulette-box">
+                                            <span id="roulette-text">魔法効果表示</span>
+                                        </div>
+                                    </div>
+                                    <div class="roulette-sub" id="roulette-sub-desc">魔法発動中...</div>
+                                </div>
+
+                                <!-- Cutin Animation Banner -->
+                                <div id="cutin-banner" class="cutin-banner-overlay" style="display:none;">
+                                    <div class="cutin-text" id="cutin-text">奇数行を3行消去！</div>
+                                </div>
+
+                                <!-- Dedicated YOU WIN Fullscreen Popup Modal -->
+                                <div id="win-modal" class="win-modal-overlay" style="display:none;">
+                                    <div class="win-modal-card">
+                                        <div class="win-icon">🏆</div>
+                                        <h1 class="win-title">YOU WIN!! 🎉</h1>
+                                        <p class="win-subtitle" id="win-modal-subtitle">見事な大勝利ニャ！！</p>
+                                        <div class="win-timer-bar"><div class="win-timer-fill"></div></div>
+                                    </div>
+                                </div>
+
+                                <!-- Dedicated YOU LOSE Fullscreen Popup Modal -->
+                                <div id="lose-modal" class="lose-modal-overlay" style="display:none;">
+                                    <div class="lose-modal-card">
+                                        <div class="lose-icon">💀</div>
+                                        <h1 class="lose-title">YOU LOSE...</h1>
+                                        <p class="lose-subtitle">敗北してしまったニャ...！</p>
+                                        <div class="lose-timer-bar"><div class="lose-timer-fill"></div></div>
+                                    </div>
+                                </div>
+
+
+                                <!-- Paused Overlay -->
+                                <div id="pause-modal" class="pause-modal glass-panel" style="display:none;">
+                                    <h2>⏸️ PAUSED</h2>
+                                    <button class="btn-primary" onclick="app.togglePause()">ゲーム再開</button>
+                                    <button class="btn-secondary" onclick="app.quitToTitle()">タイトルへ戻る</button>
+                                </div>
+                            </div>
+
+
+                            <!-- Player 2 / CPU Stage Box (Blue Base Theme) -->
+                            <div class="player-stage-box p2-theme-blue" id="p2-stage-box">
+                                <div class="stage-header">
+                                    <div class="player-meta text-right">
+                                        <div class="player-name p2-text" id="p2-name">イヌワン (CPU)</div>
+                                        <div class="player-score p2-score-text" id="p2-score">SCORE: 000000</div>
+                                    </div>
+                                    <div class="char-mini-portrait portrait-p2">
+                                        <img id="p2-face-img" class="char-mini-img" src="assets/inuwan.jpg" alt="P2 Avatar">
+                                    </div>
+                                </div>
+
+                                <div class="stage-body">
+                                    <!-- Next Queue Area -->
+                                    <div class="side-panel-left">
+                                        <div class="panel-box next-box">
+                                            <div class="panel-label">NEXT</div>
+                                            <canvas id="p2-next-canvas" width="70" height="210"></canvas>
+                                        </div>
+                                    </div>
+
+                                    <!-- Main Canvas Board (P2 Blue Border) -->
+                                    <div class="board-canvas-wrapper p2-board-border">
+                                        <canvas id="p2-board-canvas" width="240" height="480"></canvas>
+
+                                        <!-- Garbage Warning Bar -->
+                                        <div class="garbage-bar-container right-side">
+                                            <div class="garbage-bar-fill" id="p2-garbage-bar"></div>
+                                        </div>
+
+                                        <!-- Magic Effect Overlay Canvas -->
+                                        <canvas id="p2-fx-canvas" class="fx-overlay-canvas" width="240" height="480"></canvas>
+                                    </div>
+
+                                    <!-- Hold Area & Stats -->
+                                    <div class="side-panel-right">
+                                        <div class="panel-box hold-box">
+                                            <div class="panel-label">HOLD</div>
+                                            <canvas id="p2-hold-canvas" width="70" height="70"></canvas>
+                                        </div>
+                                        <div class="panel-box stats-box">
+                                            <div class="stat-item">LINE: <span id="p2-lines">0</span></div>
+                                            <div class="stat-item">REN: <span id="p2-ren">0</span></div>
+                                            <div class="stat-item">LV: <span id="p2-level">1</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Magic Gauge Bar (Blue Theme) -->
+                                <div class="magic-control-bar">
+                                    <div class="magic-gauge-container">
+                                        <div class="magic-label p2-text">✨ 2P MAGIC GAUGE</div>
+                                        <div class="magic-track">
+                                            <div class="magic-fill fill-p2" id="p2-magic-fill" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="p2-magic-status" id="p2-magic-status-badge">READY</div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Touch Mobile Controller (Iteration 5) -->
+                        <div id="touch-controls" class="mobile-touch-controls">
+                            <button class="touch-btn" onclick="app.p1Game && app.p1Game.moveLeft()">◀</button>
+                            <button class="touch-btn" onclick="app.p1Game && app.p1Game.moveRight()">▶</button>
+                            <button class="touch-btn" onclick="app.p1Game && app.p1Game.rotatePiece(1)">↻</button>
+                            <button class="touch-btn" onclick="app.p1Game && app.p1Game.softDrop()">▼</button>
+                            <button class="touch-btn btn-drop" onclick="app.p1Game && app.p1Game.hardDrop()">DROP</button>
+                            <button class="touch-btn btn-magic" onclick="app.triggerMagic('p1')">✨ 魔法</button>
+                        </div>
+                    </div>
+                </section>
+
+
+
+                <!-- 5. スコア登録画面 (Score Result & Ranking Screen) -->
+                <section id="view-score-result" class="game-view">
+                    <div class="view-card glass-panel">
+                        <div class="result-header">
+                            <h1 id="result-title-banner">🎉 STAGE CLEAR!</h1>
+                            <p id="result-subtitle">素晴しいパズルプレイでした！</p>
+                        </div>
+
+                        <div class="result-content-grid">
+                            <!-- Stats & Name Form -->
+                            <div class="result-stats-card glass-panel-sub">
+                                <h3>📊 最終プレイ結果</h3>
+                                <div class="result-stat-row" id="row-res-main">
+                                    <span id="lbl-res-main">累積クリアタイム:</span>
+                                    <strong id="res-score">00:00.0</strong>
+                                </div>
+                                <div class="result-stat-row">
+                                    <span>合計消去ライン数:</span>
+                                    <strong id="res-lines">0</strong>
+                                </div>
+                                <div class="result-stat-row">
+                                    <span>最大連続REN:</span>
+                                    <strong id="res-ren">0</strong>
+                                </div>
+
+                                <!-- Name Input Form -->
+                                <div class="name-entry-box">
+                                    <label for="player-name-input">🏆 ランキング用ネーム登録</label>
+                                    <div class="input-inline">
+                                        <input type="text" id="player-name-input" maxlength="10" placeholder="なまえを入力" value="たびびと">
+                                        <button class="btn-primary" onclick="app.submitScore()">保存</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Local High Score Ranking Table -->
+                            <div class="ranking-card glass-panel-sub">
+                                <h3>🏆 ハイスコア/最速タイム (TOP 5)</h3>
+                                <table class="ranking-table">
+                                    <thead>
+                                        <tr>
+                                            <th>順位</th>
+                                            <th>名前</th>
+                                            <th>記録 (スコア/タイム)</th>
+                                            <th>モード</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ranking-tbody">
+                                        <!-- Dynamic Entries -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="screen-nav-bar">
+                            <button class="btn-secondary" onclick="app.showScreen('view-mode-select')">🌸 タイトル・モード選択へ</button>
+                            <button class="btn-primary pulse-btn" id="btn-replay" onclick="app.startStoryGameNew()">🔁 もう一度プレイ</button>
+                        </div>
+                    </div>
+                </section>
+
+            </div><!-- /shake-wrapper -->
+        </div><!-- /game-viewport -->
+    </div><!-- /game-viewport-container -->
+
+    <script src="script.js"></script>
+</body>
+</html>

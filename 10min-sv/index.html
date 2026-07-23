@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10-Minute Survivors | 10分サバイバーズ</title>
+    <meta name="description" content="制限時間10分！迷宮ダンジョンを探索し、敵をなぎ倒して出口ポータルから脱出せよ！" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Press+Start+2P&family=M+PLUS+1p:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Canvas -->
+        <canvas id="game-canvas"></canvas>
+
+        <!-- HUD (In-Game Overlay) -->
+        <div id="hud" class="hidden">
+            <!-- Top Status Bar -->
+            <div class="hud-top">
+                <div class="hud-stat-box">
+                    <span class="hud-label">SURVIVAL TIME</span>
+                    <span id="timer-display" class="hud-value highlight-timer">10:00</span>
+                </div>
+
+                <!-- Exit Navigation Guide Indicator -->
+                <div id="exit-tracker" class="exit-tracker" title="出口ポータルへの方向">
+                    <span class="exit-icon">🚪</span>
+                    <span id="exit-compass" class="exit-arrow">⬆️</span>
+                    <span id="exit-distance" class="exit-dist-text">0m</span>
+                </div>
+
+                <div class="hud-stat-box">
+                    <span class="hud-label">KILLS</span>
+                    <span id="kill-display" class="hud-value">0</span>
+                </div>
+                <div class="hud-stat-box">
+                    <span class="hud-label">SCORE</span>
+                    <span id="score-display" class="hud-value">0</span>
+                </div>
+                <div class="hud-actions">
+                    <button id="sound-btn" class="icon-btn" title="サウンド切り替え">🔊</button>
+                    <button id="pause-btn" class="icon-btn" title="一時停止">⏸️</button>
+                </div>
+            </div>
+
+            <!-- Mini Map Canvas Container -->
+            <div id="minimap-container" class="minimap-container">
+                <canvas id="minimap-canvas" width="120" height="120"></canvas>
+                <div class="minimap-label">MINI MAP</div>
+            </div>
+
+            <!-- XP & Level Bar -->
+            <div class="xp-container">
+                <div class="level-badge"><span id="level-display">Lv.1</span></div>
+                <div class="xp-bar-outer">
+                    <div id="xp-bar-inner" class="xp-bar-inner"></div>
+                </div>
+                <div class="xp-text-container">
+                    <span id="xp-text">0 / 15 XP</span>
+                </div>
+            </div>
+
+            <!-- HP Bar -->
+            <div class="hp-container">
+                <div class="hp-label">HP</div>
+                <div class="hp-bar-outer">
+                    <div id="hp-bar-inner" class="hp-bar-inner"></div>
+                </div>
+                <div class="hp-text" id="hp-text">100 / 100</div>
+            </div>
+
+            <!-- Active Weapons / Buffs Bar -->
+            <div id="active-skills-bar" class="active-skills-bar"></div>
+        </div>
+
+        <!-- Title Screen Overlay -->
+        <div id="title-screen" class="screen-overlay">
+            <div class="title-card animate-pop">
+                <div class="badge-tag">DUNGEON ESCAPE SURVIVAL</div>
+                <h1 class="title-heading">10分<span class="accent-text">サバイバーズ</span></h1>
+                <p class="title-sub">制限時間10分！迷宮ダンジョンを攻略し、最奥の出口ポータル 🚪 から脱出せよ！</p>
+
+                <div class="char-select-section">
+                    <h3>キャラ選択</h3>
+                    <div class="char-grid">
+                        <div class="char-card selected" data-char="wizard">
+                            <div class="char-avatar">🧙‍♂️</div>
+                            <div class="char-name">大魔導士</div>
+                            <div class="char-desc">魔法弾 & 攻撃範囲+20%</div>
+                        </div>
+                        <div class="char-card" data-char="knight">
+                            <div class="char-avatar">🗡️</div>
+                            <div class="char-name">聖騎士</div>
+                            <div class="char-desc">飛剣 & HP+30%・高耐久</div>
+                        </div>
+                        <div class="char-card" data-char="ranger">
+                            <div class="char-avatar">🏹</div>
+                            <div class="char-name">風の狩人</div>
+                            <div class="char-desc">貫通矢 & 移動速度+25%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls-guide">
+                    <span>ミッション: 迷路のような広大なダンジョンを探索し、敵をなぎ倒しながら10分以内に「出口ポータル 🚪」へ到達せよ！</span>
+                </div>
+
+                <button id="start-btn" class="primary-btn pulse-glow">ダンジョン潜入 (START)</button>
+                <a href="../" class="secondary-btn" style="text-decoration:none; text-align:center; margin-top:8px; display:inline-block; width:100%;">🏠 ポータルへ戻る</a>
+
+                <!-- High Score Leaderboard -->
+                <div class="leaderboard-section">
+                    <h3>🏆 殿堂入りハイスコア (TOP 5)</h3>
+                    <ol id="title-leaderboard" class="leaderboard-list">
+                        <!-- Populated by JS -->
+                    </ol>
+                </div>
+                
+                <footer style="margin-top:12px; font-size:0.75rem; color:rgba(255,255,255,0.5); text-align:center;">
+                    zdm8390/webtools
+                </footer>
+            </div>
+        </div>
+
+        <!-- Level Up Modal Overlay -->
+        <div id="level-up-modal" class="screen-overlay hidden">
+            <div class="modal-card animate-pop">
+                <div class="modal-header">
+                    <span class="modal-tag">LEVEL UP!</span>
+                    <h2>強化スキルを選択</h2>
+                </div>
+                <div id="upgrade-cards" class="upgrade-cards-grid">
+                    <!-- Dynamic Upgrade Cards -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Pause Modal Overlay -->
+        <div id="pause-modal" class="screen-overlay hidden">
+            <div class="modal-card mini-card">
+                <h2>PAUSED</h2>
+                <p>ゲームは一時停止中です</p>
+                <div class="pause-actions">
+                    <button id="resume-btn" class="primary-btn">再開する</button>
+                    <button id="quit-btn" class="secondary-btn">タイトルへ戻る</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over / Victory Modal Overlay -->
+        <div id="game-over-modal" class="screen-overlay hidden">
+            <div class="modal-card animate-pop">
+                <div id="result-badge" class="result-badge">GAME OVER</div>
+                <h2 id="result-title" class="result-title">討ち取られた...</h2>
+                <p id="result-subtitle" class="result-subtitle">モンスターの群れに呑み込まれてしまった</p>
+
+                <div class="result-stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">経過時間</span>
+                        <span id="res-time" class="stat-value">05:23</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">獲得スコア</span>
+                        <span id="res-score" class="stat-value">12,450</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">撃破数</span>
+                        <span id="res-kills" class="stat-value">342</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">最終レベル</span>
+                        <span id="res-level" class="stat-value">Lv.18</span>
+                    </div>
+                </div>
+
+                <div id="new-record-tag" class="new-record-tag hidden">🎉 NEW HIGH SCORE! 🎉</div>
+
+                <div class="leaderboard-section">
+                    <h3>🏆 ハイスコアランキング</h3>
+                    <ol id="result-leaderboard" class="leaderboard-list">
+                        <!-- Populated by JS -->
+                    </ol>
+                </div>
+
+                <div class="result-actions">
+                    <button id="retry-btn" class="primary-btn pulse-glow">もう一度プレイ</button>
+                    <button id="title-return-btn" class="secondary-btn">タイトルへ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

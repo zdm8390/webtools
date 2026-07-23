@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国会議事録サーチ | Diet Speech Explorer</title>
+    <meta name="description" content="国会でのあらゆる発言・議論をフリーワードで検索！国立国会図書館の国会議事録検索APIを利用したリアルタイムWebツール。" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Share+Tech+Mono&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(20, 27, 44, 0.85);
+            --card-border: rgba(226, 232, 240, 0.12);
+            --accent-navy: #3b82f6;
+            --accent-green: #10b981;
+            --accent-gold: #f59e0b;
+            --accent-pink: #ec4899;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: #090d16;
+            
+            --font-sans: 'Outfit', 'Noto Sans JP', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+        }
+
+        body.light-theme {
+            --bg-color: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-border: rgba(203, 213, 225, 0.8);
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --input-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        header {
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        body.light-theme header {
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            padding: 6px 10px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .brand-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+            font-size: 0.95rem;
+            padding: 10px 22px;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1140px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Main Search Panel */
+        .search-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .search-main-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .search-input-wrap input {
+            width: 100%;
+            padding: 12px 42px 12px 44px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-input-wrap input:focus {
+            border-color: var(--accent-navy);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .clear-input-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .clear-input-btn:hover { background: rgba(239, 68, 68, 0.6); color: white; }
+
+        /* Dynamic Keyword Suggestions Panel */
+        .dynamic-suggestions-card {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 14px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sug-header {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sug-chips-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .sug-chip {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sug-chip:hover {
+            background: var(--accent-navy);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Results Section */
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .results-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            gap: 10px;
+        }
+
+        .export-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .speech-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Speech Card */
+        .speech-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+            transition: all 0.25s ease;
+        }
+
+        .speech-card:hover {
+            border-color: var(--accent-navy);
+            transform: translateY(-2px);
+        }
+
+        .speech-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 10px;
+        }
+
+        .speaker-badge {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #60a5fa;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .role-tag {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-gold);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: bold;
+        }
+
+        .meeting-tag {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-navy);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        .date-tag {
+            font-family: var(--font-mono);
+        }
+
+        .speech-body {
+            font-size: 0.92rem;
+            line-height: 1.75;
+            color: var(--text-main);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .speech-body.collapsed {
+            max-height: 140px;
+            overflow: hidden;
+            mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
+        }
+
+        .toggle-expand-btn {
+            background: transparent;
+            border: none;
+            color: var(--accent-navy);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 4px 0;
+            align-self: flex-start;
+        }
+
+        /* Keyword Highlight */
+        mark.keyword-hl {
+            background: rgba(245, 158, 11, 0.35);
+            color: #fef08a;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* Detected Laws Section */
+        .detected-laws-box {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .laws-header {
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .laws-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .law-link-badge {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+            padding: 3px 10px;
+            border-radius: 14px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .law-link-badge:hover {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: #34d399;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        /* Card Footer & SNS Share Buttons */
+        .speech-footer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.78rem;
+            border-top: 1px dashed rgba(255, 255, 255, 0.08);
+            padding-top: 10px;
+        }
+
+        .share-btn-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .share-btn {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .share-x { background: #0f1419; border: 1px solid rgba(255,255,255,0.2); }
+        .share-x:hover { background: #272c30; }
+
+        .share-line { background: #06c755; }
+        .share-line:hover { background: #05b34c; }
+
+        .official-link {
+            color: var(--accent-green);
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Modals & Dialog Overlays */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(3, 7, 18, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px 28px;
+            max-width: 560px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
+        }
+
+        .modal-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .close-modal-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        /* Advanced Search Filter Inputs in Modal */
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .modal-grid .full-width {
+            grid-column: span 2;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .field-group label {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .field-group input, .field-group select {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            outline: none;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Loading Spinner */
+        .loading-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-navy);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .hidden { display: none !important; }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        footer a { color: var(--accent-navy); text-decoration: none; }
+
+        @media (max-width: 600px) {
+            .modal-grid { grid-template-columns: 1fr; }
+            .modal-grid .full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-brand">
+            <span class="brand-icon">🏛️</span>
+            <div>
+                <div class="brand-title">国会議事録サーチ</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Diet Speech Explorer</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button id="help-modal-btn" class="btn" title="使い方ヘルプを表示">❓ ヘルプ</button>
+            <button id="theme-toggle-btn" class="btn">🌙 テーマ切替</button>
+            <a href="../" class="btn">🏠 ポータルへ戻る</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- Search Controls Panel -->
+        <div class="search-panel">
+            <div class="search-main-bar">
+                <div class="search-input-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="query-input" placeholder="検索キーワード（/ でキー入力フォーカス, 例: 保護猫, 生成AI, 扶養照会）..." value="保護猫">
+                    <button id="clear-input-btn" class="clear-input-btn" title="検索語をクリア">✕</button>
+                </div>
+                <button id="adv-search-btn" class="btn">⚙️ 詳細検索</button>
+                <button id="search-btn" class="btn btn-primary">発言を検索</button>
+            </div>
+
+            <!-- Dynamic Keyword Suggestions Panel -->
+            <div id="dynamic-sug-box" class="dynamic-suggestions-card hidden">
+                <div class="sug-header">
+                    <span>💡 発言から推測された関連検索語 (クリックでキーワード追記):</span>
+                </div>
+                <div id="sug-chips-list" class="sug-chips-list">
+                    <!-- Dynamic Suggestion Chips -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="results-anchor">
+            <div class="results-header">
+                <span id="results-count">検索ボタンを押して議事録を取得します</span>
+                <div class="export-actions">
+                    <button id="share-search-url-btn" class="btn" style="display:none;">🔗 検索URL共有</button>
+                    <button id="export-csv-btn" class="btn" style="display:none;">📄 CSV保存</button>
+                    <button id="export-json-btn" class="btn" style="display:none;">💾 JSON保存</button>
+                </div>
+            </div>
+
+            <!-- Speech Card List -->
+            <div id="speech-list" class="speech-list">
+                <!-- Dynamic Speech Cards -->
+            </div>
+
+            <!-- Pagination Controls -->
+            <div id="pagination-box" class="pagination hidden">
+                <button id="prev-btn" class="btn" disabled>◀ 前のページ</button>
+                <span id="current-page-num" style="font-family: var(--font-mono); font-weight: bold;">Page 1</span>
+                <button id="next-btn" class="btn">次のページ ▶</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Advanced Search Modal -->
+    <div id="adv-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span class="modal-title">⚙️ 詳細検索フィルター</span>
+                <button id="close-adv-modal-btn" class="close-modal-btn">✕</button>
+            </div>
+            <div class="modal-grid">
+                <div class="field-group">
+                    <label>院・所属</label>
+                    <select id="adv-house">
+                        <option value="" selected>両院 (すべて)</option>
+                        <option value="衆議院">衆議院</option>
+                        <option value="参議院">参議院</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>並び順</label>
+                    <select id="adv-sort">
+                        <option value="desc" selected>新しい順 (日付降順)</option>
+                        <option value="asc">古い順 (日付昇順)</option>
+                    </select>
+                </div>
+                <div class="field-group full-width">
+                    <label>会議名・委員会</label>
+                    <input type="text" id="adv-meeting" placeholder="例: 環境委員会, 予算委員会, 厚生労働">
+                </div>
+                <div class="field-group full-width">
+                    <label>発言者名・議員氏名</label>
+                    <input type="text" id="adv-speaker" placeholder="例: 特定の大臣・国会議員名">
+                </div>
+                <div class="field-group">
+                    <label>開始日付 (From)</label>
+                    <input type="date" id="adv-from-date">
+                </div>
+                <div class="field-group">
+                    <label>終了日付 (Until)</label>
+                    <input type="date" id="adv-until-date">
+                </div>
+                <div class="field-group full-width">
+                    <label>表示件数</label>
+                    <select id="adv-max-records">
+                        <option value="20" selected>20 件</option>
+                        <option value="40">40 件</option>
+                        <option value="80">80 件</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                <button id="reset-adv-btn" class="btn">条件リセット</button>
+                <button id="apply-adv-btn" class="btn btn-primary">この条件で検索</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span class="modal-title">❓ 使い方・機能ガイド</span>
+                <button id="close-help-modal-btn" class="close-modal-btn">✕</button>
+            </div>
+            <div style="font-size: 0.88rem; line-height: 1.7; display:flex; flex-direction:column; gap:12px; color: var(--text-main);">
+                <p><strong>1. フリーワード & アンド検索:</strong><br>
+                検索ボックスに「保護猫」「生成AI」などのキーワードを入力します。スペースを挟むことで複数単語（アンド検索）が可能です。</p>
+                <p><strong>2. 関連ワードの追記推測:</strong><br>
+                検索後、ヒットした議事録から頻出キーワードが「💡 関連検索語」として提示されます。クリックすると即座にキーワードを追記して深掘り検索できます。</p>
+                <p><strong>3. e-Gov法令連携:</strong><br>
+                発言内に法律名が登場すると、自動的に検出してe-Gov法令検索 (`elaws.e-gov.go.jp`) へのリンクが生成されます。</p>
+                <p><strong>4. ショートカットキー:</strong><br>
+                ・<kbd>/</kbd> キー : 検索窓にフォーカス<br>
+                ・<kbd>Esc</kbd> キー : モーダルダイアログを閉じる</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">コピーしました！</div>
+
+    <footer>
+        国会議事録サーチ | 出典: <a href="https://kokkai.ndl.go.jp/api.html" target="_blank" rel="noopener">国立国会図書館 国会議事録検索API</a> | zdm8390/webtools
+    </footer>
+
+    <!-- Professional Refactored Application Engine -->
+    <script>
+        /**
+         * Clean Architecture App Engine for Diet Speech Explorer
+         */
+        class DietSearchApp {
+            constructor() {
+                this.state = {
+                    query: '',
+                    house: '',
+                    meeting: '',
+                    speaker: '',
+                    fromDate: '',
+                    untilDate: '',
+                    sortOrder: 'desc',
+                    maxRecords: 20,
+                    startRecord: 1,
+                    totalRecords: 0,
+                    speeches: [],
+                    lightTheme: false
+                };
+
+                this.dom = {
+                    queryInput: document.getElementById('query-input'),
+                    clearInputBtn: document.getElementById('clear-input-btn'),
+                    searchBtn: document.getElementById('search-btn'),
+                    advSearchBtn: document.getElementById('adv-search-btn'),
+                    themeToggleBtn: document.getElementById('theme-toggle-btn'),
+                    helpModalBtn: document.getElementById('help-modal-btn'),
+                    
+                    advModal: document.getElementById('adv-modal'),
+                    closeAdvModalBtn: document.getElementById('close-adv-modal-btn'),
+                    applyAdvBtn: document.getElementById('apply-adv-btn'),
+                    resetAdvBtn: document.getElementById('reset-adv-btn'),
+
+                    advHouse: document.getElementById('adv-house'),
+                    advSort: document.getElementById('adv-sort'),
+                    advMeeting: document.getElementById('adv-meeting'),
+                    advSpeaker: document.getElementById('adv-speaker'),
+                    advFromDate: document.getElementById('adv-from-date'),
+                    advUntilDate: document.getElementById('adv-until-date'),
+                    advMaxRecords: document.getElementById('adv-max-records'),
+
+                    helpModal: document.getElementById('help-modal'),
+                    closeHelpModalBtn: document.getElementById('close-help-modal-btn'),
+
+                    dynamicSugBox: document.getElementById('dynamic-sug-box'),
+                    sugChipsList: document.getElementById('sug-chips-list'),
+
+                    resultsCount: document.getElementById('results-count'),
+                    speechList: document.getElementById('speech-list'),
+                    paginationBox: document.getElementById('pagination-box'),
+                    prevBtn: document.getElementById('prev-btn'),
+                    nextBtn: document.getElementById('next-btn'),
+                    currentPageNum: document.getElementById('current-page-num'),
+
+                    exportCsvBtn: document.getElementById('export-csv-btn'),
+                    exportJsonBtn: document.getElementById('export-json-btn'),
+                    shareSearchUrlBtn: document.getElementById('share-search-url-btn'),
+                    toast: document.getElementById('toast')
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.parseUrlParams();
+                this.dom.queryInput.focus();
+                this.executeSearch();
+            }
+
+            parseUrlParams() {
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('q')) {
+                    this.dom.queryInput.value = params.get('q');
+                    if (params.has('house')) this.dom.advHouse.value = params.get('house');
+                    if (params.has('meeting')) this.dom.advMeeting.value = params.get('meeting');
+                    if (params.has('speaker')) this.dom.advSpeaker.value = params.get('speaker');
+                }
+            }
+
+            bindEvents() {
+                // Theme Toggle
+                this.dom.themeToggleBtn.addEventListener('click', () => {
+                    this.state.lightTheme = !this.state.lightTheme;
+                    document.body.classList.toggle('light-theme', this.state.lightTheme);
+                    this.dom.themeToggleBtn.textContent = this.state.lightTheme ? '🌙 ダーク' : '☀️ ライト';
+                });
+
+                // Clear input
+                this.dom.clearInputBtn.addEventListener('click', () => {
+                    this.dom.queryInput.value = '';
+                    this.dom.queryInput.focus();
+                });
+
+                // Global Shortcuts (/ and Esc)
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === '/' && document.activeElement !== this.dom.queryInput) {
+                        e.preventDefault();
+                        this.dom.queryInput.focus();
+                    } else if (e.key === 'Escape') {
+                        this.closeModals();
+                    }
+                });
+
+                // Modal Triggers
+                this.dom.advSearchBtn.addEventListener('click', () => this.dom.advModal.classList.remove('hidden'));
+                this.dom.closeAdvModalBtn.addEventListener('click', () => this.dom.advModal.classList.add('hidden'));
+                this.dom.helpModalBtn.addEventListener('click', () => this.dom.helpModal.classList.remove('hidden'));
+                this.dom.closeHelpModalBtn.addEventListener('click', () => this.dom.helpModal.classList.add('hidden'));
+
+                this.dom.resetAdvBtn.addEventListener('click', () => this.resetAdvFilters());
+                this.dom.applyAdvBtn.addEventListener('click', () => {
+                    this.dom.advModal.classList.add('hidden');
+                    this.state.startRecord = 1;
+                    this.executeSearch();
+                });
+
+                // Primary Search Trigger
+                this.dom.searchBtn.addEventListener('click', () => {
+                    this.state.startRecord = 1;
+                    this.executeSearch();
+                });
+
+                this.dom.queryInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.state.startRecord = 1;
+                        this.executeSearch();
+                    }
+                });
+
+                // Pagination
+                this.dom.prevBtn.addEventListener('click', () => {
+                    if (this.state.startRecord > 1) {
+                        this.state.startRecord = Math.max(1, this.state.startRecord - this.state.maxRecords);
+                        this.executeSearch();
+                    }
+                });
+
+                this.dom.nextBtn.addEventListener('click', () => {
+                    this.state.startRecord += this.state.maxRecords;
+                    this.executeSearch();
+                });
+
+                // Exports & Share
+                this.dom.exportCsvBtn.addEventListener('click', () => this.exportCSV());
+                this.dom.exportJsonBtn.addEventListener('click', () => this.exportJSON());
+                this.dom.shareSearchUrlBtn.addEventListener('click', () => this.shareSearchURL());
+            }
+
+            closeModals() {
+                this.dom.advModal.classList.add('hidden');
+                this.dom.helpModal.classList.add('hidden');
+            }
+
+            resetAdvFilters() {
+                this.dom.advHouse.value = '';
+                this.dom.advSort.value = 'desc';
+                this.dom.advMeeting.value = '';
+                this.dom.advSpeaker.value = '';
+                this.dom.advFromDate.value = '';
+                this.dom.advUntilDate.value = '';
+                this.dom.advMaxRecords.value = '20';
+            }
+
+            async executeSearch() {
+                const query = this.cleanInput(this.dom.queryInput.value);
+                if (!query) {
+                    alert('検索キーワードを入力してください。');
+                    return;
+                }
+
+                this.state.query = query;
+                this.state.house = this.dom.advHouse.value;
+                this.state.meeting = this.dom.advMeeting.value.trim();
+                this.state.speaker = this.dom.advSpeaker.value.trim();
+                this.state.fromDate = this.dom.advFromDate.value;
+                this.state.untilDate = this.dom.advUntilDate.value;
+                this.state.sortOrder = this.dom.advSort.value;
+                this.state.maxRecords = parseInt(this.dom.advMaxRecords.value, 10);
+
+                if (this.state.meeting && !this.state.meeting.includes('委員会') && !this.state.meeting.includes('会議')) {
+                    this.state.meeting += '委員会';
+                }
+
+                let apiUrl = `https://kokkai.ndl.go.jp/api/speech?any=${encodeURIComponent(query)}&recordPacking=json&maximumRecords=${this.state.maxRecords}&startRecord=${this.state.startRecord}`;
+                if (this.state.house) apiUrl += `&nameOfHouse=${encodeURIComponent(this.state.house)}`;
+                if (this.state.meeting) apiUrl += `&nameOfMeeting=${encodeURIComponent(this.state.meeting)}`;
+                if (this.state.speaker) apiUrl += `&speaker=${encodeURIComponent(this.state.speaker)}`;
+                if (this.state.fromDate) apiUrl += `&from=${this.state.fromDate}`;
+                if (this.state.untilDate) apiUrl += `&until=${this.state.untilDate}`;
+
+                this.dom.resultsCount.textContent = '国会議事録APIからデータを検索・取得中...';
+                this.dom.speechList.innerHTML = `
+                    <div class="loading-box">
+                        <div class="spinner"></div>
+                        <div style="color: var(--text-muted); font-size: 0.9rem;">国会議事録データベースを検索しています...</div>
+                    </div>
+                `;
+
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+
+                    const data = await response.json();
+                    this.renderResults(data);
+                } catch (err) {
+                    console.error(err);
+                    this.dom.resultsCount.textContent = '検索処理中にエラーが発生しました。';
+                    this.dom.speechList.innerHTML = `
+                        <div style="padding: 40px; text-align: center; color: #ef4444; background: rgba(239, 68, 68, 0.1); border-radius: 16px;">
+                            <strong>国会議事録APIの通信に失敗しました。</strong><br>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">${this.escapeHtml(err.message)}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            renderResults(data) {
+                this.state.totalRecords = data.numberOfRecords || 0;
+                let speeches = data.speechRecord || [];
+
+                speeches.sort((a, b) => {
+                    const dateA = a.date || '';
+                    const dateB = b.date || '';
+                    return this.state.sortOrder === 'desc' ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
+                });
+
+                this.state.speeches = speeches;
+                this.dom.resultsCount.innerHTML = `「<strong>${this.escapeHtml(this.state.query)}</strong>」の検索結果: 全 <strong>${this.state.totalRecords.toLocaleString()}</strong> 件`;
+
+                if (speeches.length === 0) {
+                    this.dom.speechList.innerHTML = `
+                        <div style="padding: 40px; text-align: center; color: var(--text-muted); background: var(--card-bg); border-radius: 16px;">
+                            💡 該当する議事録が見つかりませんでした。<br>
+                            <span style="font-size: 0.82rem; margin-top: 6px; display: inline-block;">ヒント: 別のキーワードを試すか、日付・委員会などのフィルター条件を解除してください。</span>
+                        </div>
+                    `;
+                    this.dom.paginationBox.classList.add('hidden');
+                    this.dom.dynamicSugBox.classList.add('hidden');
+                    this.toggleExportBtns(false);
+                    return;
+                }
+
+                this.toggleExportBtns(true);
+                this.dom.speechList.innerHTML = '';
+
+                // Extract Dynamic Keyword Suggestions from Results!
+                this.renderDynamicKeywordSuggestions(speeches);
+
+                speeches.forEach(s => {
+                    const card = document.createElement('div');
+                    card.className = 'speech-card';
+
+                    const rawSpeech = s.speech || '';
+                    const charCount = rawSpeech.length.toLocaleString();
+                    const highlightedBody = this.highlightKeywords(rawSpeech, this.state.query);
+                    const detectedLaws = this.extractLaws(rawSpeech);
+
+                    let lawsHtml = '';
+                    if (detectedLaws.length > 0) {
+                        lawsHtml = `
+                            <div class="detected-laws-box">
+                                <div class="laws-header">📜 発言内から検出された関連法令 (e-Gov法令検索):</div>
+                                <div class="laws-list">
+                                    ${detectedLaws.map(law => `
+                                        <a href="https://elaws.e-gov.go.jp/search/elaws_search/1/1?lawName=${encodeURIComponent(law)}" target="_blank" rel="noopener" class="law-link-badge" title="e-Govで${this.escapeHtml(law)}の条文を調べる">
+                                            ⚖️ ${this.escapeHtml(law)} (e-Gov ↗)
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    const formattedDate = this.formatDateJP(s.date);
+                    const speakerRole = s.speakerRole ? `<span class="role-tag">${this.escapeHtml(s.speakerRole)}</span>` : '';
+                    const groupStr = s.speakerGroup ? ` (${this.escapeHtml(s.speakerGroup)})` : '';
+                    const isLong = rawSpeech.length > 320;
+                    const collapsedClass = isLong ? 'collapsed' : '';
+                    const expandBtnHtml = isLong ? `<button class="toggle-expand-btn">▶ 全文を表示 (${charCount}文字)</button>` : '';
+
+                    // SNS Share URL Building
+                    const shareText = `国会議事録「${this.escapeHtml(s.speaker || '')}議員の発言 (${s.nameOfMeeting || ''})」: ${rawSpeech.substring(0, 70)}... #国会議事録サーチ`;
+                    const shareUrl = encodeURIComponent(s.speechURL || window.location.href);
+                    const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${shareUrl}`;
+                    const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${shareUrl}`;
+
+                    card.innerHTML = `
+                        <div class="speech-meta">
+                            <div class="speaker-badge">
+                                👤 ${this.escapeHtml(s.speaker || '発言者不明')}${speakerRole}${groupStr}
+                            </div>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <span class="meeting-tag">${this.escapeHtml(s.nameOfHouse || '')} ${this.escapeHtml(s.nameOfMeeting || '')}</span>
+                                <span class="date-tag">📅 ${formattedDate}</span>
+                            </div>
+                        </div>
+                        <div class="speech-body ${collapsedClass}">${highlightedBody}</div>
+                        ${expandBtnHtml}
+                        ${lawsHtml}
+                        <div class="speech-footer">
+                            <div class="share-btn-group">
+                                <button class="btn copy-speech-btn" data-speaker="${this.escapeHtml(s.speaker || '')}" data-date="${formattedDate}" data-meeting="${this.escapeHtml(s.nameOfMeeting || '')}">
+                                    📋 発言をコピー
+                                </button>
+                                <a href="${xShareUrl}" target="_blank" rel="noopener" class="share-btn share-x">𝕏 でシェア</a>
+                                <a href="${lineShareUrl}" target="_blank" rel="noopener" class="share-btn share-line">LINE</a>
+                            </div>
+                            <a href="${this.escapeHtml(s.speechURL || '#')}" target="_blank" rel="noopener" class="official-link">
+                                📖 国会会議録システムで原文を読む ↗
+                            </a>
+                        </div>
+                    `;
+
+                    // Bind Expand Listener
+                    const toggleBtn = card.querySelector('.toggle-expand-btn');
+                    if (toggleBtn) {
+                        const bodyEl = card.querySelector('.speech-body');
+                        toggleBtn.addEventListener('click', () => {
+                            const isCol = bodyEl.classList.contains('collapsed');
+                            bodyEl.classList.toggle('collapsed', !isCol);
+                            toggleBtn.textContent = isCol ? '▲ 折りたたむ' : `▶ 全文を表示 (${charCount}文字)`;
+                        });
+                    }
+
+                    // Bind Copy Listener
+                    const copyBtn = card.querySelector('.copy-speech-btn');
+                    copyBtn.addEventListener('click', () => {
+                        const textToCopy = `【出典: 国会議事録 (${copyBtn.getAttribute('data-meeting')} ${copyBtn.getAttribute('data-date')})】\n${copyBtn.getAttribute('data-speaker')}「${rawSpeech}」`;
+                        navigator.clipboard.writeText(textToCopy).then(() => this.showToast());
+                    });
+
+                    this.dom.speechList.appendChild(card);
+                });
+
+                // Update Pagination
+                this.dom.paginationBox.classList.remove('hidden');
+                const page = Math.floor(this.state.startRecord / this.state.maxRecords) + 1;
+                this.dom.currentPageNum.textContent = `Page ${page}`;
+
+                this.dom.prevBtn.disabled = this.state.startRecord <= 1;
+                this.dom.nextBtn.disabled = this.state.startRecord + this.state.maxRecords > this.state.totalRecords;
+
+                document.getElementById('results-anchor').scrollIntoView({ behavior: 'smooth' });
+            }
+
+            renderDynamicKeywordSuggestions(speeches) {
+                const combinedText = speeches.map(s => s.speech || '').join(' ');
+                const wordsMap = {};
+
+                // Match Japanese Nouns & Key Phrases
+                const candidates = combinedText.match(/(?:[一-龠]{2,6}|[ァ-ヴー]{3,8})/g) || [];
+                const stopWords = new Set(['私共', '委員', '大臣', '政府', '質問', '答弁', '提案', '問題', '本件', '議論', '対応', '検討', '制度', '現在', '今後', '今回', '事業', '社会', '国民']);
+
+                candidates.forEach(word => {
+                    if (word.length >= 2 && !stopWords.has(word) && !this.state.query.includes(word)) {
+                        wordsMap[word] = (wordsMap[word] || 0) + 1;
+                    }
+                });
+
+                const sortedWords = Object.keys(wordsMap)
+                    .sort((a, b) => wordsMap[b] - wordsMap[a])
+                    .slice(0, 6);
+
+                if (sortedWords.length === 0) {
+                    this.dom.dynamicSugBox.classList.add('hidden');
+                    return;
+                }
+
+                this.dom.sugChipsList.innerHTML = '';
+                sortedWords.forEach(word => {
+                    const chip = document.createElement('button');
+                    chip.className = 'sug-chip';
+                    chip.innerHTML = `＋ ${this.escapeHtml(word)}`;
+                    chip.addEventListener('click', () => {
+                        this.dom.queryInput.value = `${this.dom.queryInput.value.trim()} ${word}`;
+                        this.state.startRecord = 1;
+                        this.executeSearch();
+                    });
+                    this.dom.sugChipsList.appendChild(chip);
+                });
+
+                this.dom.dynamicSugBox.classList.remove('hidden');
+            }
+
+            toggleExportBtns(show) {
+                const display = show ? 'inline-flex' : 'none';
+                this.dom.exportCsvBtn.style.display = display;
+                this.dom.exportJsonBtn.style.display = display;
+                this.dom.shareSearchUrlBtn.style.display = display;
+            }
+
+            extractLaws(text) {
+                if (!text) return [];
+                const lawPattern = /(?:[一-龠ぁ-んァ-ヶA-Za-z0-9]+(?:の愛護及び管理に関する法律|に関する法律|基本法|特例法|管理法|保護法|処罰法|取締法|促進法|防止法|適正化法))|(?:[一-龠ぁ-んァ-ヶ]{2,12}法)/g;
+                const matches = text.match(lawPattern) || [];
+                const excludeSet = new Set(['方法', '手法', '文法', '魔法', '違法', '合法', '作法', '無作法', '療法', '新法', '旧法', '司法', '立法', '行政法', '憲法', '商法']);
+                
+                const validLaws = new Set();
+                matches.forEach(m => {
+                    const clean = m.trim().replace(/^[「『【\s]+|[」』】\s]+$/g, '');
+                    if (clean.length >= 3 && !excludeSet.has(clean)) {
+                        validLaws.add(clean);
+                    }
+                });
+                return Array.from(validLaws);
+            }
+
+            highlightKeywords(text, query) {
+                if (!query) return this.escapeHtml(text);
+                let escapedText = this.escapeHtml(text);
+                escapedText = escapedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent-navy);">$1</a>');
+
+                const words = query.trim().split(/\s+/);
+                words.forEach(word => {
+                    if (word) {
+                        const escapedKw = this.escapeHtml(word);
+                        const regex = new RegExp(escapedKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                        escapedText = escapedText.replace(regex, (match) => `<mark class="keyword-hl">${match}</mark>`);
+                    }
+                });
+                return escapedText;
+            }
+
+            formatDateJP(dateStr) {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                if (parts.length === 3) return `${parts[0]}年${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日`;
+                return dateStr;
+            }
+
+            cleanInput(str) {
+                return str.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0)).trim();
+            }
+
+            escapeHtml(str) {
+                return (str || '')
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            showToast() {
+                this.dom.toast.classList.add('show');
+                setTimeout(() => this.dom.toast.classList.remove('show'), 2200);
+            }
+
+            shareSearchURL() {
+                const url = new URL(window.location.href);
+                url.searchParams.set('q', this.state.query);
+                if (this.state.house) url.searchParams.set('house', this.state.house);
+                if (this.state.meeting) url.searchParams.set('meeting', this.state.meeting);
+                
+                navigator.clipboard.writeText(url.toString()).then(() => {
+                    alert('検索条件のディープリンクURLをコピーしました！');
+                });
+            }
+
+            exportCSV() {
+                if (this.state.speeches.length === 0) return;
+                let csv = '\uFEFF日付,院名,会議名,発言者,役職,発言内容,URL\n';
+                this.state.speeches.forEach(s => {
+                    const date = `"${s.date || ''}"`;
+                    const house = `"${(s.nameOfHouse || '').replace(/"/g, '""')}"`;
+                    const meeting = `"${(s.nameOfMeeting || '').replace(/"/g, '""')}"`;
+                    const speaker = `"${(s.speaker || '').replace(/"/g, '""')}"`;
+                    const role = `"${(s.speakerRole || '').replace(/"/g, '""')}"`;
+                    const body = `"${(s.speech || '').replace(/"/g, '""')}"`;
+                    const url = `"${s.speechURL || ''}"`;
+                    csv += `${date},${house},${meeting},${speaker},${role},${body},${url}\n`;
+                });
+                this.downloadFile(csv, `国会議事録検索結果_${this.state.query}.csv`, 'text/csv;charset=utf-8;');
+            }
+
+            exportJSON() {
+                if (this.state.speeches.length === 0) return;
+                const jsonStr = JSON.stringify(this.state.speeches, null, 2);
+                this.downloadFile(jsonStr, `国会議事録検索結果_${this.state.query}.json`, 'application/json');
+            }
+
+            downloadFile(content, fileName, mimeType) {
+                const blob = new Blob([content], { type: mimeType });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                link.click();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            window.appInstance = new DietSearchApp();
+        });
+    </script>
+</body>
+</html>

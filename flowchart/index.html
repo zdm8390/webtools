@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="マウスクリック＆ドラッグで自由自在に美しく作成できるWebベースのフローチャート構築ツール" />
+    <title>Flowchart Studio | フローチャート作成ツール</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="app-container theme-dark">
+        <!-- Main Top Bar -->
+        <header class="top-bar">
+            <div class="brand">
+                <a href="../" class="back-link" title="ポータルに戻る">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </a>
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="6" rx="1.5"/>
+                        <rect x="14" y="15" width="7" height="6" rx="1.5"/>
+                        <polygon points="17.5,3 21,7.5 17.5,12 14,7.5"/>
+                        <path d="M6.5 9v4a2 2 0 002 2h5.5"/>
+                        <path d="M14 8.5h3.5"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Flowchart Studio</h1>
+                    <span class="version-tag">v1.0</span>
+                </div>
+            </div>
+
+            <!-- Toolbar Actions -->
+            <div class="toolbar-center">
+                <div class="tool-group">
+                    <button id="btn-select-tool" class="tool-btn active" title="選択・移動ツール (V)">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7 18 3-7 7-3L3 3z"/></svg>
+                        <span>選択</span>
+                    </button>
+                    <button id="btn-pan-tool" class="tool-btn" title="キャンバス移動 (H / Space+ドラッグ)">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v6M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8.5M6 14a2 2 0 0 0-2 2v0a6 6 0 0 0 6 6h4a6 6 0 0 0 6-6v-5a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2.5"/></svg>
+                        <span>手のひら</span>
+                    </button>
+                </div>
+
+                <div class="tool-divider"></div>
+
+                <div class="tool-group">
+                    <button id="btn-undo" class="tool-btn" title="元に戻す (Ctrl+Z)">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+                    </button>
+                    <button id="btn-redo" class="tool-btn" title="やり直す (Ctrl+Y)">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/></svg>
+                    </button>
+                </div>
+
+                <div class="tool-divider"></div>
+
+                <div class="tool-group">
+                    <button id="btn-templates" class="action-btn secondary" title="サンプルテンプレートを読み込む">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                        <span>テンプレート</span>
+                    </button>
+                    <button id="btn-clear" class="action-btn danger-subtle" title="キャンバスをクリア">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        <span>クリア</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="top-bar-right">
+                <button id="btn-theme-toggle" class="icon-btn" title="テーマ切り替え (ダーク/ライト)">
+                    <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+
+                <div class="dropdown">
+                    <button id="btn-export-menu" class="action-btn primary">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span>書き出し / 保存</span>
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                    </button>
+                    <div id="export-dropdown" class="dropdown-menu">
+                        <button id="btn-export-png"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> PNG画像で保存</button>
+                        <button id="btn-export-svg"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> SVGベクトル画像で保存</button>
+                        <div class="dropdown-divider"></div>
+                        <button id="btn-save-json"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> JSONプロジェクト保存</button>
+                        <button id="btn-load-json-trigger"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> JSONファイルを読み込む</button>
+                        <input type="file" id="file-input-json" accept=".json" style="display:none;">
+                    </div>
+                </div>
+
+                <a href="./NOTICE.md" target="_blank" class="notice-link-btn" title="仕様・使い方マニュアルを読む">
+                    📖 Notice
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Workspace Area -->
+        <div class="workspace-body">
+            <!-- Left Sidebar: Shape Palette -->
+            <aside class="sidebar-palette">
+                <div class="sidebar-header">
+                    <h2>図形ライブラリ</h2>
+                    <span class="sub-text">キャンバスにドラッグまたはクリック</span>
+                </div>
+                
+                <div class="palette-scroll">
+                    <div class="palette-section">
+                        <h3>基本フローチャート</h3>
+                        <div class="palette-grid">
+                            <!-- Start / End -->
+                            <div class="palette-item" data-shape="start-end" draggable="true" title="開始・終了 (ターミナル)">
+                                <div class="shape-preview shape-start-end">開始 / 終了</div>
+                                <span class="shape-label">開始・終了</span>
+                            </div>
+                            <!-- Process -->
+                            <div class="palette-item" data-shape="process" draggable="true" title="処理・プロセス">
+                                <div class="shape-preview shape-process">処理</div>
+                                <span class="shape-label">処理</span>
+                            </div>
+                            <!-- Decision -->
+                            <div class="palette-item" data-shape="decision" draggable="true" title="条件分岐">
+                                <div class="shape-preview shape-decision">分岐</div>
+                                <span class="shape-label">条件分岐</span>
+                            </div>
+                            <!-- Input / Output -->
+                            <div class="palette-item" data-shape="io" draggable="true" title="データ入出力">
+                                <div class="shape-preview shape-io">データ入出力</div>
+                                <span class="shape-label">入出力</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="palette-section">
+                        <h3>拡張図形・データ</h3>
+                        <div class="palette-grid">
+                            <!-- Document -->
+                            <div class="palette-item" data-shape="document" draggable="true" title="書類・ドキュメント">
+                                <div class="shape-preview shape-document">書類</div>
+                                <span class="shape-label">書類</span>
+                            </div>
+                            <!-- Database -->
+                            <div class="palette-item" data-shape="database" draggable="true" title="データベース">
+                                <div class="shape-preview shape-database">DB</div>
+                                <span class="shape-label">DB</span>
+                            </div>
+                            <!-- Subprocess -->
+                            <div class="palette-item" data-shape="subprocess" draggable="true" title="サブプロセス・定義済み処理">
+                                <div class="shape-preview shape-subprocess">サブ処理</div>
+                                <span class="shape-label">サブ処理</span>
+                            </div>
+                            <!-- Connector -->
+                            <div class="palette-item" data-shape="connector" draggable="true" title="結合点・コネクタ">
+                                <div class="shape-preview shape-connector"></div>
+                                <span class="shape-label">結合点</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="palette-section">
+                        <h3>注釈 & メモ</h3>
+                        <div class="palette-grid">
+                            <!-- Note -->
+                            <div class="palette-item" data-shape="note" draggable="true" title="メモ・注釈">
+                                <div class="shape-preview shape-note">メモ...</div>
+                                <span class="shape-label">メモ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="palette-footer">
+                    <div class="quick-tips">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <span>図形の青い端点（ポート）からドラッグして線で結合できます。</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center Canvas Viewport -->
+            <main id="canvas-viewport" class="canvas-viewport">
+                <!-- SVG Canvas Layer for Grid, Connections, Overlay lines -->
+                <svg id="svg-canvas" class="svg-canvas" width="100%" height="100%">
+                    <defs>
+                        <!-- Grid pattern -->
+                        <pattern id="grid-pattern-small" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="var(--grid-line-color)" stroke-width="0.75" opacity="0.4"/>
+                        </pattern>
+                        <pattern id="grid-pattern-large" width="100" height="100" patternUnits="userSpaceOnUse">
+                            <rect width="100" height="100" fill="url(#grid-pattern-small)" />
+                            <path d="M 100 0 L 0 0 0 100" fill="none" stroke="var(--grid-line-major)" stroke-width="1.2" opacity="0.6"/>
+                        </pattern>
+
+                        <!-- Arrowhead Marker Standard -->
+                        <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                            <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="var(--edge-color-default)"/>
+                        </marker>
+                        <!-- Arrowhead Marker Selected -->
+                        <marker id="arrow-end-selected" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                            <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="var(--primary-color)"/>
+                        </marker>
+                        <!-- Arrowhead Marker Hover -->
+                        <marker id="arrow-end-hover" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                            <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="var(--accent-glow)"/>
+                        </marker>
+                    </defs>
+
+                    <!-- Background Rect for Grid -->
+                    <rect id="bg-grid-rect" width="100%" height="100%" fill="url(#grid-pattern-large)" />
+
+                    <!-- Main Container Group (Transformed by Pan & Zoom) -->
+                    <g id="canvas-content-group">
+                        <!-- Rendered Connections Layer -->
+                        <g id="edges-layer"></g>
+
+                        <!-- Dragging Connection Temp Line -->
+                        <path id="temp-edge-path" class="temp-edge" d="" fill="none" stroke="var(--primary-color)" stroke-width="2.5" stroke-dasharray="5,5" marker-end="url(#arrow-end-selected)" style="display:none;"></path>
+
+                        <!-- Rendered Nodes Layer -->
+                        <g id="nodes-layer"></g>
+
+                        <!-- Marquee Selection Rectangle -->
+                        <rect id="marquee-rect" class="marquee-rect" x="0" y="0" width="0" height="0" fill="rgba(79, 70, 229, 0.15)" stroke="var(--primary-color)" stroke-width="1.5" stroke-dasharray="4,4" style="display:none;"></rect>
+
+                        <!-- Dynamic Alignment Guides -->
+                        <g id="alignment-guides-layer"></g>
+                    </g>
+                </svg>
+
+                <!-- Floating Canvas Controls -->
+                <div class="canvas-controls-bar">
+                    <div class="zoom-controls">
+                        <button id="btn-zoom-out" class="icon-btn-small" title="ズームアウト (Ctrl + ホイール下)">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                        <span id="zoom-level-text" class="zoom-text" title="現在の表示倍率">100%</span>
+                        <button id="btn-zoom-in" class="icon-btn-small" title="ズームイン (Ctrl + ホイール上)">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                        <button id="btn-zoom-reset" class="btn-text-small" title="倍率を100%に戻す">100%</button>
+                        <button id="btn-zoom-fit" class="icon-btn-small" title="全体を表示に合わせる">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 9v12H9M3 15V3h12"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="controls-divider"></div>
+
+                    <div class="snap-controls">
+                        <button id="btn-toggle-grid" class="icon-btn-small active" title="スナップ グリッドを表示/非表示">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                        </button>
+                        <button id="btn-toggle-snap" class="icon-btn-small active" title="グリッドに吸着 (Snap to Grid)">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="4"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Info Bar -->
+                <div class="canvas-status-bar">
+                    <span id="status-counts">ノード: 0 | 接続: 0</span>
+                    <span id="status-action" class="status-action-hint">操作ヘルプ: [Shift+ドラッグ] で範囲選択, [Space+ドラッグ] でパン</span>
+                </div>
+            </main>
+
+            <!-- Right Inspector Sidebar -->
+            <aside id="inspector-panel" class="inspector-panel">
+                <div class="inspector-header">
+                    <h2>プロパティ</h2>
+                    <span id="selected-type-badge" class="type-badge">選択なし</span>
+                </div>
+
+                <div class="inspector-body">
+                    <!-- Default Canvas Config (No selection) -->
+                    <div id="inspector-empty" class="inspector-section">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></empty-state>
+                            <p>ノードまたは接続線を選択すると<br>詳細設定を表示できます。</p>
+                        </div>
+                    </div>
+
+                    <!-- Single Node Inspector -->
+                    <div id="inspector-node" class="inspector-section" style="display:none;">
+                        <div class="form-group">
+                            <label for="node-prop-text">テキスト / ラベル</label>
+                            <textarea id="node-prop-text" rows="3" placeholder="テキストを入力..."></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label for="node-prop-shape">形状タイプ</label>
+                                <select id="node-prop-shape">
+                                    <option value="start-end">開始・終了</option>
+                                    <option value="process">処理</option>
+                                    <option value="decision">条件分岐</option>
+                                    <option value="io">入出力</option>
+                                    <option value="document">書類</option>
+                                    <option value="database">DB</option>
+                                    <option value="subprocess">サブ処理</option>
+                                    <option value="note">メモ</option>
+                                    <option value="connector">結合点</option>
+                                </select>
+                            </div>
+                            <div class="form-group half">
+                                <label for="node-prop-fontsize">フォントサイズ</label>
+                                <select id="node-prop-fontsize">
+                                    <option value="12">12 px (小)</option>
+                                    <option value="14" selected>14 px (標準)</option>
+                                    <option value="16">16 px (中)</option>
+                                    <option value="18">18 px (大)</option>
+                                    <option value="22">22 px (特大)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-section-title">カラーテーマ</div>
+                        <div class="color-palette-presets" id="node-color-presets">
+                            <button class="color-swatch default" data-fill="var(--node-bg-default)" data-stroke="var(--node-stroke-default)" data-color="var(--text-color)" title="デフォルト"></button>
+                            <button class="color-swatch blue" data-fill="rgba(59, 130, 246, 0.18)" data-stroke="#3b82f6" data-color="#60a5fa" title="ブルー"></button>
+                            <button class="color-swatch emerald" data-fill="rgba(16, 185, 129, 0.18)" data-stroke="#10b981" data-color="#34d399" title="エメラルド"></button>
+                            <button class="color-swatch amber" data-fill="rgba(245, 158, 11, 0.18)" data-stroke="#f59e0b" data-color="#fbbf24" title="アンバー"></button>
+                            <button class="color-swatch rose" data-fill="rgba(244, 63, 94, 0.18)" data-stroke="#f43f5e" data-color="#fb7185" title="ローズ"></button>
+                            <button class="color-swatch purple" data-fill="rgba(168, 85, 247, 0.18)" data-stroke="#a855f7" data-color="#c084fc" title="パープル"></button>
+                            <button class="color-swatch cyan" data-fill="rgba(6, 182, 212, 0.18)" data-stroke="#06b6d4" data-color="#22d3ee" title="シアン"></button>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label for="node-prop-fill">背景色</label>
+                                <input type="color" id="node-prop-fill" value="#1e293b">
+                            </div>
+                            <div class="form-group half">
+                                <label for="node-prop-stroke">枠線色</label>
+                                <input type="color" id="node-prop-stroke" value="#475569">
+                            </div>
+                        </div>
+
+                        <div class="form-section-title">サイズ & 位置</div>
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label for="node-prop-width">幅 (W)</label>
+                                <input type="number" id="node-prop-width" min="40" max="600" step="5">
+                            </div>
+                            <div class="form-group half">
+                                <label for="node-prop-height">高さ (H)</label>
+                                <input type="number" id="node-prop-height" min="30" max="600" step="5">
+                            </div>
+                        </div>
+
+                        <div class="form-section-title">配置・操作</div>
+                        <div class="button-grid">
+                            <button id="btn-bring-front" class="action-btn secondary-small" title="最前面へ移動">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                                <span>最前面</span>
+                            </button>
+                            <button id="btn-send-back" class="action-btn secondary-small" title="最背面へ移動">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                                <span>最背面</span>
+                            </button>
+                            <button id="btn-duplicate-node" class="action-btn secondary-small" title="複製 (Ctrl+D)">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                <span>複製</span>
+                            </button>
+                            <button id="btn-delete-item" class="action-btn danger-small" title="削除 (Delete)">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                <span>削除</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Single Edge Inspector -->
+                    <div id="inspector-edge" class="inspector-section" style="display:none;">
+                        <div class="form-group">
+                            <label for="edge-prop-label">接続線のラベル (例: はい, いいえ)</label>
+                            <input type="text" id="edge-prop-label" placeholder="ラベルテキスト...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edge-prop-routing">線の形状 (ルーティング)</label>
+                            <select id="edge-prop-routing">
+                                <option value="orthogonal">直角（エルボー線）</option>
+                                <option value="bezier">曲線（ベジェ曲線）</option>
+                                <option value="straight">直線</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edge-prop-style">線種</label>
+                            <select id="edge-prop-style">
+                                <option value="solid">実線 (Solid)</option>
+                                <option value="dashed">破線 (Dashed)</option>
+                                <option value="dotted">点線 (Dotted)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label for="edge-prop-color">線の色</label>
+                                <input type="color" id="edge-prop-color" value="#94a3b8">
+                            </div>
+                            <div class="form-group half">
+                                <label for="edge-prop-width">太さ</label>
+                                <select id="edge-prop-width">
+                                    <option value="1.5">細め (1.5px)</option>
+                                    <option value="2.5" selected>標準 (2.5px)</option>
+                                    <option value="4">太め (4.0px)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-section-title">操作</div>
+                        <button id="btn-delete-edge" class="action-btn danger-small block" title="接続線を削除 (Delete)">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                            <span>この接続線を削除</span>
+                        </button>
+                    </div>
+
+                    <!-- Multiple Selection Inspector -->
+                    <div id="inspector-multi" class="inspector-section" style="display:none;">
+                        <div class="multi-select-summary">
+                            <span id="multi-select-count">3個のアイテムを選択中</span>
+                        </div>
+                        <div class="button-grid">
+                            <button id="btn-align-left" class="action-btn secondary-small" title="左揃え">左揃え</button>
+                            <button id="btn-align-center-h" class="action-btn secondary-small" title="左右中央揃え">中央揃え</button>
+                            <button id="btn-align-right" class="action-btn secondary-small" title="右揃え">右揃え</button>
+                            <button id="btn-align-top" class="action-btn secondary-small" title="上揃え">上揃え</button>
+                            <button id="btn-align-center-v" class="action-btn secondary-small" title="上下中央揃え">上下中央</button>
+                            <button id="btn-align-bottom" class="action-btn secondary-small" title="下揃え">下揃え</button>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <button id="btn-delete-multi" class="action-btn danger-small block">選択項目をまとめて削除</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Templates / Presets Modal -->
+    <div id="modal-templates" class="modal-overlay" style="display:none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h2>サンプルテンプレート選択</h2>
+                <button class="modal-close" data-close="modal-templates">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>あらかじめ用意されたフローチャートのサンプルを読み込みます。<br><small style="color:var(--text-muted);">※現在のキャンバスの内容は上書きされます。</small></p>
+
+                <div class="template-cards-grid">
+                    <!-- Template 1 -->
+                    <div class="template-card" data-template="login-auth">
+                        <div class="template-icon">🔐</div>
+                        <div class="template-info">
+                            <h3>ユーザーログイン認証フロー</h3>
+                            <p>ID・パスワード検証、エラーハンドリング、マイページ遷移を含む標準的な認証処理。</p>
+                        </div>
+                    </div>
+                    <!-- Template 2 -->
+                    <div class="template-card" data-template="order-process">
+                        <div class="template-icon">🛒</div>
+                        <div class="template-info">
+                            <h3>EC注文・在庫判定処理</h3>
+                            <p>カート投入から在庫照会、決済、出荷命令データ連携に至る業務フローチャート。</p>
+                        </div>
+                    </div>
+                    <!-- Template 3 -->
+                    <div class="template-card" data-template="prime-algorithm">
+                        <div class="template-icon">🔢</div>
+                        <div class="template-info">
+                            <h3>素数判定アルゴリズム</h3>
+                            <p>数値入力から繰り返し計算（ループ）と条件分岐を用いて素数を判定するアルゴリズム。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn secondary" data-close="modal-templates">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <footer style="position:fixed; bottom:4px; right:12px; z-index:90; font-size:11px; color:rgba(255,255,255,0.4); pointer-events:none;">
+        zdm8390/webtools
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
