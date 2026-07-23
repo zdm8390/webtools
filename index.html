@@ -585,9 +585,33 @@
                 flex-wrap: wrap;
             }
         }
+
+        /* App Version Badge (Top Right) */
+        .app-version-badge {
+            position: fixed;
+            top: 16px;
+            right: 20px;
+            z-index: 100;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            padding: 4px 12px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(148, 163, 184, 0.12);
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body>
+
+    <!-- App Version Badge -->
+    <div class="app-version-badge" title="Webtools Portal Version">v2.4.0</div>
 
     <div class="ambient-blob blob-1"></div>
     <div class="ambient-blob blob-2"></div>

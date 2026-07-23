@@ -1,7 +1,7 @@
-/* Modern styling for 10-Minute Survivors */
+/* Modern styling for 10-Minute Survivors (Dungeon Edition) */
 :root {
     --bg-dark: #070913;
-    --card-bg: rgba(15, 23, 42, 0.85);
+    --card-bg: rgba(15, 23, 42, 0.88);
     --card-border: rgba(99, 102, 241, 0.3);
     --accent-purple: #8b5cf6;
     --accent-cyan: #06b6d4;
@@ -68,7 +68,7 @@ canvas {
     display: flex;
     flex-direction: column;
     padding: 16px 24px;
-    gap: 12px;
+    gap: 10px;
 }
 
 .hud-top {
@@ -76,7 +76,7 @@ canvas {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
@@ -99,7 +99,7 @@ canvas {
 }
 
 .hud-value {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 900;
     font-family: var(--font-pixel);
     color: var(--text-main);
@@ -108,6 +108,71 @@ canvas {
 .highlight-timer {
     color: var(--accent-gold);
     text-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+/* Exit Tracker Indicator */
+.exit-tracker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    padding: 6px 14px;
+    border-radius: 20px;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.exit-icon {
+    font-size: 18px;
+}
+
+.exit-arrow {
+    font-size: 18px;
+    display: inline-block;
+    transition: transform 0.1s linear;
+}
+
+.exit-dist-text {
+    font-family: var(--font-pixel);
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--accent-green);
+}
+
+/* Mini Map Canvas Container */
+.minimap-container {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    width: 120px;
+    height: 120px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    overflow: hidden;
+    pointer-events: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#minimap-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.minimap-label {
+    position: absolute;
+    bottom: 2px;
+    font-size: 8px;
+    font-weight: 900;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 1px 6px;
+    border-radius: 6px;
 }
 
 .hud-actions {
@@ -181,7 +246,7 @@ canvas {
     font-size: 12px;
     font-weight: 700;
     color: var(--text-muted);
-    min-width: 80px;
+    min-width: 90px;
     text-align: right;
 }
 
@@ -265,7 +330,7 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(3, 7, 18, 0.82);
+    background: rgba(3, 7, 18, 0.84);
     backdrop-filter: blur(16px);
     z-index: 100;
     display: flex;
@@ -390,20 +455,12 @@ canvas {
 
 .controls-guide {
     background: rgba(255, 255, 255, 0.04);
-    padding: 10px 16px;
-    border-radius: 10px;
+    padding: 12px 18px;
+    border-radius: 12px;
     font-size: 12px;
-    color: var(--text-muted);
-}
-
-kbd {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: monospace;
-    margin: 0 2px;
-    font-weight: bold;
+    color: var(--text-main);
+    line-height: 1.5;
+    border: 1px dashed rgba(255, 255, 255, 0.15);
 }
 
 /* Buttons */
@@ -629,11 +686,19 @@ kbd {
     }
     .hud-top {
         padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
     }
     .hud-value {
         font-size: 16px;
     }
     .title-heading {
         font-size: 28px;
+    }
+    .minimap-container {
+        width: 90px;
+        height: 90px;
+        bottom: 16px;
+        right: 16px;
     }
 }

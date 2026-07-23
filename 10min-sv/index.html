@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>10-Minute Survivors | 10分サバイバーズ</title>
-    <meta name="description" content="10分間を生き残れ！Unicode絵文字とCanvasで描かれる爽快ヴァンパイア・サバイバーズ風2Dアクションゲーム。" />
+    <meta name="description" content="制限時間10分！迷宮ダンジョンを探索し、敵をなぎ倒して出口ポータルから脱出せよ！" />
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,6 +26,14 @@
                     <span class="hud-label">SURVIVAL TIME</span>
                     <span id="timer-display" class="hud-value highlight-timer">10:00</span>
                 </div>
+
+                <!-- Exit Navigation Guide Indicator -->
+                <div id="exit-tracker" class="exit-tracker" title="出口ポータルへの方向">
+                    <span class="exit-icon">🚪</span>
+                    <span id="exit-compass" class="exit-arrow">⬆️</span>
+                    <span id="exit-distance" class="exit-dist-text">0m</span>
+                </div>
+
                 <div class="hud-stat-box">
                     <span class="hud-label">KILLS</span>
                     <span id="kill-display" class="hud-value">0</span>
@@ -40,6 +48,12 @@
                 </div>
             </div>
 
+            <!-- Mini Map Canvas Container -->
+            <div id="minimap-container" class="minimap-container">
+                <canvas id="minimap-canvas" width="120" height="120"></canvas>
+                <div class="minimap-label">MINI MAP</div>
+            </div>
+
             <!-- XP & Level Bar -->
             <div class="xp-container">
                 <div class="level-badge"><span id="level-display">Lv.1</span></div>
@@ -47,7 +61,7 @@
                     <div id="xp-bar-inner" class="xp-bar-inner"></div>
                 </div>
                 <div class="xp-text-container">
-                    <span id="xp-text">0 / 10 XP</span>
+                    <span id="xp-text">0 / 15 XP</span>
                 </div>
             </div>
 
@@ -67,9 +81,9 @@
         <!-- Title Screen Overlay -->
         <div id="title-screen" class="screen-overlay">
             <div class="title-card animate-pop">
-                <div class="badge-tag">10-MINUTE SURVIVORS</div>
+                <div class="badge-tag">DUNGEON ESCAPE SURVIVAL</div>
                 <h1 class="title-heading">10分<span class="accent-text">サバイバーズ</span></h1>
-                <p class="title-sub">画面を埋め尽くす敵をなぎ倒し、10分間を生存せよ！</p>
+                <p class="title-sub">制限時間10分！迷宮ダンジョンを攻略し、最奥の出口ポータル 🚪 から脱出せよ！</p>
 
                 <div class="char-select-section">
                     <h3>キャラ選択</h3>
@@ -82,7 +96,7 @@
                         <div class="char-card" data-char="knight">
                             <div class="char-avatar">🗡️</div>
                             <div class="char-name">聖騎士</div>
-                            <div class="char-desc">飛剣 & HP+30%・防御力高</div>
+                            <div class="char-desc">飛剣 & HP+30%・高耐久</div>
                         </div>
                         <div class="char-card" data-char="ranger">
                             <div class="char-avatar">🏹</div>
@@ -93,10 +107,10 @@
                 </div>
 
                 <div class="controls-guide">
-                    <span>操作方法: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> または <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> で移動（自動攻撃）</span>
+                    <span>ミッション: 迷路のような広大なダンジョンを探索し、敵をなぎ倒しながら10分以内に「出口ポータル 🚪」へ到達せよ！</span>
                 </div>
 
-                <button id="start-btn" class="primary-btn pulse-glow">戦いに挑む (START)</button>
+                <button id="start-btn" class="primary-btn pulse-glow">ダンジョン潜入 (START)</button>
 
                 <!-- High Score Leaderboard -->
                 <div class="leaderboard-section">
@@ -142,7 +156,7 @@
 
                 <div class="result-stats-grid">
                     <div class="stat-item">
-                        <span class="stat-label">生存時間</span>
+                        <span class="stat-label">経過時間</span>
                         <span id="res-time" class="stat-value">05:23</span>
                     </div>
                     <div class="stat-item">
