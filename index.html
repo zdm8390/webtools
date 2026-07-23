@@ -3,35 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="zdm8390/webtools - Web便利ツールポータル。白ベースのスタイリッシュなダッシュボード。" />
-    <title>Webtools Portal | zdm8390</title>
-    
+    <title>Webtools Portal | zdm8390 アプリケーションハブ</title>
+    <meta name="description" content="zdm8390が開発・公開するWebツール・ゲーム・ユーティリティの総合ポータルハブ。AIチャット、パズル、変換器、実用開発ツールを網羅。" />
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Noto+Sans+JP:wght@300;400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
     <style>
-        /* Modern Reset and Design Tokens (Premium Light Theme) */
         :root {
-            --bg-color: #f8fafc;
-            --text-color: #0f172a;
-            --text-muted: #475569;
-            --card-bg: rgba(255, 255, 255, 0.85);
-            --card-border: rgba(226, 232, 240, 0.8);
-            --font-sans: 'Outfit', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --font-mono: 'Share Tech Mono', monospace;
+            --bg-color: #070913;
+            --card-bg: rgba(18, 24, 43, 0.82);
+            --card-border: rgba(99, 102, 241, 0.22);
+            --accent-primary: #6366f1;
+            --accent-pink: #ec4899;
+            --accent-cyan: #06b6d4;
+            --accent-gold: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
             
-            --color-ccg: #db2777;
-            --color-chime: #0891b2;
-            --color-teams: #4f46e5;
-            --color-cocoron: #f87171;
-            --color-sambot: #ef4444;
-            --color-ndl: #1e3a8a;
-            --color-hondafy: #eb2f06;
-            --color-flowchart: #6366f1;
-            --color-tetris: #ff5a82;
-            --color-10minsv: #8b5cf6;
+            --font-sans: 'Outfit', 'Noto Sans JP', -apple-system, sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
         }
 
         * {
@@ -42,180 +35,150 @@
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-color);
+            color: var(--text-main);
             font-family: var(--font-sans);
             min-height: 100vh;
-            overflow-x: hidden;
             display: flex;
             flex-direction: column;
-            position: relative;
-        }
-
-        /* Ambient Pastel Aurora Blobs */
-        .ambient-blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(120px);
-            z-index: 1;
-            pointer-events: none;
-            opacity: 0.35;
-            animation: float 25s infinite alternate ease-in-out;
-        }
-
-        .blob-1 {
-            background-color: #fae8ff;
-            width: 500px;
-            height: 500px;
-            top: -10%;
-            left: 5%;
-        }
-
-        .blob-2 {
-            background-color: #e0f2fe;
-            width: 600px;
-            height: 600px;
-            bottom: 5%;
-            right: 10%;
-            animation-delay: -6s;
-        }
-
-        .blob-3 {
-            background-color: #ffe4e6;
-            width: 450px;
-            height: 450px;
-            top: 35%;
-            left: 45%;
-            transform: translate(-50%, -50%);
-            animation-delay: -12s;
-        }
-
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(60px, 40px) scale(1.1); }
-        }
-
-        .grid-pattern {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
             background-image: 
-                radial-gradient(rgba(148, 163, 184, 0.05) 1.5px, transparent 1.5px), 
-                radial-gradient(rgba(148, 163, 184, 0.05) 1.5px, transparent 1.5px);
-            background-size: 24px 24px;
-            background-position: 0 0, 12px 12px;
-            z-index: 2;
-            pointer-events: none;
+                radial-gradient(rgba(99, 102, 241, 0.1) 1.5px, transparent 1.5px),
+                radial-gradient(rgba(99, 102, 241, 0.1) 1.5px, transparent 1.5px);
+            background-size: 32px 32px;
+            background-position: 0 0, 16px 16px;
         }
 
-        /* Main Container */
-        .container {
-            width: 100%;
-            max-width: 1240px;
-            margin: 0 auto;
-            padding: 40px 24px;
-            z-index: 10;
-            flex: 1;
+        /* Top Header Bar */
+        header {
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-badge {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-pink));
+            color: white;
+            font-weight: 900;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        .header-title-wrap {
             display: flex;
             flex-direction: column;
         }
 
-        /* Header Styles */
-        header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        header .repo-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 30px;
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(226, 232, 240, 0.9);
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            letter-spacing: 0.12em;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 14px;
-            box-shadow: 0 4px 6px -1px rgba(148, 163, 184, 0.05);
-        }
-
-        header h1 {
-            font-size: clamp(2.2rem, 5vw, 3.4rem);
+        .header-title {
+            font-size: 1.3rem;
             font-weight: 800;
-            letter-spacing: -0.03em;
-            background: linear-gradient(135deg, #1e3a8a 20%, #4f46e5 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
+            letter-spacing: -0.02em;
         }
 
-        header p {
-            font-size: clamp(0.9rem, 1.8vw, 1.05rem);
+        .header-subtitle {
+            font-size: 0.76rem;
             color: var(--text-muted);
-            max-width: 620px;
-            margin: 0 auto;
-            line-height: 1.5;
         }
 
-        /* Info Board */
-        .info-board {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 14px 20px;
-            margin-bottom: 28px;
+        .header-right {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.08);
+            gap: 16px;
         }
 
-        /* Control Panel (Search, Filter Tabs, View Switcher) */
-        .control-panel {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(12px);
+        .contact-info {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .contact-info a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .contact-info a:hover { text-decoration: underline; }
+
+        .ver-badge {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        /* Container */
+        .container {
+            flex: 1;
+            max-width: 1240px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* Search & Filter Controls Bar */
+        .controls-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
             border: 1px solid var(--card-border);
             border-radius: 20px;
-            padding: 16px 20px;
-            margin-bottom: 32px;
+            padding: 20px 24px;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
-            box-shadow: 0 8px 30px -10px rgba(148, 163, 184, 0.12);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .search-box {
+        .search-box-wrap {
             position: relative;
             flex: 1;
-            min-width: 240px;
+            min-width: 280px;
         }
 
-        .search-box input {
+        .search-box-wrap input {
             width: 100%;
-            padding: 10px 16px 10px 42px;
+            padding: 12px 18px 12px 42px;
             border-radius: 12px;
-            border: 1px solid rgba(203, 213, 225, 0.8);
-            background: #ffffff;
-            font-family: var(--font-sans);
-            font-size: 0.9rem;
-            color: var(--text-color);
+            border: 1px solid var(--card-border);
+            background: rgba(10, 14, 26, 0.9);
+            color: var(--text-main);
+            font-size: 0.95rem;
             outline: none;
             transition: all 0.2s ease;
         }
 
-        .search-box input:focus {
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        .search-box-wrap input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
         }
 
         .search-icon {
@@ -223,786 +186,538 @@
             left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: #94a3b8;
-            font-size: 1.1rem;
-            pointer-events: none;
+            color: var(--text-muted);
         }
 
-        /* Filter Chips */
         .filter-chips {
             display: flex;
-            flex-wrap: wrap;
             gap: 8px;
-            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .chip {
-            background: rgba(241, 245, 249, 0.8);
-            border: 1px solid rgba(226, 232, 240, 0.9);
+        .chip-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
             color: var(--text-muted);
-            padding: 7px 14px;
-            border-radius: 20px;
-            font-size: 0.82rem;
-            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
         }
 
-        .chip:hover {
-            background: #ffffff;
-            color: var(--text-color);
-            transform: translateY(-1px);
+        .chip-btn:hover, .chip-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
         }
 
-        .chip.active {
-            background: linear-gradient(135deg, #1e3a8a, #4f46e5);
-            color: #ffffff;
-            border-color: transparent;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
-        }
-
-        .chip-count {
-            background: rgba(0, 0, 0, 0.12);
-            padding: 1px 6px;
-            border-radius: 10px;
-            font-size: 0.72rem;
-        }
-
-        .chip.active .chip-count {
-            background: rgba(255, 255, 255, 0.25);
-        }
-
-        /* View Mode Switcher */
-        .view-switcher {
+        .view-toggle-wrap {
             display: flex;
-            background: rgba(241, 245, 249, 0.9);
-            border-radius: 12px;
-            padding: 3px;
-            border: 1px solid rgba(226, 232, 240, 0.9);
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px;
+            border-radius: 10px;
         }
 
         .view-btn {
             background: transparent;
             border: none;
-            padding: 7px 14px;
-            border-radius: 9px;
-            font-size: 0.82rem;
-            font-weight: 700;
             color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 700;
             transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .view-btn.active {
-            background: #ffffff;
-            color: var(--text-color);
-            box-shadow: 0 2px 6px rgba(148, 163, 184, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
         }
 
-        /* Grouped Section Headers */
+        /* Section Groups */
         .group-section {
-            margin-bottom: 36px;
-        }
-
-        .group-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 18px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid rgba(226, 232, 240, 0.6);
-        }
-
-        .group-title {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: #1e293b;
-        }
-
-        .group-tag {
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 12px;
-            background: rgba(226, 232, 240, 0.8);
-            color: var(--text-muted);
-        }
-
-        /* Dashboard Grid Layout (Default Card View) */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 24px;
-        }
-
-        /* Compact List View Mode */
-        .dashboard-grid.list-view {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-        }
-
-        /* Card Wrapper */
-        .card-wrapper {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
-        }
-
-        .card-wrapper.hidden-by-filter {
-            display: none !important;
-        }
-
-        /* Notice Badge */
-        .notice-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 30;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4.5px 10px;
-            border-radius: 20px;
-            background: #ffffff;
-            border: 1px solid rgba(226, 232, 240, 1);
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-decoration: none;
-            box-shadow: 0 2px 4px rgba(148, 163, 184, 0.08);
-            transition: all 0.25s ease;
-        }
-
-        .notice-badge:hover {
-            color: var(--theme-color);
-            border-color: var(--theme-color);
-            transform: translateY(-1.5px);
-        }
-
-        /* Portal Card Styles */
-        .portal-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 30px 26px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: var(--text-color);
-            box-shadow: 0 10px 30px -15px rgba(148, 163, 184, 0.2);
-            height: 100%;
-        }
-
-        .portal-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 35px -10px rgba(148, 163, 184, 0.35);
-            border-color: var(--theme-color);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 18px;
-        }
-
-        .icon-container {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            background: rgba(241, 245, 249, 0.9);
-            color: var(--theme-color);
-            flex-shrink: 0;
-        }
-
-        .status-badge {
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            padding: 4px 10px;
-            border-radius: 12px;
-            background: rgba(241, 245, 249, 0.9);
-            color: var(--text-muted);
-        }
-
-        .card-body h2 {
-            font-size: 1.3rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            transition: color 0.2s ease;
-        }
-
-        .portal-card:hover .card-body h2 {
-            color: var(--theme-color);
-        }
-
-        .card-body p {
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            line-height: 1.55;
-            margin-bottom: 24px;
-        }
-
-        .launch-indicator {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-family: var(--font-mono);
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--theme-color);
-            padding-top: 14px;
-            border-top: 1px dashed rgba(226, 232, 240, 0.9);
-        }
-
-        .launch-indicator svg {
-            width: 16px;
-            height: 16px;
-            transition: transform 0.25s ease;
-        }
-
-        .portal-card:hover .launch-indicator svg {
-            transform: translateX(4px);
-        }
-
-        /* --- Compact List View Overrides --- */
-        .dashboard-grid.list-view .card-wrapper {
-            margin-bottom: 0;
-        }
-
-        .dashboard-grid.list-view .portal-card {
-            flex-direction: row;
-            align-items: center;
-            padding: 16px 20px;
-            border-radius: 14px;
-            gap: 20px;
-        }
-
-        .dashboard-grid.list-view .notice-badge {
-            position: relative;
-            top: auto;
-            right: auto;
-            margin-left: 8px;
-            flex-shrink: 0;
-        }
-
-        .dashboard-grid.list-view .card-header {
-            margin-bottom: 0;
-            min-width: 200px;
-        }
-
-        .dashboard-grid.list-view .card-body {
-            flex: 1;
-            display: flex;
-            align-items: center;
             gap: 16px;
         }
 
-        .dashboard-grid.list-view .card-body h2 {
-            font-size: 1.05rem;
-            margin-bottom: 0;
-            white-space: nowrap;
+        .group-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 8px;
         }
 
-        .dashboard-grid.list-view .card-body p {
-            margin-bottom: 0;
-            font-size: 0.82rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 500px;
+        .group-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
         }
 
-        .dashboard-grid.list-view .launch-indicator {
-            padding-top: 0;
-            border-top: none;
-            min-width: 120px;
-            justify-content: flex-end;
-            gap: 6px;
-        }
-
-        /* Theme Color Assigns */
-        .theme-ccg { --theme-color: var(--color-ccg); }
-        .theme-chime { --theme-color: var(--color-chime); }
-        .theme-teams { --theme-color: var(--color-teams); }
-        .theme-cocoron { --theme-color: var(--color-cocoron); }
-        .theme-sambot { --theme-color: var(--color-sambot); }
-        .theme-ndl { --theme-color: var(--color-ndl); }
-        .theme-hondafy { --theme-color: var(--color-hondafy); }
-        .theme-flowchart { --theme-color: var(--color-flowchart); }
-        .theme-tetris { --theme-color: var(--color-tetris); }
-        .theme-10minsv { --theme-color: var(--color-10minsv); }
-
-        footer {
-            text-align: center;
-            padding: 30px;
-            font-size: 0.82rem;
+        .group-count {
+            background: rgba(255, 255, 255, 0.08);
             color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* Apps Grid Layout */
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        /* App Card */
+        .app-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: all 0.25s ease;
+            position: relative;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .app-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-icon {
+            font-size: 2.2rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notice-link {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s ease;
             z-index: 10;
         }
 
-        footer a {
-            color: var(--text-color);
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+        .notice-link:hover {
+            background: var(--accent-primary);
+            color: white;
         }
 
-        footer svg {
-            width: 16px;
-            height: 16px;
+        .app-name {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
         }
 
-        @media (max-width: 768px) {
-            .control-panel {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .dashboard-grid.list-view .card-body p {
-                display: none;
-            }
-            .dashboard-grid.list-view .portal-card {
-                flex-wrap: wrap;
-            }
-        }
-
-        /* App Version Badge (Top Right) */
-        .app-version-badge {
-            position: fixed;
-            top: 16px;
-            right: 20px;
-            z-index: 100;
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
+        .app-desc {
+            font-size: 0.85rem;
             color: var(--text-muted);
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(226, 232, 240, 0.9);
-            padding: 4px 12px;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(148, 163, 184, 0.12);
-            pointer-events: auto;
+            line-height: 1.6;
+            flex: 1;
         }
+
+        .launch-btn {
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #818cf8;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .app-card:hover .launch-btn {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* List View Support */
+        .apps-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        .apps-grid.list-view .app-card {
+            flex-direction: row;
+            align-items: center;
+            padding: 16px 24px;
+        }
+
+        .apps-grid.list-view .app-desc {
+            flex: 2;
+        }
+
+        footer {
+            border-top: 1px solid var(--card-border);
+            background: rgba(15, 23, 42, 0.8);
+            padding: 24px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        footer a { color: var(--accent-cyan); text-decoration: none; }
     </style>
 </head>
 <body>
 
-    <!-- App Version Badge -->
-    <div class="app-version-badge" title="Webtools Portal Version">v2.4.0</div>
-
-    <div class="ambient-blob blob-1"></div>
-    <div class="ambient-blob blob-2"></div>
-    <div class="ambient-blob blob-3"></div>
-    <div class="grid-pattern"></div>
+    <!-- Header Bar -->
+    <header>
+        <div class="header-left">
+            <span class="logo-badge">⚡ webtools</span>
+            <div class="header-title-wrap">
+                <h1 class="header-title">アプリケーションポータル</h1>
+                <span class="header-subtitle">zdm8390 Web Application Suite</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="contact-info">
+                ✉ お問い合わせ: X (旧Twitter): <a href="https://x.com/zdm8390" target="_blank" rel="noopener">@zdm8390</a> まで
+            </div>
+            <span class="ver-badge">v2.5.0</span>
+        </div>
+    </header>
 
     <div class="container">
         
-        <header>
-            <div class="repo-badge">
-                <span>zdm8390/webtools</span>
-            </div>
-            <h1>Webtools Directory</h1>
-            <p>開発・ユーティリティ・AIメンタルヘルス・ゲームまで、Webブラウザで即座に使えるマルチポータル。</p>
-        </header>
-
-        <!-- Dynamic Overall Info Board -->
-        <div class="info-board">
-            <span style="font-size:1.2rem;">💡</span>
-            <div>
-                各ツールの事前設定・動作仕様については、右上の「📖 Notice」リンクからドキュメントをいつでも参照できます。
-            </div>
-        </div>
-
-        <!-- Filter & Control Panel -->
-        <div class="control-panel">
-            <!-- Search Box -->
-            <div class="search-box">
+        <!-- Controls Bar -->
+        <div class="controls-card">
+            <div class="search-box-wrap">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" placeholder="ツール名やキーワードで検索..." />
+                <input type="text" id="portal-search" placeholder="キーワード・ツール名・用途で検索...">
             </div>
 
-            <!-- Category Filter Chips -->
+            <!-- Filter Chips -->
             <div class="filter-chips">
-                <button class="chip active" data-filter="all">
-                    <span>ALL (すべて)</span>
-                    <span class="chip-count" id="count-all">11</span>
-                </button>
-                <button class="chip" data-filter="ai">
-                    <span>🤖 AI・対話</span>
-                    <span class="chip-count">3</span>
-                </button>
-                <button class="chip" data-filter="utility">
-                    <span>🛠️ 実用・仕事</span>
-                    <span class="chip-count">4</span>
-                </button>
-                <button class="chip" data-filter="game">
-                    <span>🎮 ゲーム</span>
-                    <span class="chip-count">2</span>
-                </button>
-                <button class="chip" data-filter="joke">
-                    <span>✋ ネタ・変換</span>
-                    <span class="chip-count">2</span>
-                </button>
+                <button class="chip-btn active" data-filter="all">ALL (全16ツール)</button>
+                <button class="chip-btn" data-filter="ai">🤖 AI・対話</button>
+                <button class="chip-btn" data-filter="utility">🛠️ 実用・仕事</button>
+                <button class="chip-btn" data-filter="game">🎮 ゲーム</button>
+                <button class="chip-btn" data-filter="joke">✋ ネタ・変換</button>
             </div>
 
-            <!-- View Switcher (Grid vs List) -->
-            <div class="view-switcher">
-                <button class="view-btn active" id="view-grid-btn">▦ カード</button>
-                <button class="view-btn" id="view-list-btn">☰ リスト</button>
+            <!-- View Toggle -->
+            <div class="view-toggle-wrap">
+                <button id="view-grid-btn" class="view-btn active" title="グリッド表示">▦ カード</button>
+                <button id="view-list-btn" class="view-btn" title="リスト表示">☰ リスト</button>
             </div>
         </div>
 
-        <main id="portal-main-content">
-            
-            <!-- Section 1: AI & Interactive -->
-            <section class="group-section" data-group="ai">
-                <div class="group-header">
-                    <span class="group-title">🤖 AI & メンタルサポート</span>
-                    <span class="group-tag">3 Tools</span>
-                </div>
-                <div class="dashboard-grid">
-                    <!-- Card 1: CrazyCommit.js -->
-                    <div class="card-wrapper theme-ccg" data-category="ai" data-keywords="crazycommit git commit ai meme">
-                        <a href="./CCG/NOTICE.md" class="notice-badge" target="_blank" title="CrazyCommit.jsの仕様・注意事項を読む">📖 Notice</a>
-                        <a href="./CCG/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">💻</div>
-                                <span class="status-badge">React + AI</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>CrazyCommit.js</h2>
-                                <p>真面目なコミットメッセージを、ネットミーム・村上春樹・パプリカなどのクレイジーなテキストに面白おかしく変換するコミットジェネレーター。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH TOOL
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
-                    </div>
+        <!-- Section 1: AI & Mental Support -->
+        <section class="group-section" data-group="ai">
+            <div class="group-title-wrap">
+                <span class="group-title">🤖 AI & メンタルサポート</span>
+                <span class="group-count">3 Apps</span>
+            </div>
+            <div class="apps-grid" id="grid-ai">
 
-                    <!-- Card 4: ココロン -->
-                    <div class="card-wrapper theme-cocoron" data-category="ai" data-keywords="cocoron ココロン ai メンタル 全肯定 癒し">
-                        <a href="./cocoron/NOTICE.md" class="notice-badge" target="_blank" title="ココロンの仕様・注意事項を読む">📖 Notice</a>
-                        <a href="./cocoron/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">🌸</div>
-                                <span class="status-badge">Gemini + Synth</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>ココロン (Cocoron)</h2>
-                                <p>ストレス社会に寄り添う全肯定型AIフレンド。悩みを優しく受け止め肯定します。雨音やたき火音の癒やしBGM波形シンセサイザー内蔵。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH TOOL
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
+                <a href="./cocoron/" class="app-card" data-keywords="cocoron ココロン ai チャット メンタル 癒し 寄り添い 相談">
+                    <div class="card-top">
+                        <span class="app-icon">🌸</span>
+                        <a href="./cocoron/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
+                    <div class="app-name">AIフレンド ココロン</div>
+                    <div class="app-desc">何でも優しく肯定し、愚痴や悩みに寄り添うヒーリングAIチャットボット。現代のストレス社会で頑張るあなたを応援。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
 
-                    <!-- Card 5: サンボット -->
-                    <div class="card-wrapper theme-sambot" data-category="ai" data-keywords="sambot サンボット ai ロック サンボマスター パッション">
-                        <a href="./sambot/NOTICE.md" class="notice-badge" target="_blank" title="サンボットの仕様・注意事項を読む">📖 Notice</a>
-                        <a href="./sambot/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">🔥</div>
-                                <span class="status-badge">Gemini + Distortion</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>サンボット (Sambot)</h2>
-                                <p>すべてを「愛とロックの叫び」で肯定するAI。サンボマスターのライブMC風の熱狂的パッションで、悩みを蹴散らし魂を揺さぶります。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH TOOL
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
+                <a href="./sambot/" class="app-card" data-keywords="sambot サンボット ai ロック ライブ 激熱 熱血 肯定 サンボマスター">
+                    <div class="card-top">
+                        <span class="app-icon">🔥</span>
+                        <a href="./sambot/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                </div>
-            </section>
+                    <div class="app-name">熱叫肯定AI サンボット</div>
+                    <div class="app-desc">サンボマスター山口さんのような激熱ライブMC口調で全肯定するAI！愛とシャウトでエネルギーを注入。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
 
-            <!-- Section 2: Utilities & Development -->
-            <section class="group-section" data-group="utility">
-                <div class="group-header">
-                    <span class="group-title">🛠️ 開発 & 実用ユーティリティ</span>
-                    <span class="group-tag">4 Tools</span>
-                </div>
-                <div class="dashboard-grid">
-                    <!-- Card 2: Chime-Out Radar -->
-                    <div class="card-wrapper theme-chime" data-category="utility" data-keywords="chime-out radar 定時 退勤 レーダー 不穏検知">
-                        <a href="./ChimeOut/NOTICE.md" class="notice-badge" target="_blank" title="Chime-Out Radarの仕様・注意事項を読む">📖 Notice</a>
-                        <a href="./ChimeOut/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">📡</div>
-                                <span class="status-badge">Vite + React</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>Chime-Out Radar</h2>
-                                <p>不穏な空気や定時退勤の気配を警告アラートでお知らせするユーモラスな不穏検知システム。グラフィカルなインジケーターで退勤を支援。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH TOOL
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
+                <a href="./CCG/" class="app-card" data-keywords="shitcommit ccg ミーム コミット メッセージ 変換 haruki">
+                    <div class="card-top">
+                        <span class="app-icon">💩</span>
+                        <a href="./CCG/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
+                    <div class="app-name">ShitCommit.js</div>
+                    <div class="app-desc">真面目なコミットメッセージをネットミーム風・村上春樹風・パプリカ風の文体へ面白変換するジェネレーター。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
 
-                    <!-- Card 3: チーム戦メイカー -->
-                    <div class="card-wrapper theme-teams" data-category="utility" data-keywords="teams チーム シャッフル ランダム 分割 チーム戦">
-                        <a href="./teams/NOTICE.md" class="notice-badge" target="_blank" title="チーム戦メイカーの仕様・注意事項を読む">📖 Notice</a>
-                        <a href="./teams/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">👥</div>
-                                <span class="status-badge">Vanilla JS</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>チーム戦メイカー</h2>
-                                <p>メンバー名リストから、偏りなくランダムに公平なチーム切り分けを行うシャッフルツール。ゲームの編成やタスク割り振りに活用できます。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH TOOL
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
+            </div>
+        </section>
+
+        <!-- Section 2: Utilities & Development -->
+        <section class="group-section" data-group="utility">
+            <div class="group-title-wrap">
+                <span class="group-title">🛠️ 開発 & 実用ユーティリティ</span>
+                <span class="group-count">8 Apps</span>
+            </div>
+            <div class="apps-grid" id="grid-utility">
+
+                <a href="./char-counter/" class="app-card" data-keywords="文字数 カウンター 計測 リアルタイム 空白 改行 原稿用紙 読了時間 char-counter">
+                    <div class="card-top">
+                        <span class="app-icon">📏</span>
+                        <a href="./char-counter/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
+                    <div class="app-name">文字数カウンタースタジオ</div>
+                    <div class="app-desc">貼り付け＆ファイルアップロード対応の高速文字数リアルタイム計測ツール！空白・改行の有無、原稿用紙枚数、読了時間をワンクリック切替。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
 
-                    <!-- Card 6: NDL公開状況チェッカー -->
-                    <div class="card-wrapper theme-ndl" data-category="utility" data-keywords="ndl 国立国会図書館 デジタルコレクション 書籍 検索">
-                        <a href="./ndl-checker/NOTICE.md" class="notice-badge" target="_blank" title="NDL公開状況チェッカーの仕様・注意事項を読む">📖 Notice</a>
-                        <a href="./ndl-checker/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">📚</div>
-                                <span class="status-badge">Japan Search API</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>NDL公開状況チェッカー</h2>
-                                <p>書籍・雑誌が「国立国会図書館デジタルコレクション」で電子化されているか、またその公開範囲（ネット公開・個人送信）を即座に判定。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH TOOL
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
+                <a href="./diet-search/" class="app-card" data-keywords="国会議事録 国会 発言 検索 保護猫 議事録 API e-gov 法令 diet-search">
+                    <div class="card-top">
+                        <span class="app-icon">🏛️</span>
+                        <a href="./diet-search/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
+                    <div class="app-name">国会議事録サーチ</div>
+                    <div class="app-desc">「保護猫」「生成AI」等のキーで国会での過去の議論をリアルタイム検索！e-Gov法令自動検出＆SNS共有対応。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
 
-                    <!-- Card 9: Flowchart Studio -->
-                    <div class="card-wrapper theme-flowchart" data-category="utility" data-keywords="flowchart フローチャート 図解 ダイヤグラム エディタ svg">
-                        <a href="./flowchart/NOTICE.md" class="notice-badge" target="_blank" title="Flowchart Studioの仕様・注意事項を読む">📖 Notice</a>
-                        <a href="./flowchart/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">📐</div>
-                                <span class="status-badge">SVG + Mouse Vector</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>Flowchart Studio</h2>
-                                <p>ブラウザ上でマウスを使って自由にフローチャートを作成・編集できるツール。端点ドラッグ接続、パン・ズーム、JSON/PNG/SVG出力対応。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH TOOL
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
+                <a href="./wareki-converter/" class="app-card" data-keywords="和暦 西暦 変換 年号 令和 平成 昭和 明治 干支 ニュース 年表 出来事 wareki-converter">
+                    <div class="card-top">
+                        <span class="app-icon">🌸</span>
+                        <a href="./wareki-converter/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                </div>
-            </section>
+                    <div class="app-name">年号・和暦ニュース変換器</div>
+                    <div class="app-desc">西暦↔和暦（令和・平成・昭和・大正・明治）の相互変換！干支・年齢算出およびその年の重大ニュースを年表で自動表示。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
 
-            <!-- Section 3: Games & Entertainment -->
-            <section class="group-section" data-group="game">
-                <div class="group-header">
-                    <span class="group-title">🎮 ゲーム & エンターテインメント</span>
-                    <span class="group-tag">2 Games</span>
-                </div>
-                <div class="dashboard-grid">
-                    <!-- Card 10: Tetrisun -->
-                    <div class="card-wrapper theme-tetris" data-category="game" data-keywords="tetrisun テトリスン パズル 対戦 ストーリー 魔法">
-                        <a href="./tetris-versus/NOTICE.md" class="notice-badge" target="_blank" title="テトリスンの仕様・注意事項を読む">📖 Notice</a>
-                        <a href="./tetris-versus/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">🐾</div>
-                                <span class="status-badge">Pop Magic + ADV Story</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>テトリスン (Tetrisun)</h2>
-                                <p>7匹の魔法動物たちと繰り広げるパステル対戦パズル！対戦・CPU戦・重厚なストーリー会話劇・個別の魔法効果・P2P待機対戦対応。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH GAME
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
+                <a href="./text-diff/" class="app-card" data-keywords="diff text 差分 比較 コピペ ツール text-diff">
+                    <div class="card-top">
+                        <span class="app-icon">🔄</span>
+                        <a href="./text-diff/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
+                    <div class="app-name">Text Diff Studio</div>
+                    <div class="app-desc">2つのテキストをコピペして「比較実行」を押すだけ！行単位・文字単位で追加・削除・変更箇所を高速ハイライト比較。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
 
-                    <!-- Card 11: 10-Minute Survivors -->
-                    <div class="card-wrapper theme-10minsv" data-category="game" data-keywords="10min-sv 10分サバイバーズ vampire survivors ヴァンサバ アクション">
-                        <a href="./10min-sv/gemini-code-1784772433816.md" class="notice-badge" target="_blank" title="10分サバイバーズの仕様書を読む">📖 Spec MD</a>
-                        <a href="./10min-sv/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">⚔️</div>
-                                <span class="status-badge">10min Survival Action</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>10分サバイバーズ (10-Minute Survivors)</h2>
-                                <p>画面を埋め尽くす大量のモンスターを薙ぎ払え！Unicode絵文字とCanvasで描かれる軽快＆爽快な2Dサバイバル。ビルド強化・サウンド合成搭載。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH GAME
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
+                <a href="./flowchart/" class="app-card" data-keywords="flowchart フローチャート 作図 ノード 接続 図形 プロセス">
+                    <div class="card-top">
+                        <span class="app-icon">📊</span>
+                        <a href="./flowchart/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                </div>
-            </section>
+                    <div class="app-name">Flowchart Studio</div>
+                    <div class="app-desc">ブラウザ上で直感的にノードを追加・接続し、美しくフローチャートをドラッグ＆ドロップで構築できる作図ツール。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
 
-            <!-- Section 4: Parody & Jokes -->
-            <section class="group-section" data-group="joke">
-                <div class="group-header">
-                    <span class="group-title">✋ パロディ & テキスト変換</span>
-                    <span class="group-tag">2 Tools</span>
-                </div>
-                <div class="dashboard-grid">
-                    <!-- Card 7: E. HONDAFY -->
-                    <div class="card-wrapper theme-hondafy" data-category="joke" data-keywords="hondafy エドモンド本田 どすこい 変換">
-                        <a href="./hondafy/NOTICE.md" class="notice-badge" target="_blank" title="E. HONDAFYの仕様・注意事項を読む">📖 Notice</a>
-                        <a href="./hondafy/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">✋</div>
-                                <span class="status-badge">SF E.Honda + Speech</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>E. HONDAFY</h2>
-                                <p>ストリートファイターの「エドモンド本田」モチーフ！音節を解析し「ホンダホンダホダ ﾎﾝﾀﾞ ﾎﾝﾀﾞ!? どすこい！」へ変換するアプリ。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH TOOL
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
+                <a href="./ndl-checker/" class="app-card" data-keywords="ndl 国立国会図書館 デジタルコレクション 書籍 検索">
+                    <div class="card-top">
+                        <span class="app-icon">📚</span>
+                        <a href="./ndl-checker/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
+                    <div class="app-name">NDL公開状況チェッカー</div>
+                    <div class="app-desc">国立国会図書館デジタルコレクションの各書籍・資料のインターネット公開範囲・送信利用状況を判定・検索。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
 
-                    <!-- Card 8: E. HONDA CIPHER -->
-                    <div class="card-wrapper theme-hondafy" data-category="joke" data-keywords="honda-cipher エドモンド本田 暗号 可逆">
-                        <a href="./honda-cipher/NOTICE.md" class="notice-badge" target="_blank" title="E. HONDA CIPHERの仕様・注意事項を読む">📖 Notice</a>
-                        <a href="./honda-cipher/" class="portal-card">
-                            <div class="card-header">
-                                <div class="icon-container">🔐</div>
-                                <span class="status-badge">Reversible Cipher</span>
-                            </div>
-                            <div class="card-body">
-                                <h2>E. HONDA CIPHER</h2>
-                                <p>文章を「ホンダ」「ドスコーイ」「百裂張り手」の暗号文に相互可逆変換（100%復元可能）できるエドモンド本田暗号通信機。</p>
-                            </div>
-                            <div class="launch-indicator">
-                                LAUNCH TOOL
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </a>
+                <a href="./ChimeOut/" class="app-card" data-keywords="chime-out radar 定時 退勤 レーダー 不穏検知">
+                    <div class="card-top">
+                        <span class="app-icon">📡</span>
+                        <a href="./ChimeOut/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
                     </div>
-                </div>
-            </section>
+                    <div class="app-name">Chime-Out Radar</div>
+                    <div class="app-desc">不穏な空気や定時退勤の気配を警告アラートでお知らせするユーモラスな退勤支援システム。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
 
-        </main>
+                <a href="./teams/" class="app-card" data-keywords="teams チーム シャッフル ランダム 分割 チーム戦">
+                    <div class="card-top">
+                        <span class="app-icon">👥</span>
+                        <a href="./teams/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
+                    </div>
+                    <div class="app-name">チーム戦メイカー</div>
+                    <div class="app-desc">メンバー名リストから、偏りなくランダムに公平なチーム切り分けを行うシャッフルツール。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- Section 3: Games & Entertainment -->
+        <section class="group-section" data-group="game">
+            <div class="group-title-wrap">
+                <span class="group-title">🎮 ゲーム & エンターテインメント</span>
+                <span class="group-count">3 Apps</span>
+            </div>
+            <div class="apps-grid" id="grid-game">
+
+                <a href="./element-chain/" class="app-card" data-keywords="elemental fusion エレメンタル フュージョン 属性 宝珠 連鎖 パズル 落ち物 element-chain">
+                    <div class="card-top">
+                        <span class="app-icon">🔮</span>
+                        <a href="./element-chain/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
+                    </div>
+                    <div class="app-name">エレメンタル・フュージョン</div>
+                    <div class="app-desc">属性宝珠を合成・進化させる落ち物ファンタジーパズル！同種の魔法エレメントを融合させて連鎖を起こし創世の神玉を目指せ！</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
+
+                <a href="./tetris-versus/" class="app-card" data-keywords="tetrisun テトリスン パズル 対戦 ストーリー 魔法">
+                    <div class="card-top">
+                        <span class="app-icon">🐾</span>
+                        <a href="./tetris-versus/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
+                    </div>
+                    <div class="app-name">テトリスン (Tetrisun)</div>
+                    <div class="app-desc">7匹の魔法動物たちと繰り広げるパステル対戦パズル！対戦・CPU戦・ストーリー会話劇・個別の魔法効果・P2P待機対戦対応。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
+
+                <a href="./10min-sv/" class="app-card" data-keywords="10min-sv 10分サバイバーズ vampire survivors ヴァンサバ アクション">
+                    <div class="card-top">
+                        <span class="app-icon">⚔️</span>
+                        <a href="./10min-sv/gemini-code-1784772433816.md" class="notice-link" target="_blank">📖 Spec MD</a>
+                    </div>
+                    <div class="app-name">10分サバイバーズ</div>
+                    <div class="app-desc">画面を埋め尽くす大量のモンスターを薙ぎ払え！迷宮ダンジョンを探索し最奥の出口ポータルから脱出する2Dサバイバル。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- Section 4: Parody & Jokes -->
+        <section class="group-section" data-group="joke">
+            <div class="group-title-wrap">
+                <span class="group-title">✋ パロディ & テキスト変換</span>
+                <span class="group-tag">2 Apps</span>
+            </div>
+            <div class="apps-grid" id="grid-joke">
+
+                <a href="./hondafy/" class="app-card" data-keywords="hondafy エドモンド本田 どすこい 変換">
+                    <div class="card-top">
+                        <span class="app-icon">✋</span>
+                        <a href="./hondafy/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
+                    </div>
+                    <div class="app-name">E. HONDAFY</div>
+                    <div class="app-desc">あらゆる文章を格闘ゲーム「ストリートファイター」のエドモンド本田の豪快な相撲・どすこい語調に変換するエンタメツール。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
+
+                <a href="./honda-cipher/" class="app-card" data-keywords="honda cipher 本田 暗号 可逆 エンコード デコード">
+                    <div class="card-top">
+                        <span class="app-icon">🔐</span>
+                        <a href="./honda-cipher/NOTICE.md" class="notice-link" target="_blank">📖 Notice</a>
+                    </div>
+                    <div class="app-name">E. HONDA CIPHER</div>
+                    <div class="app-desc">テキストを本田語の暗号文（「ホンダ」「ドスコーイ」など）に相互可逆エンコード/デコードできる100%復元可逆暗号ツール。</div>
+                    <div class="launch-btn">アプリを起動 ➔</div>
+                </a>
+
+            </div>
+        </section>
+
     </div>
 
+    <!-- Portal Footer -->
     <footer>
-        <a href="https://github.com/zdm8390/webtools" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
-            zdm8390/webtools GitHub Repository
-        </a>
-        <div style="margin-top: 10px;">© 2026 WEBTOOLS PORTAL DIRECTORY</div>
+        <div>zdm8390/webtools &copy; All Rights Reserved.</div>
+        <div>お問い合わせ: X (旧Twitter): <a href="https://x.com/zdm8390" target="_blank" rel="noopener">@zdm8390</a> まで</div>
     </footer>
 
-    <!-- Filtering & View Toggle Logic -->
+    <!-- Portal Interactive Engine Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('search-input');
-            const filterChips = document.querySelectorAll('.chip');
-            const gridViewBtn = document.getElementById('view-grid-btn');
-            const listViewBtn = document.getElementById('view-list-btn');
-            const dashboardGrids = document.querySelectorAll('.dashboard-grid');
-            const groupSections = document.querySelectorAll('.group-section');
+            const portalSearch = document.getElementById('portal-search');
+            const filterChips = document.querySelectorAll('.chip-btn');
+            const viewGridBtn = document.getElementById('view-grid-btn');
+            const viewListBtn = document.getElementById('view-list-btn');
+            const grids = document.querySelectorAll('.apps-grid');
+            const appCards = document.querySelectorAll('.app-card');
+            const sections = document.querySelectorAll('.group-section');
 
-            let currentCategory = 'all';
-            let currentSearchTerm = '';
+            let currentFilter = 'all';
 
-            function applyFilters() {
-                groupSections.forEach(section => {
-                    const cardsInSection = section.querySelectorAll('.card-wrapper');
-                    let visibleInSection = 0;
-
-                    cardsInSection.forEach(card => {
-                        const category = card.getAttribute('data-category');
-                        const keywords = (card.getAttribute('data-keywords') || '').toLowerCase();
-                        const titleText = card.querySelector('h2').textContent.toLowerCase();
-                        const descText = card.querySelector('p').textContent.toLowerCase();
-
-                        const matchesCategory = (currentCategory === 'all' || category === currentCategory);
-                        const matchesSearch = !currentSearchTerm || 
-                            keywords.includes(currentSearchTerm) || 
-                            titleText.includes(currentSearchTerm) || 
-                            descText.includes(currentSearchTerm);
-
-                        if (matchesCategory && matchesSearch) {
-                            card.classList.remove('hidden-by-filter');
-                            visibleInSection++;
-                        } else {
-                            card.classList.add('hidden-by-filter');
-                        }
-                    });
-
-                    if (visibleInSection === 0) {
-                        section.style.display = 'none';
-                    } else {
-                        section.style.display = 'block';
-                    }
-                });
-            }
-
+            // Filter Chips Click
             filterChips.forEach(chip => {
                 chip.addEventListener('click', () => {
                     filterChips.forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
-                    currentCategory = chip.getAttribute('data-filter');
-                    applyFilters();
+                    currentFilter = chip.getAttribute('data-filter');
+                    filterApps();
                 });
             });
 
-            searchInput.addEventListener('input', (e) => {
-                currentSearchTerm = e.target.value.toLowerCase().trim();
-                applyFilters();
+            // Realtime Search
+            portalSearch.addEventListener('input', () => filterApps());
+
+            function filterApps() {
+                const q = portalSearch.value.trim().toLowerCase();
+
+                sections.forEach(sec => {
+                    const group = sec.getAttribute('data-group');
+                    const cards = sec.querySelectorAll('.app-card');
+                    let visibleCount = 0;
+
+                    cards.forEach(card => {
+                        const keywords = (card.getAttribute('data-keywords') || '').toLowerCase();
+                        const title = card.querySelector('.app-name').textContent.toLowerCase();
+                        const desc = card.querySelector('.app-desc').textContent.toLowerCase();
+
+                        const matchesFilter = (currentFilter === 'all' || currentFilter === group);
+                        const matchesQuery = (!q || keywords.includes(q) || title.includes(q) || desc.includes(q));
+
+                        if (matchesFilter && matchesQuery) {
+                            card.style.display = 'flex';
+                            visibleCount++;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+
+                    sec.style.display = visibleCount > 0 ? 'flex' : 'none';
+                });
+            }
+
+            // View Mode Toggle (Grid vs List)
+            viewGridBtn.addEventListener('click', () => {
+                viewGridBtn.classList.add('active');
+                viewListBtn.classList.remove('active');
+                grids.forEach(g => g.classList.remove('list-view'));
             });
 
-            gridViewBtn.addEventListener('click', () => {
-                gridViewBtn.classList.add('active');
-                listViewBtn.classList.remove('active');
-                dashboardGrids.forEach(grid => grid.classList.remove('list-view'));
-            });
-
-            listViewBtn.addEventListener('click', () => {
-                listViewBtn.classList.add('active');
-                gridViewBtn.classList.remove('active');
-                dashboardGrids.forEach(grid => grid.classList.add('list-view'));
+            viewListBtn.addEventListener('click', () => {
+                viewListBtn.classList.add('active');
+                viewGridBtn.classList.remove('active');
+                grids.forEach(g => g.classList.add('list-view'));
             });
         });
     </script>

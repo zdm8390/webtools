@@ -631,20 +631,20 @@ class Player {
         switch (charType) {
             case 'knight':
                 this.symbol = '🗡️';
-                this.maxHp = 130;
+                this.maxHp = 220;
                 this.speed = 3.2;
                 this.areaMultiplier = 1.0;
                 break;
             case 'ranger':
                 this.symbol = '🏹';
-                this.maxHp = 90;
+                this.maxHp = 150;
                 this.speed = 4.2;
                 this.areaMultiplier = 1.0;
                 break;
             case 'wizard':
             default:
                 this.symbol = '🧙‍♂️';
-                this.maxHp = 100;
+                this.maxHp = 170;
                 this.speed = 3.5;
                 this.areaMultiplier = 1.2;
                 break;
@@ -695,7 +695,7 @@ class Player {
     takeDamage(amount) {
         if (this.invulnerableFrames > 0) return false;
         this.hp -= amount;
-        this.invulnerableFrames = 30;
+        this.invulnerableFrames = 120; // 2 seconds invulnerability (60 fps * 2s = 120 frames)
         return true;
     }
 
@@ -721,8 +721,9 @@ class Player {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        if (this.invulnerableFrames > 0 && Math.floor(this.invulnerableFrames / 4) % 2 === 0) {
-            ctx.globalAlpha = 0.4;
+        // Flicker during 2-second invulnerability
+        if (this.invulnerableFrames > 0 && Math.floor(this.invulnerableFrames / 6) % 2 === 0) {
+            ctx.globalAlpha = 0.45;
         }
 
         ctx.font = '32px sans-serif';
