@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蔵書点検チェックツール Pro (Daily Checker)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="background-globes">
+        <div class="globe globe-1"></div>
+        <div class="globe globe-2"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <div>
+                    <h1>蔵書点検チェックツール <span>Pro</span></h1>
+                    <p class="subtitle">Daily Inventory Checking Automation Suite</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="date-badge">
+                    <span class="label">点検対象日:</span>
+                    <input type="date" id="target-date-input" class="date-picker">
+                </div>
+                <button id="btn-run-all" class="btn btn-primary btn-glow">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    全工程一括実行
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="main-content">
+            <!-- Left Side: Config & Stats -->
+            <section class="left-panel">
+                <div class="glass-card config-card">
+                    <h2><span class="icon">⚙️</span> 動作設定ファイル状態</h2>
+                    <div class="config-grid">
+                        <div class="config-item">
+                            <span class="config-label">作業ファイル (B5)</span>
+                            <span class="config-val" id="cfg-work-file">--</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">テキストパス (A9)</span>
+                            <span class="config-val" id="cfg-text-path" title="--">--</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">バックアップ先 (A3)</span>
+                            <span class="config-val" id="cfg-backup-path" title="--">--</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">最終格納先 (A21)</span>
+                            <span class="config-val" id="cfg-dest-path" title="--">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card stats-card">
+                    <h2><span class="icon">📊</span> 処理データ件数サマリー</h2>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-num" id="stat-e1">--</div>
+                            <div class="stat-desc">リスト件数 (E1)</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-num" id="stat-f1">--</div>
+                            <div class="stat-desc">対象日付 (F1)</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-num" id="stat-e2">--</div>
+                            <div class="stat-desc">IDリスト行 (E2)</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-num" id="stat-f2">--</div>
+                            <div class="stat-desc">ID対象件数 (F2)</div>
+                        </div>
+                        <div class="stat-box highlight">
+                            <div class="stat-num" id="stat-g1">--</div>
+                            <div class="stat-desc">統合有効件数 (G1)</div>
+                        </div>
+                        <div class="stat-box highlight">
+                            <div class="stat-num" id="stat-g9">--</div>
+                            <div class="stat-desc">テキスト取込 (G9)</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Steps & Execution -->
+            <section class="right-panel">
+                <div class="steps-container">
+
+                    <!-- Step 1 -->
+                    <div class="glass-card step-card" id="step-1">
+                        <div class="step-badge">Step 1</div>
+                        <div class="step-info">
+                            <h3>バックアップ＆作業ファイル作成</h3>
+                            <p>本日の点検リスト＆IDリストを複製し、作業用ファイルを生成</p>
+                        </div>
+                        <div class="step-action">
+                            <span class="step-status status-idle">未実行</span>
+                            <button class="btn btn-secondary btn-step-run" onclick="runSingleStep(1)">実行</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="glass-card step-card" id="step-2">
+                        <div class="step-badge">Step 2</div>
+                        <div class="step-info">
+                            <h3>チェックリストとIDリストの統合</h3>
+                            <p>対象日付データをマージし、不要行削除とソートを実施</p>
+                        </div>
+                        <div class="step-action">
+                            <span class="step-status status-idle">未実行</span>
+                            <button class="btn btn-secondary btn-step-run" onclick="runSingleStep(2)">実行</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="glass-card step-card" id="step-3">
+                        <div class="step-badge">Step 3</div>
+                        <div class="step-info">
+                            <h3>UTF-8 テキストデータ取り込み</h3>
+                            <p>点検機器から抽出されたテキストファイルをパースして転記</p>
+                        </div>
+                        <div class="step-action">
+                            <span class="step-status status-idle">未実行</span>
+                            <button class="btn btn-secondary btn-step-run" onclick="runSingleStep(3)">実行</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="glass-card step-card" id="step-4">
+                        <div class="step-badge">Step 4</div>
+                        <div class="step-info">
+                            <h3>データ検証＆自動判定・着色</h3>
+                            <p>不整合箇所を自動検出し、セルとヘッダーを着色（黄/緑）</p>
+                        </div>
+                        <div class="step-action">
+                            <span class="step-status status-idle">未実行</span>
+                            <button class="btn btn-secondary btn-step-run" onclick="runSingleStep(4)">実行</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="glass-card step-card" id="step-5">
+                        <div class="step-badge">Step 5</div>
+                        <div class="step-info">
+                            <h3>最終格納先へファイル転送</h3>
+                            <p>完成したファイルを最終格納フォルダへコピー＆エクスプローラー起動</p>
+                        </div>
+                        <div class="step-action">
+                            <span class="step-status status-idle">未実行</span>
+                            <button class="btn btn-secondary btn-step-run" onclick="runSingleStep(5)">実行</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 6 -->
+                    <div class="glass-card step-card" id="step-6">
+                        <div class="step-badge">Step 6</div>
+                        <div class="step-info">
+                            <h3>履歴ファイルへの記録＆整合性チェック</h3>
+                            <p>点検履歴Excelに実行結果を転記し、データの整合性を最終チェック</p>
+                        </div>
+                        <div class="step-action">
+                            <span class="step-status status-idle">未実行</span>
+                            <button class="btn btn-secondary btn-step-run" onclick="runSingleStep(6)">実行</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Log Panel -->
+                <div class="glass-card log-card">
+                    <div class="log-header">
+                        <h3><span class="icon">💻</span> 実行ログ</h3>
+                        <button id="btn-clear-log" class="btn-text">クリア</button>
+                    </div>
+                    <div class="log-content" id="log-output">
+                        <div class="log-line info">[System] 蔵書点検チェックツール Pro が起動しました。</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
