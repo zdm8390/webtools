@@ -1,0 +1,13 @@
+{
+  "name": "local-gamepad-game",
+  "version": "1.0.0",
+  "description": "Windowsローカル環境・コントローラーパッド対応 三人称3D街中破壊格闘ゲーム",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y serve .",
+    "dev": "npx -y vite"
+  },
+  "keywords": ["gamepad", "threejs", "3d-game", "brawler", "gamepad-api"],
+  "author": "",
+  "license": "MIT"
+}

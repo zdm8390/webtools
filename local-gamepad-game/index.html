@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Breaker 3D - 3D 街中破壊格闘ゲーム</title>
+    <meta name="description" content="Windowsローカル環境・コントローラーパッド完全対応の三人称視点3D街中破壊格闘アクションゲーム。">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- ES Modules Import Map for Three.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- 3D WebGL Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay (HUD & Controls) -->
+    <div id="ui-overlay">
+        <!-- ヘッダーエリア -->
+        <div class="header-bar">
+            <div class="player-stats">
+                <div class="player-label">PLAYER 1 - URBAN BREAKER</div>
+                <div class="hp-track">
+                    <div id="player-hp-bar" class="hp-fill"></div>
+                </div>
+            </div>
+
+            <div id="controller-status" class="status-badge disconnected">
+                ⌨️ コントローラー検知中...
+            </div>
+        </div>
+
+        <!-- ダイナミック コンボカウンター -->
+        <div id="combo-counter">
+            <div id="combo-number" class="combo-num">0</div>
+            <div class="combo-text">HITS COMBO!</div>
+        </div>
+
+        <!-- フッター コントローラー操作ガイド -->
+        <div class="controls-guide">
+            <div class="control-item">
+                <span class="key-badge">L-Stick / WASD</span> 3D移動
+            </div>
+            <div class="control-item">
+                <span class="key-badge">R-Stick / Arrows</span> 3Dカメラ回転
+            </div>
+            <div class="control-item">
+                <span class="key-badge">X / J</span> 🥊 パンチ
+            </div>
+            <div class="control-item">
+                <span class="key-badge">Y / K</span> 💥 キック
+            </div>
+            <div class="control-item">
+                <span class="key-badge">B / L</span> 🛡️ ガード
+            </div>
+            <div class="control-item">
+                <span class="key-badge">A / Space</span> ⚡ ダッシュ
+            </div>
+        </div>
+    </div>
+
+    <!-- メインエントリーポイント -->
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
