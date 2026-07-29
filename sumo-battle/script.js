@@ -1,6 +1,6 @@
 /**
- * はっけよい！超速相撲バトル POP - メインJavaScript
- * スマホ・タッチ操作最適化＆マルチタッチフルスクリーン連打
+ * SUMO POP! 🌸 はっけよいの国 - メインJavaScript
+ * パステルポップアニメーション & タイトル即時バトルスタート
  */
 
 (function() {
@@ -23,7 +23,7 @@
             }
         }
 
-        playTaiko(freq = 80, duration = 0.4, vol = 0.8) {
+        playTaiko(freq = 120, duration = 0.35, vol = 0.8) {
             if (!this.enabled) return;
             this.init();
             if (!this.ctx) return;
@@ -33,7 +33,7 @@
 
             osc.type = 'sine';
             osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + duration);
+            osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + duration);
 
             gain.gain.setValueAtTime(vol, this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
@@ -54,8 +54,8 @@
             const gain = this.ctx.createGain();
 
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(2400, this.ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1800, this.ctx.currentTime + 0.1);
+            osc.frequency.setValueAtTime(2600, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + 0.1);
 
             gain.gain.setValueAtTime(0.7, this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
@@ -72,7 +72,7 @@
             this.init();
             if (!this.ctx) return;
 
-            const bufferSize = this.ctx.sampleRate * 0.12;
+            const bufferSize = this.ctx.sampleRate * 0.1;
             const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
             const data = buffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -81,18 +81,18 @@
             noise.buffer = buffer;
             const filter = this.ctx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(400, this.ctx.currentTime);
+            filter.frequency.setValueAtTime(600, this.ctx.currentTime);
 
             const gain = this.ctx.createGain();
             gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
 
             noise.connect(filter);
             filter.connect(gain);
             gain.connect(this.ctx.destination);
 
             noise.start();
-            this.playTaiko(160, 0.12, 0.5);
+            this.playTaiko(200, 0.1, 0.6);
         }
 
         playDodge() {
@@ -103,8 +103,8 @@
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(450, this.ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(900, this.ctx.currentTime + 0.15);
+            osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1040, this.ctx.currentTime + 0.15);
 
             gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
@@ -119,17 +119,17 @@
             if (!this.enabled) return;
             this.init();
             if (!this.ctx) return;
-            this.playTaiko(240, 0.5, 1.0);
-            setTimeout(() => this.playTaiko(180, 0.4, 0.9), 100);
-            setTimeout(() => this.playTaiko(140, 0.4, 0.8), 200);
+            this.playTaiko(300, 0.4, 1.0);
+            setTimeout(() => this.playTaiko(240, 0.3, 0.9), 100);
+            setTimeout(() => this.playTaiko(180, 0.3, 0.8), 200);
         }
 
         playCardSelect() {
             if (!this.enabled) return;
             this.init();
             if (!this.ctx) return;
-            this.playTaiko(300, 0.1, 0.5);
-            setTimeout(() => this.playTaiko(600, 0.2, 0.7), 80);
+            this.playTaiko(400, 0.1, 0.5);
+            setTimeout(() => this.playTaiko(800, 0.2, 0.7), 80);
         }
 
         playFanfare(isWin) {
@@ -137,7 +137,7 @@
             this.init();
             if (!this.ctx) return;
 
-            const notes = isWin ? [261.63, 329.63, 392.00, 523.25, 659.25] : [260, 220, 180, 140];
+            const notes = isWin ? [349.23, 440.00, 523.25, 698.46] : [300, 260, 220, 180];
             notes.forEach((freq, idx) => {
                 setTimeout(() => {
                     if (!this.ctx) return;
@@ -146,11 +146,11 @@
                     osc.type = isWin ? 'triangle' : 'sawtooth';
                     osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
                     gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
                     osc.start();
-                    osc.stop(this.ctx.currentTime + 0.35);
+                    osc.stop(this.ctx.currentTime + 0.3);
                 }, idx * 100);
             });
         }
@@ -158,18 +158,18 @@
 
     const audio = new SoundEngine();
 
-    // --- ゲーム設定 & アーケード番付定義 ---
+    // パステル番付
     const RANKS = [
-        { name: '序ノ口', enemyName: '富士ノ山', strength: 2.2, weight: 110, color: '#00e676', avatar: '♨️' },
-        { name: '十両', enemyName: '琴ノ海', strength: 3.8, weight: 135, color: '#00f0ff', avatar: '🌊' },
-        { name: '幕内', enemyName: '朝日龍', strength: 5.4, weight: 155, color: '#ffe600', avatar: '🐉' },
-        { name: '大関', enemyName: '豪快山', strength: 7.2, weight: 175, color: '#ff6b00', avatar: '⛰️' },
-        { name: '横綱', enemyName: '武蔵王', strength: 9.2, weight: 200, color: '#ff007f', avatar: '👑' }
+        { name: '序ノ口', enemyName: 'うさ丸', strength: 2.0, weight: 110, color: '#34d399', avatar: '🐰' },
+        { name: '十両', enemyName: 'くまごろう', strength: 3.5, weight: 130, color: '#38bdf8', avatar: '🐻' },
+        { name: '幕内', enemyName: 'ねこノ海', strength: 5.0, weight: 150, color: '#fde047', avatar: '🐱' },
+        { name: '大関', enemyName: 'ぺんぎん山', strength: 6.8, weight: 170, color: '#c084fc', avatar: '🐧' },
+        { name: '横綱', enemyName: 'ぴよ王', strength: 8.8, weight: 195, color: '#ff85c0', avatar: '🐥' }
     ];
 
-    const RIVAL_NAMES = ['怒涛龍', '金剛丸', '鬼ノ海', '雷神山', '百首王', '超嵐丸', '炎ノ海', '猛牛山', '覇王龍'];
-    const RIVAL_AVATARS = ['👹', '🔥', '⚡', '🐂', '🦁', '🌪️', '💥', '⚓'];
-    const RIVAL_COLORS = ['#ff007f', '#ffe600', '#00f0ff', '#9d4edd', '#ff6b00', '#00e676'];
+    const RIVAL_NAMES = ['ぽんちゃん', 'もち丸', 'わたがし山', 'いちご龍', 'みるく丸', 'キャンディ海', 'ぷりん山', 'そら丸'];
+    const RIVAL_AVATARS = ['🍓', '🍡', '🐥', '🐰', '🐻', '🐱', '🦄', '🐼'];
+    const RIVAL_COLORS = ['#ff85c0', '#fde047', '#38bdf8', '#c084fc', '#34d399', '#ffb3d9'];
 
     const ALL_SKILL_CARDS = [
         { id: 'push_power', icon: '⚡', title: 'どすこい連打術', desc: '押し出しの攻撃力が 25% アップ！', rarity: 'common', apply: (p) => { p.powerMultiplier += 0.25; } },
@@ -300,9 +300,9 @@
             ctx.globalAlpha = alpha;
 
             if (this.text) {
-                ctx.font = '900 20px "Dela Gothic One", sans-serif';
+                ctx.font = '900 20px "Mochiy Pop One", sans-serif';
                 ctx.fillStyle = this.color;
-                ctx.shadowColor = '#000';
+                ctx.shadowColor = '#fff';
                 ctx.shadowBlur = 4;
                 ctx.fillText(this.text, this.x, this.y);
             } else {
@@ -315,7 +315,7 @@
         }
     }
 
-    // --- DOM要素 ---
+    // DOM要素
     const canvas = document.getElementById('sumo-canvas');
     const ctx = canvas.getContext('2d');
 
@@ -342,7 +342,6 @@
     const btnRetryMatch = document.getElementById('btn-retry-match');
     const btnToggleAudio = document.getElementById('btn-toggle-audio');
 
-    // タッチ操作ボタン
     const btnP1Push = document.getElementById('btn-p1-push');
     const btnP1Dodge = document.getElementById('btn-p1-dodge');
     const btnP1Burst = document.getElementById('btn-p1-burst');
@@ -352,7 +351,6 @@
     const btnP2Dodge = document.getElementById('btn-p2-dodge');
     const btnP2Burst = document.getElementById('btn-p2-burst');
 
-    // マッチアップ要素
     const playerNameEl = document.getElementById('player-name');
     const enemyNameEl = document.getElementById('enemy-name');
     const playerAvatarEl = document.getElementById('player-avatar-preview');
@@ -365,7 +363,6 @@
     const acquiredSkillsList = document.getElementById('acquired-skills-list');
     const cardsContainer = document.getElementById('cards-container');
 
-    // リザルト要素
     const resultTitleEl = document.getElementById('result-title');
     const winnerNameEl = document.getElementById('winner-name');
     const resultKimariteEl = document.getElementById('result-kimarite');
@@ -373,8 +370,8 @@
     const resCpsEl = document.getElementById('res-cps');
     const resStreakEl = document.getElementById('res-streak');
 
-    let p1 = new Rikishi(true, '雷電丸', '#ff007f', '⚡', 5.5, 130);
-    let p2 = new Rikishi(false, '富士ノ山', '#00f0ff', '♨️', 2.2, 110);
+    let p1 = new Rikishi(true, '雷電ちゃん', '#ff85c0', '⚡', 5.5, 130);
+    let p2 = new Rikishi(false, 'うさ丸', '#34d399', '🐰', 2.0, 110);
 
     let particles = [];
     let announceText = '';
@@ -393,9 +390,10 @@
 
     // --- イベントリスナー設定 ---
     function setupEventListeners() {
-        btnModeArcade.addEventListener('click', () => resetAndStartMode('arcade'));
-        btnModeEndless.addEventListener('click', () => resetAndStartMode('endless'));
-        btnModePvp.addEventListener('click', () => resetAndStartMode('pvp'));
+        // TOPメニューボタンを押したら、ダイレクトに即時対戦カウントダウンスタート！
+        btnModeArcade.addEventListener('click', (e) => { e.preventDefault(); resetAndStartMode('arcade'); });
+        btnModeEndless.addEventListener('click', (e) => { e.preventDefault(); resetAndStartMode('endless'); });
+        btnModePvp.addEventListener('click', (e) => { e.preventDefault(); resetAndStartMode('pvp'); });
 
         btnTopNav.addEventListener('click', showTitle);
         btnMatchupToTop.addEventListener('click', showTitle);
@@ -407,16 +405,16 @@
             if (gameMode === 'arcade') {
                 currentRankIdx = Math.min(RANKS.length - 1, currentRankIdx + 1);
             }
-            startMatchup(gameMode);
+            startCountdown();
         });
-        btnRetryMatch.addEventListener('click', () => startMatchup(gameMode));
+        btnRetryMatch.addEventListener('click', () => startCountdown());
 
         btnToggleAudio.addEventListener('click', () => {
             audio.enabled = !audio.enabled;
             btnToggleAudio.textContent = audio.enabled ? '🔊 Sound ON' : '🔇 Sound OFF';
         });
 
-        // スマホ画面タップ連打対応 (キャンバス直接タッチでも連打可能)
+        // タッチ連打
         canvas.addEventListener('touchstart', (e) => {
             if (gameState === STATE.PLAYING) {
                 e.preventDefault();
@@ -430,20 +428,16 @@
             }
         });
 
-        // 1P タッチ
         btnP1Push.addEventListener('pointerdown', (e) => { e.preventDefault(); handlePush(p1); });
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); handleDodge(p1); });
         btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); handleBurst(p1); });
 
-        // 2P タッチ
         btnP2Push.addEventListener('pointerdown', (e) => { e.preventDefault(); handlePush(p2); });
         btnP2Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); handleDodge(p2); });
         btnP2Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); handleBurst(p2); });
 
-        // キーボード操作
         window.addEventListener('keydown', (e) => {
             if (gameState !== STATE.PLAYING) return;
-
             if (e.code === 'Space') {
                 e.preventDefault();
                 handlePush(p1);
@@ -488,68 +482,35 @@
         screenResult.classList.remove('active');
     }
 
+    // TOPメニューボタン選択時：すぐにカウントダウンがスタートする親切設計！
     function resetAndStartMode(mode) {
         gameMode = mode;
         currentRankIdx = 0;
         streakCount = 0;
-        p1 = new Rikishi(true, '雷電丸', '#ff007f', '⚡', 5.5, 130);
-        startMatchup(mode);
+        p1 = new Rikishi(true, '雷電ちゃん', '#ff85c0', '⚡', 5.5, 130);
+        
+        setupEnemy(mode);
+        startCountdown();
     }
 
-    function startMatchup(mode) {
-        gameState = STATE.MATCHUP;
-        hideAllScreens();
-        screenMatchup.classList.add('active');
-        uiOverlay.classList.add('active');
-
+    function setupEnemy(mode) {
         if (mode === 'pvp') {
-            p2 = new Rikishi(false, '鳳凰丸 (2P)', '#9d4edd', '🦅', 6.0, 140);
+            p2 = new Rikishi(false, '鳳凰丸 (2P)', '#c084fc', '🦅', 6.0, 140);
             p2ControlsGroup.classList.remove('hidden');
-            matchupRankEl.textContent = '【ふたり対戦】 東西直接対決！';
         } else if (mode === 'arcade') {
             p2ControlsGroup.classList.add('hidden');
             const enemyData = RANKS[currentRankIdx];
             p2 = new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight);
-            matchupRankEl.textContent = `【横綱への道】 幕内 ${enemyData.name} 戦！`;
         } else if (mode === 'endless') {
             p2ControlsGroup.classList.add('hidden');
             const rName = RIVAL_NAMES[streakCount % RIVAL_NAMES.length];
             const rAvatar = RIVAL_AVATARS[streakCount % RIVAL_AVATARS.length];
             const rColor = RIVAL_COLORS[streakCount % RIVAL_COLORS.length];
-            const rStrength = 2.5 + (streakCount * 0.75);
+            const rStrength = 2.4 + (streakCount * 0.7);
             const rWeight = 110 + (streakCount * 12);
             
             p2 = new Rikishi(false, `${rName} (${streakCount + 1}人目)`, rColor, rAvatar, rStrength, rWeight);
-            matchupRankEl.textContent = `【連勝サバイバル】 ${streakCount + 1}戦目の刺客！`;
         }
-
-        playerNameEl.textContent = p1.name;
-        enemyNameEl.textContent = p2.name;
-        playerAvatarEl.textContent = p1.avatar;
-        enemyAvatarEl.textContent = p2.avatar;
-
-        pStrBar.style.width = `${Math.min(100, p1.currentPower * 12)}%`;
-        pWgtBar.style.width = `${Math.min(100, p1.weight * 0.4)}%`;
-        eStrBar.style.width = `${Math.min(100, p2.currentPower * 12)}%`;
-        eWgtBar.style.width = `${Math.min(100, p2.weight * 0.4)}%`;
-
-        renderAcquiredSkills();
-        audio.playHyoshigi();
-    }
-
-    function renderAcquiredSkills() {
-        acquiredSkillsList.innerHTML = '';
-        if (p1.acquiredSkills.length === 0) {
-            acquiredSkillsList.innerHTML = '<span class="no-skill">習得スキルなし</span>';
-            return;
-        }
-
-        p1.acquiredSkills.forEach(card => {
-            const chip = document.createElement('span');
-            chip.className = 'skill-chip';
-            chip.textContent = `${card.icon} ${card.title}`;
-            acquiredSkillsList.appendChild(chip);
-        });
     }
 
     function showSkillSelect() {
@@ -582,7 +543,8 @@
                 if (gameMode === 'arcade') {
                     currentRankIdx = Math.min(RANKS.length - 1, currentRankIdx + 1);
                 }
-                startMatchup(gameMode);
+                setupEnemy(gameMode);
+                startCountdown();
             });
 
             cardsContainer.appendChild(cardEl);
@@ -604,15 +566,15 @@
 
         setTimeout(() => {
             triggerAnnouncement('はっけよい！', 1.2);
-            audio.playTaiko(120, 0.3, 0.9);
-        }, 1000);
+            audio.playTaiko(140, 0.3, 0.9);
+        }, 900);
 
         setTimeout(() => {
             triggerAnnouncement('のこった！', 1.5);
-            audio.playTaiko(200, 0.4, 1.0);
+            audio.playTaiko(220, 0.4, 1.0);
             gameState = STATE.PLAYING;
             startTime = performance.now();
-        }, 2000);
+        }, 1800);
     }
 
     function finishMatch(winner, kimarite) {
@@ -628,15 +590,15 @@
         if (isP1Win) {
             winsCount++;
             streakCount++;
-            resultTitleEl.textContent = '金 星 ！ 勝 負 あ り';
+            resultTitleEl.textContent = '金 星 ！ 勝 負 あ り 🌸';
             winnerNameEl.textContent = `東 ${winner.name} の大勝利！`;
             
             if (gameMode !== 'pvp') {
-                btnNextMatch.textContent = '秘伝スキル獲得 ➔';
+                btnNextMatch.textContent = '秘伝カード獲得 ➔';
                 btnNextMatch.onclick = () => showSkillSelect();
             } else {
                 btnNextMatch.textContent = '次の取組へ ➔';
-                btnNextMatch.onclick = () => startMatchup(gameMode);
+                btnNextMatch.onclick = () => { setupEnemy(gameMode); startCountdown(); };
             }
 
             btnNextMatch.classList.remove('hidden');
@@ -654,7 +616,7 @@
 
         resultKimariteEl.textContent = `決まり手：${kimarite}`;
         resTimeEl.textContent = `${durationSec}秒`;
-        resCpsEl.textContent = `${cps}回/秒`;
+        resCpsEl.textContent = `${cps}回`;
         resStreakEl.textContent = `${streakCount}連勝`;
 
         updateHeaderUI();
@@ -675,7 +637,7 @@
             rankBadge.textContent = `⚔️ 対戦モード`;
         }
 
-        winsBadge.textContent = `🔥 ${streakCount}連勝中 (通算${winsCount}勝 ${lossesCount}敗)`;
+        winsBadge.textContent = `🌸 ${streakCount}連勝中 (通算${winsCount}勝)`;
     }
 
     // --- アクション処理 ---
@@ -700,7 +662,7 @@
             speedLinesEl.classList.add('active');
             setTimeout(() => speedLinesEl.classList.remove('active'), 400);
 
-            spawnSparks((actor.x + opponent.x)/2, actor.y, '#00f0ff', 15, '見切り！');
+            spawnSparks((actor.x + opponent.x)/2, actor.y, '#38bdf8', 15, '見切り！');
             return;
         }
 
@@ -716,7 +678,7 @@
 
         if (actor.hasStunSlap && Math.random() < 0.15) {
             pushForce *= 1.8;
-            spawnSparks((actor.x + opponent.x)/2, actor.y, '#ffe600', 12, 'ハリケーン！');
+            spawnSparks((actor.x + opponent.x)/2, actor.y, '#fde047', 12, 'ハリケーン！');
         }
 
         opponent.vx += dir * pushForce;
@@ -748,7 +710,7 @@
         setTimeout(() => speedLinesEl.classList.remove('active'), 800);
 
         opponent.vx += dir * 32;
-        spawnSparks((actor.x + opponent.x)/2, actor.y, '#ffd700', 35, 'ドゴーン！');
+        spawnSparks((actor.x + opponent.x)/2, actor.y, '#fde047', 35, 'ドゴーン！');
     }
 
     function updateBurstUI() {
@@ -834,7 +796,7 @@
     }
 
     function spawnVictoryConfetti() {
-        const colors = ['#ff007f', '#ffe600', '#00f0ff', '#ffffff', '#9d4edd'];
+        const colors = ['#ff85c0', '#fde047', '#38bdf8', '#ffffff', '#c084fc'];
         for (let i = 0; i < 90; i++) {
             particles.push(new Particle(
                 DOHYO.cx + (Math.random() * 450 - 225),
@@ -854,36 +816,38 @@
         announceTimer = duration;
     }
 
+    // パステル土俵描画
     function drawDohyo() {
         ctx.save();
 
         const bgGrad = ctx.createRadialGradient(DOHYO.cx, DOHYO.cy, 40, DOHYO.cx, DOHYO.cy, 520);
-        bgGrad.addColorStop(0, '#23153b');
-        bgGrad.addColorStop(1, '#0f0919');
+        bgGrad.addColorStop(0, '#fff5fa');
+        bgGrad.addColorStop(1, '#f3e8f8');
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // 土俵
         ctx.beginPath();
         ctx.ellipse(DOHYO.cx, DOHYO.cy, DOHYO.rx, DOHYO.ry, 0, 0, Math.PI * 2);
         const dohyoGrad = ctx.createRadialGradient(DOHYO.cx, DOHYO.cy, 30, DOHYO.cx, DOHYO.cy, DOHYO.rx);
-        dohyoGrad.addColorStop(0, '#e5a76c');
-        dohyoGrad.addColorStop(0.85, '#ca8647');
-        dohyoGrad.addColorStop(1, '#945421');
+        dohyoGrad.addColorStop(0, '#fffdfa');
+        dohyoGrad.addColorStop(0.85, '#fde6d2');
+        dohyoGrad.addColorStop(1, '#fbcfe8');
         ctx.fillStyle = dohyoGrad;
         ctx.fill();
         ctx.lineWidth = 8;
-        ctx.strokeStyle = '#ffe600';
+        ctx.strokeStyle = '#ff85c0';
         ctx.stroke();
 
         ctx.beginPath();
         ctx.ellipse(DOHYO.cx, DOHYO.cy, DOHYO.rx - 10, DOHYO.ry - 5, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.strokeStyle = '#c084fc';
         ctx.lineWidth = 4;
         ctx.setLineDash([14, 10]);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#ff85c0';
         ctx.fillRect(DOHYO.cx - 50, DOHYO.cy - 24, 10, 48);
         ctx.fillRect(DOHYO.cx + 40, DOHYO.cy - 24, 10, 48);
 
@@ -900,18 +864,18 @@
         if (rikishi.isDodging) {
             ctx.beginPath();
             ctx.arc(x, y, r + 14, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
             ctx.fill();
         }
 
         ctx.beginPath();
         ctx.ellipse(x, DOHYO.cy + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
         ctx.fill();
 
         ctx.beginPath();
         ctx.arc(x + pushOffset, y, r, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffe0bd';
+        ctx.fillStyle = '#fff4e6';
         ctx.fill();
         ctx.lineWidth = 4;
         ctx.strokeStyle = rikishi.color;
@@ -927,15 +891,15 @@
         ctx.textBaseline = 'middle';
         ctx.fillText(rikishi.avatar, x + pushOffset, y - 2);
 
-        ctx.font = '900 15px "Dela Gothic One", sans-serif';
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = '#000';
+        ctx.font = '900 15px "Mochiy Pop One", sans-serif';
+        ctx.fillStyle = '#4a3b52';
+        ctx.shadowColor = '#fff';
         ctx.shadowBlur = 4;
         ctx.fillText(rikishi.name, x, y - r - 14);
 
         if (rikishi.stateTextTimer > 0) {
-            ctx.font = '900 18px "Dela Gothic One", sans-serif';
-            ctx.fillStyle = '#ffe600';
+            ctx.font = '900 18px "Mochiy Pop One", sans-serif';
+            ctx.fillStyle = '#d946ef';
             ctx.fillText(rikishi.stateText, x, y - r - 36);
         }
 
@@ -948,16 +912,16 @@
         ctx.translate(DOHYO.cx, DOHYO.cy - 60);
         ctx.scale(announceScale, announceScale);
 
-        ctx.font = '900 52px "Dela Gothic One", sans-serif';
+        ctx.font = '900 52px "Mochiy Pop One", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        ctx.fillStyle = '#ffe600';
-        ctx.shadowColor = '#ff007f';
-        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#ff85c0';
+        ctx.shadowColor = '#fff';
+        ctx.shadowBlur = 10;
         ctx.fillText(announceText, 0, 0);
 
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = '#fff';
         ctx.lineWidth = 4;
         ctx.strokeText(announceText, 0, 0);
 

@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>はっけよい！超速相撲バトル POP | Hakkeyoi Sumo Battle</title>
-    <meta name="description" content="スマホ対応！1回15秒の超爽快ポップ相撲アクション！タップ連打＆秘伝スキルカードで横綱を目指せ！">
+    <title>SUMO POP! 🌸 はっけよいの国 | パステル相撲アクション</title>
+    <meta name="description" content="パステル＆ゆめかわ和風の世界！1回15秒の超爽快相撲アクションゲーム。タップ連打＆秘伝カードで横綱を目指せ！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Kiwi+Maru:wght@500;700;900&family=MPLUS1p:wght@800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,14 +16,14 @@
         <header class="game-header">
             <div class="header-main-info">
                 <h1 class="logo">
-                    <span class="logo-sub">⚡ タップ連打×カード成長 ⚡</span>
-                    <span class="logo-main">はっけよい！<span class="highlight">大相撲POP</span></span>
+                    <span class="logo-sub">🌸 ゆめかわ×連打アクション 🌸</span>
+                    <span class="logo-main">SUMO <span class="highlight">POP!</span></span>
                 </h1>
                 <button id="btn-top-nav" class="btn-icon-top" title="タイトルへ戻る">🏠 TOP</button>
             </div>
             <div class="header-badges">
                 <div class="badge" id="rank-badge">👑 番付: 序ノ口</div>
-                <div class="badge" id="wins-badge">🔥 0連勝中</div>
+                <div class="badge" id="wins-badge">🌸 0連勝中</div>
             </div>
         </header>
 
@@ -40,35 +40,35 @@
                 <!-- 1. タイトル画面 -->
                 <div id="screen-title" class="screen-panel active">
                     <div class="title-banner">
-                        <div class="pop-sticker">どすこい！</div>
-                        <h2>超速相撲バトル POP</h2>
-                        <p class="subtitle">タップ連打＆カードスキルで土俵の王者を目指せ！</p>
+                        <div class="pop-sticker">🌸 どすこいパステル 🍡</div>
+                        <h2>SUMO POP!</h2>
+                        <p class="subtitle">〜 はっけよいの国 〜</p>
                     </div>
                     <div class="mode-select">
                         <button id="btn-mode-arcade" class="btn btn-arcade btn-pop-glow">
                             <span class="btn-emoji">🏆</span>
                             <div class="btn-content">
                                 <strong>横綱昇進モード</strong>
-                                <small>スキルを育てて全5階級を制覇！</small>
+                                <small>タップですぐ対戦開始！カードで強化！</small>
                             </div>
                         </button>
                         <button id="btn-mode-endless" class="btn btn-endless btn-pop-glow">
-                            <span class="btn-emoji">🔥</span>
+                            <span class="btn-emoji">🍡</span>
                             <div class="btn-content">
                                 <strong>連勝サバイバル</strong>
-                                <small>どこまで連勝できるか限界挑戦！</small>
+                                <small>どこまで連勝できるか挑戦！</small>
                             </div>
                         </button>
                         <button id="btn-mode-pvp" class="btn btn-pvp btn-pop-glow">
-                            <span class="btn-emoji">⚔️</span>
+                            <span class="btn-emoji">🎀</span>
                             <div class="btn-content">
                                 <strong>ふたり対戦 (1P vs 2P)</strong>
-                                <small>スマホ1台・PCで白熱対戦！</small>
+                                <small>スマホ1台・PCで白熱バトル！</small>
                             </div>
                         </button>
                     </div>
                     <div class="how-to-play">
-                        <h3>⚡ スマホ＆PC かんたん操作 ⚡</h3>
+                        <h3>🌸 かんたん操作ガイド 🌸</h3>
                         <div class="controls-guide">
                             <div class="guide-item"><span class="key">画面タップ / Space</span><span>押し出し (超連打!)</span></div>
                             <div class="guide-item"><span class="key">はたきボタン / J</span><span>はたき込み (回避カウンター)</span></div>
@@ -82,7 +82,7 @@
                     <div class="matchup-container">
                         <div class="rikishi-card player-card">
                             <span class="card-role">東 (あなた)</span>
-                            <h3 id="player-name">雷電丸</h3>
+                            <h3 id="player-name">雷電ちゃん</h3>
                             <div class="rikishi-avatar" id="player-avatar-preview">⚡</div>
                             <div class="stat-bar"><span class="stat-label">腕力</span><div class="bar"><div class="fill" id="p-str-bar"></div></div></div>
                             <div class="stat-bar"><span class="stat-label">体重</span><div class="bar"><div class="fill" id="p-wgt-bar"></div></div></div>
@@ -101,7 +101,7 @@
                     
                     <!-- 習得済みスキルアイコンリスト -->
                     <div class="acquired-skills-wrap">
-                        <span class="skills-label">習得スキル:</span>
+                        <span class="skills-label">習得カード:</span>
                         <div id="acquired-skills-list" class="skills-list">
                             <span class="no-skill">なし</span>
                         </div>
@@ -112,7 +112,7 @@
                     </div>
                     <div class="matchup-actions">
                         <button id="btn-start-fight" class="btn btn-arcade btn-large btn-pop-glow">
-                            見合って！立合い開始！ 💥
+                            見合って！立合いスタート！ 🌸
                         </button>
                         <button id="btn-matchup-to-top" class="btn btn-secondary">TOPへ戻る</button>
                     </div>
@@ -122,8 +122,8 @@
                 <div id="screen-skill-select" class="screen-panel hidden">
                     <div class="skill-select-header">
                         <span class="pop-badge">VICTORY BONUS!</span>
-                        <h2>秘伝スキル習得！</h2>
-                        <p>カードを1枚タップして力士を強化！</p>
+                        <h2>秘伝カード習得！</h2>
+                        <p>カードをタップして力士をレベルアップ！</p>
                     </div>
                     
                     <div id="cards-container" class="cards-container">

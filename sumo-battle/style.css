@@ -1,24 +1,29 @@
 /* ==========================================
-   はっけよい！超速相撲バトル POP - スタイルシート
-   スマホ・モバイル完全対応 (Mobile First Optimized)
+   SUMO POP! 🌸 はっけよいの国 - スタイルシート
+   オシャレで可愛いパステル和風ポップデザイン
    ========================================== */
 
 :root {
-    --bg-dark: #0f0919;
-    --card-bg: rgba(26, 17, 43, 0.94);
-    --pop-pink: #ff007f;
-    --pop-yellow: #ffe600;
-    --pop-cyan: #00f0ff;
-    --pop-purple: #9d4edd;
-    --pop-orange: #ff6b00;
-    --pop-green: #00e676;
+    --bg-pastel: #fbf5fc;
+    --card-pastel: rgba(255, 248, 253, 0.96);
     
-    --gold-primary: #ffd700;
-    --text-light: #ffffff;
-    --text-muted: #b8c1ec;
+    --pastel-pink: #ffb3d9;
+    --pastel-pink-dark: #ff85c0;
+    --pastel-purple: #d8b4fe;
+    --pastel-purple-dark: #c084fc;
+    --pastel-yellow: #fff3a8;
+    --pastel-yellow-dark: #fde047;
+    --pastel-mint: #a7f3d0;
+    --pastel-mint-dark: #34d399;
+    --pastel-blue: #bae6fd;
+    --pastel-blue-dark: #38bdf8;
     
-    --font-pop: 'Dela Gothic One', 'MPLUS1p', sans-serif;
-    --font-jp: 'Kiwi Maru', sans-serif;
+    --text-dark: #4a3b52;
+    --text-pink: #d946ef;
+    --text-muted: #8b7996;
+    
+    --font-pop: 'Mochiy Pop One', sans-serif;
+    --font-jp: 'Zen Maru Gothic', sans-serif;
 }
 
 * {
@@ -39,13 +44,14 @@ html, body {
 }
 
 body {
-    background-color: var(--bg-dark);
+    background-color: var(--bg-pastel);
     background-image: 
-        radial-gradient(circle at 20% 20%, rgba(255, 0, 127, 0.25), transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(0, 240, 255, 0.2), transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(255, 230, 0, 0.15), transparent 50%);
-    color: var(--text-light);
+        radial-gradient(circle at 10% 20%, rgba(255, 179, 217, 0.4), transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(186, 230, 253, 0.4), transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(255, 243, 168, 0.35), transparent 50%);
+    color: var(--text-dark);
     font-family: var(--font-jp);
+    font-weight: 700;
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -64,11 +70,11 @@ body {
 
 /* ヘッダー */
 .game-header {
-    background: var(--card-bg);
-    border: 3px solid var(--pop-pink);
-    border-radius: 16px;
-    padding: 8px 14px;
-    box-shadow: 0 6px 20px rgba(255, 0, 127, 0.3);
+    background: var(--card-pastel);
+    border: 3px solid var(--pastel-pink);
+    border-radius: 20px;
+    padding: 8px 16px;
+    box-shadow: 0 6px 18px rgba(255, 179, 217, 0.4), 0 4px 0px var(--pastel-pink);
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -86,40 +92,42 @@ body {
 }
 
 .logo-sub {
-    font-size: 0.7rem;
-    color: var(--pop-yellow);
+    font-size: 0.72rem;
+    color: var(--pastel-pink-dark);
     letter-spacing: 1px;
     font-family: var(--font-pop);
 }
 
 .logo-main {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     font-family: var(--font-pop);
+    color: var(--text-dark);
     letter-spacing: 1px;
-    text-shadow: 2px 2px 0px #000;
+    text-shadow: 2px 2px 0px #fff;
 }
 
 .logo-main .highlight {
-    color: var(--pop-pink);
-    text-shadow: 2px 2px 0px #000, 0 0 10px var(--pop-pink);
+    color: var(--pastel-pink-dark);
+    text-shadow: 2px 2px 0px #fff, 0 0 10px rgba(255, 133, 192, 0.4);
 }
 
 .btn-icon-top {
-    background: linear-gradient(135deg, #ff007f, #d6006b);
+    background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-pink-dark));
     color: #fff;
     border: 2px solid #fff;
     border-radius: 20px;
-    padding: 4px 12px;
+    padding: 6px 14px;
     font-family: var(--font-pop);
     font-size: 0.8rem;
     cursor: pointer;
-    box-shadow: 2px 2px 0px #000;
-    transition: transform 0.15s ease;
+    box-shadow: 0 4px 0px var(--pastel-pink-dark);
+    transition: transform 0.1s ease;
     white-space: nowrap;
 }
 
 .btn-icon-top:active {
-    transform: scale(0.95);
+    transform: translateY(2px);
+    box-shadow: 0 2px 0px var(--pastel-pink-dark);
 }
 
 .header-badges {
@@ -129,14 +137,14 @@ body {
 }
 
 .badge {
-    background: rgba(0, 0, 0, 0.6);
-    border: 2px solid var(--pop-yellow);
-    padding: 2px 10px;
+    background: #fff;
+    border: 2px solid var(--pastel-purple);
+    padding: 3px 12px;
     border-radius: 16px;
     font-size: 0.78rem;
     font-family: var(--font-pop);
-    color: var(--pop-yellow);
-    box-shadow: 2px 2px 0px #000;
+    color: var(--pastel-purple-dark);
+    box-shadow: 0 3px 0px var(--pastel-purple);
     white-space: nowrap;
 }
 
@@ -144,11 +152,11 @@ body {
 .game-viewport {
     position: relative;
     width: 100%;
-    border-radius: 16px;
+    border-radius: 22px;
     overflow: hidden;
-    background: #000;
-    border: 3px solid var(--pop-yellow);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 230, 0, 0.4);
+    background: #fff;
+    border: 4px solid var(--pastel-yellow);
+    box-shadow: 0 10px 25px rgba(186, 230, 253, 0.5), 0 6px 0px var(--pastel-yellow-dark);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -160,11 +168,11 @@ body {
     max-height: 520px;
     display: block;
     aspect-ratio: 900 / 520;
-    background: #0f0919;
+    background: #fbf5fc;
     touch-action: manipulation;
 }
 
-/* 集中線エフェクト */
+/* 集中線エフェクト (パステル) */
 .speed-lines {
     position: absolute;
     top: 0;
@@ -173,7 +181,7 @@ body {
     height: 100%;
     pointer-events: none;
     opacity: 0;
-    background: repeating-conic-gradient(from 0deg, transparent 0deg 10deg, rgba(255, 230, 0, 0.15) 10deg 12deg);
+    background: repeating-conic-gradient(from 0deg, transparent 0deg 10deg, rgba(255, 179, 217, 0.25) 10deg 12deg);
     transition: opacity 0.2s ease;
     z-index: 2;
 }
@@ -195,7 +203,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(15, 9, 25, 0.92);
+    background: rgba(255, 245, 252, 0.94);
     backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
@@ -227,39 +235,40 @@ body {
 }
 
 @keyframes popBounce {
-    0% { opacity: 0; transform: scale(0.85); }
+    0% { opacity: 0; transform: scale(0.88); }
     100% { opacity: 1; transform: scale(1); }
 }
 
-/* ステッカー & タイトル */
+/* パステルステッカー & タイトル */
 .pop-sticker {
     display: inline-block;
-    background: var(--pop-yellow);
-    color: #000;
+    background: var(--pastel-yellow);
+    color: var(--text-dark);
     font-family: var(--font-pop);
-    padding: 2px 10px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    transform: rotate(-3deg);
-    box-shadow: 2px 2px 0px #000;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    transform: rotate(-2deg);
+    box-shadow: 0 3px 0px var(--pastel-yellow-dark);
     margin-bottom: 4px;
 }
 
 .title-banner h2 {
     font-family: var(--font-pop);
-    font-size: 1.8rem;
-    color: var(--pop-yellow);
-    text-shadow: 3px 3px 0px #000;
-    margin-bottom: 4px;
+    font-size: 2.2rem;
+    color: var(--pastel-pink-dark);
+    text-shadow: 3px 3px 0px #fff;
+    margin-bottom: 2px;
 }
 
 .title-banner .subtitle {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--text-muted);
     margin-bottom: 16px;
+    font-weight: 700;
 }
 
-/* ボタン群 */
+/* ぷっくりパステルボタン */
 .mode-select {
     display: flex;
     flex-direction: column;
@@ -271,25 +280,26 @@ body {
 .btn {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    border-radius: 14px;
-    border: 3px solid #000;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 18px;
+    border: 3px solid #fff;
     font-family: var(--font-jp);
-    font-size: 0.95rem;
+    font-size: 1rem;
+    font-weight: 900;
     cursor: pointer;
-    box-shadow: 3px 3px 0px #000;
-    transition: transform 0.1s ease;
+    box-shadow: 0 5px 0px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
     touch-action: manipulation;
 }
 
 .btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0px #000;
+    transform: translateY(3px);
+    box-shadow: 0 2px 0px rgba(0, 0, 0, 0.1);
 }
 
 .btn-emoji {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
 }
 
 .btn-content {
@@ -300,46 +310,50 @@ body {
 }
 
 .btn-content small {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     opacity: 0.9;
 }
 
 .btn-arcade {
-    background: linear-gradient(135deg, var(--pop-pink), #c70062);
+    background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-pink-dark));
     color: #fff;
+    box-shadow: 0 5px 0px var(--pastel-pink-dark);
 }
 
 .btn-endless {
-    background: linear-gradient(135deg, var(--pop-orange), #d44d00);
+    background: linear-gradient(135deg, var(--pastel-purple), var(--pastel-purple-dark));
     color: #fff;
+    box-shadow: 0 5px 0px var(--pastel-purple-dark);
 }
 
 .btn-pvp {
-    background: linear-gradient(135deg, var(--pop-purple), #6a00b8);
+    background: linear-gradient(135deg, var(--pastel-blue), var(--pastel-blue-dark));
     color: #fff;
+    box-shadow: 0 5px 0px var(--pastel-blue-dark);
 }
 
 .btn-secondary {
-    background: #251b38;
-    color: var(--pop-yellow);
-    border: 2px solid var(--pop-yellow);
+    background: #fff;
+    color: var(--text-dark);
+    border: 2px solid var(--pastel-pink);
     justify-content: center;
     font-family: var(--font-pop);
+    box-shadow: 0 4px 0px var(--pastel-pink);
 }
 
-/* かんたん操作 */
+/* ガイド */
 .how-to-play {
-    background: rgba(0, 0, 0, 0.5);
-    border: 2px dashed var(--pop-cyan);
-    border-radius: 12px;
-    padding: 10px 12px;
+    background: #fff;
+    border: 2px dashed var(--pastel-pink-dark);
+    border-radius: 16px;
+    padding: 10px 14px;
     width: 100%;
 }
 
 .how-to-play h3 {
     font-family: var(--font-pop);
     font-size: 0.85rem;
-    color: var(--pop-cyan);
+    color: var(--pastel-pink-dark);
     margin-bottom: 6px;
 }
 
@@ -358,13 +372,13 @@ body {
 }
 
 .key {
-    background: #362456;
-    border: 1px solid var(--pop-yellow);
+    background: var(--pastel-yellow);
+    border: 1px solid var(--pastel-yellow-dark);
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: 6px;
     font-family: var(--font-pop);
     font-size: 0.7rem;
-    color: var(--pop-yellow);
+    color: var(--text-dark);
 }
 
 /* マッチアップ画面 */
@@ -379,39 +393,40 @@ body {
 
 .rikishi-card {
     flex: 1;
-    background: rgba(30, 20, 48, 0.95);
-    border: 2px solid var(--pop-cyan);
-    border-radius: 14px;
+    background: #fff;
+    border: 3px solid var(--pastel-pink);
+    border-radius: 18px;
     padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 3px 3px 0px #000;
+    box-shadow: 0 4px 0px var(--pastel-pink);
 }
 
 .card-role {
     font-family: var(--font-pop);
     font-size: 0.7rem;
-    color: var(--pop-yellow);
+    color: var(--pastel-pink-dark);
 }
 
 .rikishi-card h3 {
     font-family: var(--font-pop);
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     margin: 2px 0 6px 0;
+    color: var(--text-dark);
 }
 
 .rikishi-avatar {
-    width: 54px;
-    height: 54px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    background: #2b1d45;
+    background: var(--pastel-yellow);
     margin-bottom: 8px;
-    border: 2px solid var(--pop-yellow);
+    border: 2px solid var(--pastel-yellow-dark);
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.8rem;
+    font-size: 1.9rem;
 }
 
 .stat-bar {
@@ -426,28 +441,28 @@ body {
 .bar {
     flex: 1;
     height: 8px;
-    background: rgba(0, 0, 0, 0.6);
+    background: #f1e4f5;
     border-radius: 4px;
     overflow: hidden;
 }
 
 .bar .fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--pop-yellow), var(--pop-pink));
+    background: linear-gradient(90deg, var(--pastel-yellow-dark), var(--pastel-pink-dark));
     width: 60%;
 }
 
 .vs-divider {
     font-family: var(--font-pop);
     font-size: 1.6rem;
-    color: var(--pop-pink);
-    text-shadow: 2px 2px 0px #000;
+    color: var(--pastel-pink-dark);
+    text-shadow: 2px 2px 0px #fff;
 }
 
 .acquired-skills-wrap {
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--pop-purple);
-    border-radius: 10px;
+    background: #fff;
+    border: 2px solid var(--pastel-purple);
+    border-radius: 14px;
     padding: 6px 10px;
     width: 100%;
     margin-bottom: 12px;
@@ -459,7 +474,7 @@ body {
 .skills-label {
     font-size: 0.75rem;
     font-family: var(--font-pop);
-    color: var(--pop-yellow);
+    color: var(--pastel-purple-dark);
     white-space: nowrap;
 }
 
@@ -470,10 +485,10 @@ body {
 }
 
 .skill-chip {
-    background: var(--pop-purple);
+    background: var(--pastel-purple);
     color: #fff;
-    padding: 1px 6px;
-    border-radius: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
     font-size: 0.7rem;
     font-family: var(--font-pop);
 }
@@ -493,17 +508,17 @@ body {
 /* スキルカード選択画面 */
 .skill-select-header h2 {
     font-family: var(--font-pop);
-    font-size: 1.4rem;
-    color: var(--pop-yellow);
-    text-shadow: 2px 2px 0px #000;
+    font-size: 1.5rem;
+    color: var(--pastel-pink-dark);
+    text-shadow: 2px 2px 0px #fff;
 }
 
 .pop-badge {
     display: inline-block;
-    background: var(--pop-pink);
+    background: var(--pastel-pink-dark);
     color: #fff;
     font-family: var(--font-pop);
-    padding: 2px 10px;
+    padding: 3px 12px;
     border-radius: 14px;
     font-size: 0.75rem;
     margin-bottom: 4px;
@@ -519,30 +534,33 @@ body {
 
 .skill-card {
     flex: 1;
-    background: linear-gradient(145deg, #281a42, #160d26);
-    border: 2px solid var(--pop-cyan);
-    border-radius: 12px;
-    padding: 10px 8px;
+    background: #fff;
+    border: 3px solid var(--pastel-mint-dark);
+    border-radius: 16px;
+    padding: 12px 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
     cursor: pointer;
     position: relative;
-    box-shadow: 3px 3px 0px #000;
+    box-shadow: 0 5px 0px var(--pastel-mint-dark);
     transition: transform 0.15s ease;
     touch-action: manipulation;
 }
 
 .skill-card:active {
-    transform: scale(0.96);
+    transform: translateY(3px);
+    box-shadow: 0 2px 0px var(--pastel-mint-dark);
 }
 
 .skill-card.rare-rare {
-    border-color: var(--pop-purple);
+    border-color: var(--pastel-purple-dark);
+    box-shadow: 0 5px 0px var(--pastel-purple-dark);
 }
 
 .skill-card.rare-legendary {
-    border-color: var(--gold-primary);
+    border-color: var(--pastel-pink-dark);
+    box-shadow: 0 5px 0px var(--pastel-pink-dark);
 }
 
 .card-icon {
@@ -553,14 +571,14 @@ body {
 .card-title {
     font-family: var(--font-pop);
     font-size: 0.95rem;
-    color: var(--pop-yellow);
+    color: var(--text-dark);
     margin-bottom: 4px;
 }
 
 .card-desc {
     font-size: 0.72rem;
-    color: var(--text-light);
-    line-height: 1.2;
+    color: var(--text-muted);
+    line-height: 1.25;
 }
 
 .card-rarity {
@@ -571,41 +589,40 @@ body {
     font-size: 0.6rem;
     padding: 1px 6px;
     border-radius: 8px;
-    background: #000;
+    background: var(--pastel-pink-dark);
     color: #fff;
-    border: 1px solid #fff;
 }
 
 /* リザルト画面 */
 .result-box {
-    background: rgba(22, 14, 38, 0.96);
-    border: 3px solid var(--pop-yellow);
-    border-radius: 16px;
-    padding: 16px 14px;
+    background: #fff;
+    border: 4px solid var(--pastel-pink);
+    border-radius: 20px;
+    padding: 18px 16px;
     width: 100%;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.9);
+    box-shadow: 0 8px 0px var(--pastel-pink);
 }
 
 #result-title {
     font-family: var(--font-pop);
-    font-size: 1.8rem;
-    color: var(--pop-yellow);
-    text-shadow: 3px 3px 0px #000;
+    font-size: 1.9rem;
+    color: var(--pastel-pink-dark);
+    text-shadow: 2px 2px 0px var(--pastel-yellow);
 }
 
 .winner-announcement {
     font-family: var(--font-pop);
     font-size: 1.2rem;
-    color: var(--pop-cyan);
+    color: var(--pastel-purple-dark);
     margin: 4px 0 8px 0;
 }
 
 .kimarite-badge {
     display: inline-block;
-    background: var(--pop-pink);
+    background: var(--pastel-pink);
     color: #fff;
     font-family: var(--font-pop);
-    padding: 4px 14px;
+    padding: 4px 16px;
     border-radius: 16px;
     font-size: 0.95rem;
     margin-bottom: 12px;
@@ -614,9 +631,10 @@ body {
 .result-stats {
     display: flex;
     justify-content: space-around;
-    background: rgba(0, 0, 0, 0.4);
+    background: #fbf5fc;
     padding: 8px;
-    border-radius: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--pastel-purple);
     margin-bottom: 12px;
 }
 
@@ -628,7 +646,7 @@ body {
 .r-stat strong {
     font-family: var(--font-pop);
     font-size: 1.1rem;
-    color: var(--pop-yellow);
+    color: var(--pastel-pink-dark);
 }
 
 .result-actions {
@@ -638,15 +656,15 @@ body {
     flex-wrap: wrap;
 }
 
-/* スマホ用タッチ操作ボタン (親指で押しやすい超連打レイアウト) */
+/* スマホ用タッチ操作ボタン (パステル) */
 .touch-controls {
     width: 100%;
-    background: rgba(20, 13, 34, 0.96);
+    background: rgba(255, 248, 253, 0.98);
     padding: 8px;
     display: flex;
     justify-content: center;
     gap: 8px;
-    border-top: 3px solid var(--pop-pink);
+    border-top: 3px solid var(--pastel-pink);
 }
 
 .control-group {
@@ -659,21 +677,21 @@ body {
 .action-btn {
     flex: 1;
     padding: 14px 4px;
-    border: 3px solid #000;
-    border-radius: 14px;
+    border: 3px solid #fff;
+    border-radius: 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 3px 3px 0px #000;
+    box-shadow: 0 4px 0px rgba(0, 0, 0, 0.1);
     transition: transform 0.05s ease;
     touch-action: manipulation;
 }
 
 .action-btn:active {
-    transform: translate(2px, 2px) scale(0.96);
-    box-shadow: 1px 1px 0px #000;
+    transform: translateY(2px);
+    box-shadow: 0 2px 0px rgba(0, 0, 0, 0.1);
 }
 
 .action-emoji {
@@ -691,24 +709,27 @@ body {
 }
 
 .push-btn {
-    flex: 1.4; /* 連打ボタンを大きめに */
-    background: linear-gradient(135deg, var(--pop-pink), #c70062);
+    flex: 1.4;
+    background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-pink-dark));
     color: #fff;
+    box-shadow: 0 4px 0px var(--pastel-pink-dark);
 }
 
 .dodge-btn {
-    background: linear-gradient(135deg, #1d4ed8, #1e40af);
-    color: var(--pop-cyan);
+    background: linear-gradient(135deg, var(--pastel-blue), var(--pastel-blue-dark));
+    color: #fff;
+    box-shadow: 0 4px 0px var(--pastel-blue-dark);
 }
 
 .burst-btn {
-    background: linear-gradient(135deg, var(--pop-yellow), #d97706);
-    color: #000;
+    background: linear-gradient(135deg, var(--pastel-yellow), var(--pastel-yellow-dark));
+    color: var(--text-dark);
+    box-shadow: 0 4px 0px var(--pastel-yellow-dark);
 }
 
 .burst-btn.disabled {
-    opacity: 0.35;
-    filter: grayscale(0.8);
+    opacity: 0.4;
+    filter: grayscale(0.6);
     pointer-events: none;
 }
 
@@ -723,9 +744,9 @@ body {
 }
 
 .audio-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--pop-yellow);
-    color: var(--pop-yellow);
+    background: #fff;
+    border: 2px solid var(--pastel-pink);
+    color: var(--pastel-pink-dark);
     padding: 2px 10px;
     border-radius: 12px;
     cursor: pointer;
@@ -734,28 +755,28 @@ body {
 }
 
 .donation-footer-banner {
-    background: linear-gradient(135deg, rgba(255, 0, 127, 0.25), rgba(255, 230, 0, 0.2));
-    border: 2px solid var(--pop-pink);
+    background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-yellow));
+    border: 2px solid var(--pastel-pink-dark);
     padding: 4px 12px;
     border-radius: 16px;
-    color: #fff;
+    color: var(--text-dark);
     display: flex;
     align-items: center;
     gap: 6px;
-    box-shadow: 2px 2px 0px #000;
+    box-shadow: 0 2px 0px var(--pastel-pink-dark);
     font-size: 0.75rem;
 }
 
 .donation-link {
-    color: var(--pop-yellow);
+    color: var(--pastel-pink-dark);
     font-family: var(--font-pop);
     text-decoration: none;
 }
 
 .donation-card-inline {
-    background: rgba(255, 0, 127, 0.15);
-    border: 2px dashed var(--pop-pink);
-    border-radius: 12px;
+    background: #fff;
+    border: 2px dashed var(--pastel-pink-dark);
+    border-radius: 14px;
     padding: 8px 10px;
     margin: 10px 0;
     text-align: center;
@@ -764,7 +785,7 @@ body {
 .donation-badge {
     font-family: var(--font-pop);
     font-size: 0.8rem;
-    color: var(--pop-pink);
+    color: var(--pastel-pink-dark);
     margin-bottom: 2px;
 }
 
@@ -787,7 +808,7 @@ body {
 }
 
 /* ==========================================
-   スマートフォンレスポンシブブレイクポイント
+   スマホ対応ブレイクポイント
    ========================================== */
 @media (max-width: 650px) {
     #app-container {
@@ -795,28 +816,12 @@ body {
         gap: 6px;
     }
 
-    .logo-main {
-        font-size: 1.2rem;
-    }
+    .logo-main { font-size: 1.2rem; }
+    .logo-sub { font-size: 0.65rem; }
+    .title-banner h2 { font-size: 1.5rem; }
+    .btn { padding: 10px 12px; font-size: 0.88rem; }
+    .btn-emoji { font-size: 1.3rem; }
 
-    .logo-sub {
-        font-size: 0.65rem;
-    }
-
-    .title-banner h2 {
-        font-size: 1.4rem;
-    }
-
-    .btn {
-        padding: 10px 12px;
-        font-size: 0.88rem;
-    }
-
-    .btn-emoji {
-        font-size: 1.3rem;
-    }
-
-    /* スキルカード縦積み */
     .cards-container {
         flex-direction: column;
         gap: 8px;
@@ -830,44 +835,14 @@ body {
         text-align: left;
     }
 
-    .card-icon {
-        font-size: 1.8rem;
-        margin-bottom: 0;
-    }
+    .card-icon { font-size: 1.8rem; margin-bottom: 0; }
+    .card-title { font-size: 0.88rem; margin-bottom: 2px; }
+    .card-desc { font-size: 0.7rem; }
 
-    .card-title {
-        font-size: 0.88rem;
-        margin-bottom: 2px;
-    }
-
-    .card-desc {
-        font-size: 0.7rem;
-    }
-
-    .matchup-container {
-        gap: 4px;
-    }
-
-    .rikishi-avatar {
-        width: 44px;
-        height: 44px;
-        font-size: 1.4rem;
-        margin-bottom: 4px;
-    }
-
-    .rikishi-card h3 {
-        font-size: 0.95rem;
-    }
-
-    .action-btn {
-        padding: 12px 2px;
-    }
-
-    .action-label {
-        font-size: 0.95rem;
-    }
-
-    .action-emoji {
-        font-size: 1.2rem;
-    }
+    .matchup-container { gap: 4px; }
+    .rikishi-avatar { width: 44px; height: 44px; font-size: 1.4rem; margin-bottom: 4px; }
+    .rikishi-card h3 { font-size: 0.95rem; }
+    .action-btn { padding: 12px 2px; }
+    .action-label { font-size: 0.95rem; }
+    .action-emoji { font-size: 1.2rem; }
 }
