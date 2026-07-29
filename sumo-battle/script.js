@@ -333,11 +333,11 @@
     }
 
     const RANKS = [
-        { name: 'シルバー', icon: '🥈', imgUrl: 'assets/rabbit_cute.jpg', enemyName: '音速うさ丸', aiType: 'rookie_rabbit', strength: 1.8, weight: 70, color: '#059669', avatar: '🐰' },
-        { name: 'ゴールド', icon: '🥇', imgUrl: 'assets/bear_cute.jpg', enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 4.8, weight: 260, color: '#0284c7', avatar: '🐻' },
-        { name: 'ダイヤ', icon: '💎', imgUrl: 'assets/cat_cute.jpg', enemyName: '閃光ねこノ海', aiType: 'ninja_dodge', strength: 7.2, weight: 140, color: '#d97706', avatar: '🐱' },
-        { name: 'プラチナ', icon: '👑', imgUrl: 'assets/phoenix_cute.jpg', enemyName: '暴風鳳凰丸', aiType: 'salt_master', strength: 9.2, weight: 170, color: '#9333ea', avatar: '🦅' },
-        { name: 'マスター', icon: '🏆', imgUrl: 'assets/boss_gold_cute.jpg', enemyName: '覇王金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 12.0, weight: 210, color: '#b45309', avatar: '🐉' }
+        { name: 'シルバー', icon: '🥈', imgUrl: 'assets/rabbit_flat.jpg', enemyName: '音速うさ丸', aiType: 'rookie_rabbit', strength: 1.8, weight: 70, color: '#059669', avatar: '🐰' },
+        { name: 'ゴールド', icon: '🥇', imgUrl: 'assets/bear_flat.jpg', enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 4.8, weight: 260, color: '#0284c7', avatar: '🐻' },
+        { name: 'ダイヤ', icon: '💎', imgUrl: 'assets/cat_flat.jpg', enemyName: '閃光ねこノ海', aiType: 'ninja_dodge', strength: 7.2, weight: 140, color: '#d97706', avatar: '🐱' },
+        { name: 'プラチナ', icon: '👑', imgUrl: 'assets/phoenix_flat.jpg', enemyName: '暴風鳳凰丸', aiType: 'salt_master', strength: 9.2, weight: 170, color: '#9333ea', avatar: '🦅' },
+        { name: 'マスター', icon: '🏆', imgUrl: 'assets/boss_gold_flat.jpg', enemyName: '覇王金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 12.0, weight: 210, color: '#b45309', avatar: '🐉' }
     ];
 
     const ALL_SKILL_CARDS = [
@@ -525,6 +525,7 @@
             this.pushStock = 3;
             this.stunTimer = 0;
             this.edgeLatchTimer = 0;
+            this.autoLatchCooldown = 0;
             this.parryBoostTimer = 0;
             this.parryBoostCount = 0;
 
@@ -548,6 +549,7 @@
             this.dodgeTimer = 0;
             this.stunTimer = 0;
             this.edgeLatchTimer = 0;
+            this.autoLatchCooldown = 0;
             this.parryBoostTimer = 0;
             this.parryBoostCount = 0;
             this.stateText = '';
@@ -589,8 +591,21 @@
 
             if (this.edgeLatchTimer > 0) {
                 this.edgeLatchTimer -= dt;
-                this.vx *= 0.03;
-                this.vy *= 0.03;
+                // 🔴 土俵の外側へ向かうノックバックベクトルのみ相殺し、自由なキー移動は阻害しない！
+                const distFromCenter = Math.hypot(this.x - GAME_CONFIG.DOHYO_CX, this.y - GAME_CONFIG.DOHYO_CY);
+                if (distFromCenter > 10) {
+                    const outX = (this.x - GAME_CONFIG.DOHYO_CX) / distFromCenter;
+                    const outY = (this.y - GAME_CONFIG.DOHYO_CY) / distFromCenter;
+                    const dot = this.vx * outX + this.vy * outY;
+                    if (dot > 0) {
+                        this.vx -= outX * dot * 0.85;
+                        this.vy -= outY * dot * 0.85;
+                    }
+                }
+            }
+
+            if (this.autoLatchCooldown > 0) {
+                this.autoLatchCooldown -= dt;
             }
 
             this.x += this.vx;
@@ -704,7 +719,7 @@
 
     const yokozunaTitleCard = document.getElementById('yokozuna-title-card');
 
-    let p1 = new Rikishi(true, 'エドモーンド', '#ff3377', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player_cute.jpg');
+    let p1 = new Rikishi(true, 'エドモーンド', '#ff3377', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player_flat.jpg');
     let enemies = [];
     let announceText = '';
     let announceScale = 1;
@@ -918,7 +933,7 @@
             statsParryCount = 0;
             statsContinueCount = 0;
             isTimerRunning = true;
-            p1 = new Rikishi(true, 'エドモーンド', '#ff3377', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player_cute.jpg');
+            p1 = new Rikishi(true, 'エドモーンド', '#ff3377', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player_flat.jpg');
         }
 
         randomizeDohyo();
@@ -958,8 +973,8 @@
         enemies = [];
         const enemyData = RANKS[currentRankIdx];
         if (enemyData.aiType === 'boss_duo') {
-            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.0, 210, 'boss_duo', 580, 210, 'assets/boss_gold_cute.jpg');
-            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 10.5, 190, 'boss_duo', 580, 310, 'assets/boss_silver_cute.jpg');
+            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.0, 210, 'boss_duo', 580, 210, 'assets/boss_gold_flat.jpg');
+            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 10.5, 190, 'boss_duo', 580, 310, 'assets/boss_silver_flat.jpg');
             enemies.push(boss1, boss2);
         } else {
             enemies.push(new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260, enemyData.imgUrl));
@@ -1147,11 +1162,18 @@
             p1.vy += (dy / len) * 3.4 * p1.moveSpeed;
         }
 
-        const isNearEdge = isOutOfDohyo(p1.x, p1.y, 0.94);
-        if (isNearEdge && p1.edgeLatchTimer <= 0) {
-            p1.edgeLatchTimer = 0.22;
+        const isNearEdge = isOutOfDohyo(p1.x, p1.y, 0.93);
+        const currentSpeed = Math.hypot(p1.vx, p1.vy);
+        const distFromCenter = Math.hypot(p1.x - GAME_CONFIG.DOHYO_CX, p1.y - GAME_CONFIG.DOHYO_CY);
+        const outX = distFromCenter > 0 ? (p1.x - GAME_CONFIG.DOHYO_CX) / distFromCenter : 0;
+        const outY = distFromCenter > 0 ? (p1.y - GAME_CONFIG.DOHYO_CY) / distFromCenter : 0;
+        const isMovingOutward = (p1.vx * outX + p1.vy * outY) > 0.8;
+
+        if (isNearEdge && isMovingOutward && currentSpeed > 2.2 && p1.edgeLatchTimer <= 0 && p1.autoLatchCooldown <= 0) {
+            p1.edgeLatchTimer = 0.30;
+            p1.autoLatchCooldown = 1.8;
             p1.setStateText('土俵際自動踏み止まり！🦶');
-            spawnSparks(p1.x, p1.y, '#fde047', 10);
+            spawnSparks(p1.x, p1.y, '#ffe66d', 12);
         }
     }
 
@@ -1595,41 +1617,21 @@
         ctx.fillStyle = 'rgba(255, 107, 157, 0.2)';
         ctx.fill();
 
-        // アバター画像がある場合
+        // 🔴 アイコンは背景透過で囲み円なし（衝突判定は従来の円形 this.radius を維持）
         if (rikishi.imageObj && rikishi.imageObj.complete && rikishi.imageObj.naturalWidth > 0) {
             ctx.save();
             ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.arc(x, y, r * 1.05, 0, Math.PI * 2);
             ctx.clip();
 
-            if (parryGlowTimer > 0) {
-                ctx.filter = 'brightness(2.0) drop-shadow(0 0 15px #ffe66d)';
-            } else if (rikishi.flashTimer > 0) {
-                ctx.filter = 'brightness(2.4)';
-            }
-            ctx.drawImage(rikishi.imageObj, x - r, y - r, r * 2, r * 2);
+            ctx.drawImage(rikishi.imageObj, x - r * 1.05, y - r * 1.05, r * 2.1, r * 2.1);
             ctx.restore();
-
-            // キュート枠線
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = rikishi.isPlayer ? '#ff3377' : '#70d6ff';
-            ctx.stroke();
         } else {
-            // アバター画像がない場合：キュート力士キャラクター
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fillStyle = parryGlowTimer > 0 ? '#ffe66d' : (rikishi.flashTimer > 0 ? '#ffffff' : rikishi.color);
-            ctx.fill();
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = '#ffffff';
-            ctx.stroke();
-
-            ctx.font = `${Math.floor(r * 0.85)}px sans-serif`;
+            // アバター画像がない場合：囲み円なしで絵文字アイコンのみ描画
+            ctx.font = `${Math.floor(r * 1.4)}px sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(rikishi.avatar, x, y - 2);
+            ctx.fillText(rikishi.avatar, x, y);
         }
 
         if (rikishi.stunTimer > 0) {
