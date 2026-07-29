@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>超音速スモウバトル～ちゃんこ食わんかい～</title>
-    <meta name="description" content="1プレイ3分で爽快絶頂！ボタンを押した瞬間気持ちいい！360°ぶっ飛ばし超音速スモウアクション！">
+    <meta name="description" content="Nintendo, SEGA, CAPCOMスピリッツが宿る！ボタンを押した瞬間に快感最高潮の極上アーケードスモウアクション！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@900&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
@@ -12,34 +12,35 @@
 </head>
 <body>
     <div id="app-container">
-        <!-- 爆速・極小シンプルヘッダー -->
+        <!-- 🏛️ アーケード・極上ヘッダー -->
         <header class="game-header">
             <div class="header-main-info">
                 <h1 class="logo">
                     <span class="logo-main">超音速スモウバトル <span class="highlight">～ちゃんこ食わんかい～</span></span>
                 </h1>
                 <div class="header-badges">
-                    <div class="badge badge-level" id="level-badge">勝数: 0 破竹の連勝中！</div>
+                    <div class="badge badge-level" id="level-badge">破竹の 0 連勝中！ 🔥</div>
                     <button id="btn-top-nav" class="btn-icon-top" type="button">🏠 TOP</button>
                 </div>
             </div>
 
-            <!-- 超直感進行ゲージ -->
-            <div class="rank-map-container">
+            <!-- 超直感・階級進行インジケーター -->
+            <div class="rank-map-container" aria-label="幕内番付">
                 <div class="rank-step active" id="rmap-0">🐰<small>超高速</small></div>
                 <div class="rank-line"></div>
                 <div class="rank-step" id="rmap-1">🐻<small>超重量</small></div>
                 <div class="rank-line"></div>
                 <div class="rank-step" id="rmap-2">🐱<small>影分身</small></div>
                 <div class="rank-line"></div>
-                <div class="rank-step" id="rmap-3">🦅<small>塩乱射</small></div>
+                <div class="rank-step" id="rmap-3">🦅<small>塩弾幕</small></div>
                 <div class="rank-line"></div>
-                <div class="rank-step" id="rmap-4">🐲<small>双子ボス</small></div>
+                <div class="rank-step" id="rmap-4">🐲<small>双子決戦</small></div>
             </div>
         </header>
 
-        <!-- メインゲームエリア -->
+        <!-- 🎮 ゲームビューポート & 特大カットインコンテナ -->
         <main class="game-viewport">
+            <div id="flash-overlay" class="flash-overlay" aria-hidden="true"></div>
             <div id="speed-lines" class="speed-lines" aria-hidden="true"></div>
 
             <div id="burst-cutin" class="burst-cutin hidden">
@@ -50,14 +51,21 @@
                 <span id="event-title">🎲 破天荒ハプニング！</span>
             </div>
 
+            <!-- コンボ・リアルタイム称賛表示 -->
+            <div id="combo-display" class="combo-display hidden" aria-hidden="true">
+                <div class="combo-count" id="combo-count-text">2 HIT!</div>
+                <div class="combo-title" id="combo-title-text">神 押 し !</div>
+            </div>
+
             <canvas id="sumo-canvas" width="900" height="520" aria-label="相撲ゲーム画面"></canvas>
 
+            <!-- 🎯 UIオーバーレイ（待たせない・迷わせない） -->
             <div id="ui-overlay" class="overlay active">
                 
-                <!-- 1. 爆速タイトル画面 (ボタン1つで即開幕！) -->
+                <!-- 1. 爆速スタートタイトル画面 -->
                 <section id="screen-title" class="screen-panel active">
                     <div class="title-banner">
-                        <span class="pop-sticker">💥 爽快絶頂！1プレイ3分のぶっ飛ばしバトル 💥</span>
+                        <span class="pop-sticker">💥 ボタン1個で快感絶頂！極上アーケードアクション 💥</span>
                         <h2 class="title-huge">超音速スモウバトル</h2>
                         <p class="subtitle">～ちゃんこ食わんかい～</p>
                     </div>
@@ -70,25 +78,25 @@
                     </div>
 
                     <div class="super-simple-rules">
-                        <span>🕹️ 移動: WASD / 矢印 / タッチ</span>
+                        <span>🕹️ 移動: WASD / 矢印</span>
                         <span>💥 押す: Space</span>
                         <span>✨ パリィ: J</span>
                     </div>
                 </section>
 
-                <!-- 2. 1秒直感スキル選択画面 (試合間に爆速ポップアップ！) -->
+                <!-- 2. 別ゲーム化！1秒直感スキル選択 -->
                 <section id="screen-skill-select" class="screen-panel hidden">
                     <div class="skill-select-header">
-                        <span class="pop-badge">💥 強化ちゃんこ獲得！ 💥</span>
+                        <span class="pop-badge">🍲 秘伝ちゃんこ獲得！別ゲーム化パワーアップ！ 🍲</span>
                         <h2>1秒でカードを選べ！ [A/D ➔ Enter]</h2>
                     </div>
                     <div id="cards-container" class="cards-container"></div>
                 </section>
 
-                <!-- 3. 短く熱い決着リザルト画面 -->
+                <!-- 3. 熱狂勝利リザルト -->
                 <section id="screen-result" class="screen-panel hidden">
                     <div class="result-box">
-                        <h2 id="result-title">どすこい大勝利！</h2>
+                        <h2 id="result-title">💥 どすこい大勝利！ 💥</h2>
                         <div class="winner-announcement" id="winner-name">東 エドモーンド の圧勝！</div>
                         
                         <div id="yokozuna-title-card" class="yokozuna-title-card hidden">
@@ -98,7 +106,7 @@
 
                         <div class="result-actions-simplified">
                             <button id="btn-next-match" class="btn btn-arcade btn-main-next" type="button">
-                                🔥 もう一回遊ぶ！ [Enter] ➔
+                                🔥 次の勝負へ！ [Enter] ➔
                             </button>
                             <button id="btn-to-title" class="btn-sub-link" type="button">タイトルへ戻る (Esc)</button>
                         </div>
@@ -106,7 +114,7 @@
                 </section>
             </div>
 
-            <!-- 直感アクション操作パネル -->
+            <!-- アクション操作パネル -->
             <div id="touch-controls" class="touch-controls-action">
                 <div class="dpad-container">
                     <button id="dpad-up" class="dpad-btn dpad-u" type="button">⬆️</button>
