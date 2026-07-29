@@ -1,7 +1,7 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * 1. 勝敗結果画面（画面切り替え）表示確実化バグ修正
- * 2. モダン＆ネオポップグラフィック＆演出リデザイン
+ * 1. 4大統計（ぶつかり回数、インパクト回数、パリィ回数、コンティニュー数）の累積保存
+ * 2. マスター到達・決着時の詳細アクション統計表示 ＆ スコア加算
  */
 
 (function() {
@@ -403,6 +403,12 @@
     let timeAttackTimer = 0;
     let isTimerRunning = false;
 
+    // 🔴 4大詳細統計カウンター (セッション積算)
+    let statsCollisionCount = 0; // ぶつかり回数
+    let statsPushCount = 0;      // インパクト回数
+    let statsParryCount = 0;     // パリィ成功回数
+    let statsContinueCount = 0;  // コンティニュー回数
+
     let currentDohyoShape = 'circle';
     let currentDohyoRadius = 230;
 
@@ -667,6 +673,13 @@
     const winnerNameEl = document.getElementById('winner-name');
     const finalTimeTextEl = document.getElementById('final-time-text');
     const finalScoreTextEl = document.getElementById('final-score-text');
+    
+    // 🔴 4大詳細統計表示エレメント
+    const statCollisionsEl = document.getElementById('stat-collisions');
+    const statPushesEl = document.getElementById('stat-pushes');
+    const statParriesEl = document.getElementById('stat-parries');
+    const statContinuesEl = document.getElementById('stat-continues');
+
     const yokozunaTitleCard = document.getElementById('yokozuna-title-card');
 
     let p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player.jpg');
@@ -689,6 +702,7 @@
 
         btnNextMatch.addEventListener('click', () => {
             if (isMatchFinished && winnerNameEl.textContent.includes('西 勝利')) {
+                statsContinueCount++; // 🔴 コンティニュー数カウント
                 startNextBattleDirectly(false, false);
             } else if (currentRankIdx < RANKS.length - 1) {
                 currentRankIdx++;
@@ -779,7 +793,6 @@
         btn.addEventListener('pointerleave', () => { dpadPressed[dir] = false; });
     }
 
-    // 🔴 画面非表示確実化関数 (すべてのパネルから hidden を正しく解除/付与)
     function hideAllScreens() {
         [screenTitle, screenSkillSelect, screenResult].forEach(screen => {
             if (screen) {
@@ -804,6 +817,13 @@
         isMatchFinished = false;
         isTimerRunning = false;
         timeAttackTimer = 0;
+
+        // 🔴 統計リセット
+        statsCollisionCount = 0;
+        statsPushCount = 0;
+        statsParryCount = 0;
+        statsContinueCount = 0;
+
         saltBulletPool.clearAll();
         particlePool.clearAll();
 
@@ -849,6 +869,10 @@
             currentRankIdx = 0;
             winsCount = 0;
             timeAttackTimer = 0;
+            statsCollisionCount = 0;
+            statsPushCount = 0;
+            statsParryCount = 0;
+            statsContinueCount = 0;
             isTimerRunning = true;
             p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player.jpg');
         }
@@ -952,7 +976,7 @@
         spawnSparks(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, '#fde047', 30, 'ハプニング！！');
     }
 
-    // 🔴 勝利・敗北結果画面を100%確実に表示！ (showScreenPanel を使用)
+    // 🔴 4大詳細統計を表示し、最終スコアを動的に計算！
     function finishMatch(isP1Win) {
         if (isMatchFinished) return;
         isMatchFinished = true;
@@ -975,7 +999,22 @@
         audio.playFanfare(isP1Win);
 
         if (finalTimeTextEl) finalTimeTextEl.textContent = formatTime(timeAttackTimer);
-        const calculatedScore = Math.max(100, Math.floor(winsCount * 2500 - timeAttackTimer * 10));
+
+        // 🔴 4大詳細統計の画面反映
+        if (statCollisionsEl) statCollisionsEl.textContent = statsCollisionCount;
+        if (statPushesEl) statPushesEl.textContent = statsPushCount;
+        if (statParriesEl) statParriesEl.textContent = statsParryCount;
+        if (statContinuesEl) statContinuesEl.textContent = statsContinueCount;
+
+        // 🔴 4大統計を組み込んだハイスコア動的計算！
+        const calculatedScore = Math.max(100, Math.floor(
+            winsCount * 3000 + 
+            statsParryCount * 350 + 
+            statsCollisionCount * 30 + 
+            statsPushCount * 50 - 
+            timeAttackTimer * 10 - 
+            statsContinueCount * 500
+        ));
         if (finalScoreTextEl) finalScoreTextEl.textContent = `${calculatedScore.toLocaleString()} PTS`;
 
         if (isP1Win) {
@@ -1103,6 +1142,7 @@
         });
     }
 
+    // 🔴 インパクト回数カウント (statsPushCount++)
     function handlePush(actor) {
         if (!canPlayerControl()) return;
 
@@ -1112,6 +1152,7 @@
                 return;
             }
             p1.pushStock--;
+            statsPushCount++; // カウント加算！
             updatePushStockUI();
             addComboHit();
         }
@@ -1159,6 +1200,7 @@
         });
     }
 
+    // 🔴 パリィ成功回数カウント (statsParryCount++)
     function handleDodge(actor) {
         if (!canPlayerControl() || hitStopTimer > 0) return;
         
@@ -1181,6 +1223,7 @@
             });
 
             if (parryTriggered) {
+                statsParryCount++; // カウント加算！
                 p1.pushStock = Math.min(5, p1.pushStock + 1);
                 updatePushStockUI();
                 p1.setStateText('🌟 ジャストパリィ成立！✨');
@@ -1191,6 +1234,7 @@
         }
     }
 
+    // 🔴 ぶつかり回数カウント (statsCollisionCount++)
     function checkCharacterCollisions() {
         const allRikishi = [p1, ...enemies].filter(r => r && !r.isEliminated);
         
@@ -1205,6 +1249,11 @@
                 const minDist = r1.radius + r2.radius;
 
                 if (dist < minDist && dist > 0.001) {
+                    // プレイヤーが関与している衝突の場合のみカウント
+                    if (r1.isPlayer || r2.isPlayer) {
+                        statsCollisionCount++;
+                    }
+
                     const overlap = minDist - dist;
                     const nx = dx / dist;
                     const ny = dy / dist;

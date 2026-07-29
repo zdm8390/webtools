@@ -97,21 +97,27 @@
                     <div id="cards-container" class="cards-container"></div>
                 </section>
 
-                <!-- 3. POP勝負リザルト (勝利・敗北表示確実化) -->
+                <!-- 3. POP勝負リザルト (詳細統計＆総合スコア表示) -->
                 <section id="screen-result" class="screen-panel hidden">
                     <div class="result-box">
                         <div class="result-pop-header" id="result-header-badge">✨ RESULT ✨</div>
                         <h2 id="result-title" class="result-title-pop">💥 豪快決まり手：寄り切り！！ 💥</h2>
                         <div class="winner-announcement" id="winner-name">東 エドモーンド の天下無双！</div>
                         
-                        <!-- タイムアタック＆最終スコアカード -->
+                        <!-- 🔴 詳細アクション統計 ＆ 最終スコア表示カード -->
                         <div class="score-card-box">
                             <div class="score-row">
                                 <span class="score-label">⏱️ トータルクリア時間:</span>
                                 <span class="score-value" id="final-time-text">00:00.00</span>
                             </div>
-                            <div class="score-row">
-                                <span class="score-label">🏆 ハイスコア:</span>
+                            <div class="score-stats-grid">
+                                <div class="stat-item">💥 ぶつかり: <strong id="stat-collisions">0</strong> 回</div>
+                                <div class="stat-item">👊 インパクト: <strong id="stat-pushes">0</strong> 回</div>
+                                <div class="stat-item">✨ パリィ: <strong id="stat-parries">0</strong> 回</div>
+                                <div class="stat-item">🔄 コンティニュー: <strong id="stat-continues">0</strong> 回</div>
+                            </div>
+                            <div class="score-row score-total-line">
+                                <span class="score-label">🏆 総合ハイスコア:</span>
                                 <span class="score-value highlight-score" id="final-score-text">0 PTS</span>
                             </div>
                         </div>
