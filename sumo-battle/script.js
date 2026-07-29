@@ -1,6 +1,6 @@
 /**
- * SUMO POP! 🌸 はっけよいの国 - メインJavaScript
- * セキュリティ強化 (XSS対策) / エラー防止 / メモリ管理 / プロクオリティ
+ * 音速スモウバトル どすこいの国～ちゃんこ食わんかい～
+ * メインJavaScript (超直感操作＆ヒットシェイク＆デンジャー警告)
  */
 
 (function() {
@@ -10,7 +10,6 @@
     class SoundEngine {
         constructor() {
             this.ctx = null;
-            // localStorage から音声設定を自動ロード
             const savedState = localStorage.getItem('sumo_pop_audio_enabled');
             this.enabled = savedState !== null ? (savedState === 'true') : true;
         }
@@ -52,9 +51,7 @@
 
                 osc.start();
                 osc.stop(this.ctx.currentTime + duration);
-            } catch (e) {
-                console.warn('Audio playback error:', e);
-            }
+            } catch (e) {}
         }
 
         playHyoshigi() {
@@ -78,9 +75,7 @@
 
                 osc.start();
                 osc.stop(this.ctx.currentTime + 0.1);
-            } catch (e) {
-                console.warn('Audio playback error:', e);
-            }
+            } catch (e) {}
         }
 
         playHit() {
@@ -110,9 +105,7 @@
 
                 noise.start();
                 this.playTaiko(200, 0.1, 0.6);
-            } catch (e) {
-                console.warn('Audio hit error:', e);
-            }
+            } catch (e) {}
         }
 
         playDodge() {
@@ -184,8 +177,8 @@
 
     // ランク階級システム (全6段階)
     const RANKS = [
-        { name: 'ブロンズ', icon: '🥉', enemyName: 'うさ丸', strength: 2.0, weight: 110, color: '#cd7f32', avatar: '🐰' },
-        { name: 'シルバー', icon: '🥈', enemyName: 'くまごろう', strength: 3.4, weight: 125, color: '#94a3b8', avatar: '🐻' },
+        { name: 'ブロンズ', icon: '🥉', enemyName: 'うさ丸', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
+        { name: 'シルバー', icon: '🥈', enemyName: 'くまごろう', strength: 3.4, weight: 125, color: '#0284c7', avatar: '🐻' },
         { name: 'ゴールド', icon: '🥇', enemyName: 'ねこノ海', strength: 4.8, weight: 145, color: '#d97706', avatar: '🐱' },
         { name: 'プラチナ', icon: '💎', enemyName: 'ぺんぎん山', strength: 6.2, weight: 165, color: '#0284c7', avatar: '🐧' },
         { name: 'ダイヤ', icon: '👑', enemyName: '鳳凰丸', strength: 7.6, weight: 185, color: '#9333ea', avatar: '🦅' },
@@ -197,11 +190,11 @@
     const RIVAL_COLORS = ['#e05297', '#d97706', '#0284c7', '#9333ea', '#059669', '#ffb3d9'];
 
     const ALL_SKILL_CARDS = [
-        { id: 'push_power', icon: '⚡', title: 'どすこい連打術', desc: '押し出しの攻撃力が 25% アップ！', rarity: 'common', apply: (p) => { p.powerMultiplier += 0.25; } },
+        { id: 'push_power', icon: '🍲', title: '特上ちゃんこ', desc: '押し出しの攻撃力が 25% アップ！', rarity: 'common', apply: (p) => { p.powerMultiplier += 0.25; } },
         { id: 'iron_wall', icon: '🛡️', title: '鉄壁の構え', desc: 'はたき込みの受付窓 +0.15秒＆カウンター力強化', rarity: 'rare', apply: (p) => { p.dodgeWindow += 0.15; p.counterPower += 0.3; } },
-        { id: 'burst_boost', icon: '🔥', title: '気炎万丈', desc: '必殺技ゲージの増加スピードが 1.8倍！', rarity: 'rare', apply: (p) => { p.gaugeRate *= 1.8; } },
-        { id: 'chanko_power', icon: '🍲', title: '特製ちゃんこ鍋', desc: '体重 +40kg！相手に押されにくくなる！', rarity: 'common', apply: (p) => { p.weight += 40; } },
-        { id: 'swift_foot', icon: '💨', title: '疾風迅雷', desc: '力士の機動力＆押し出しの連打反動を軽減！', rarity: 'common', apply: (p) => { p.moveSpeed += 0.3; } },
+        { id: 'burst_boost', icon: '🔥', title: '激辛どすこい鍋', desc: '必殺技ゲージの増加スピードが 1.8倍！', rarity: 'rare', apply: (p) => { p.gaugeRate *= 1.8; } },
+        { id: 'chanko_power', icon: '🍚', title: '超大盛り飯', desc: '体重 +40kg！相手に押されにくくなる！', rarity: 'common', apply: (p) => { p.weight += 40; } },
+        { id: 'swift_foot', icon: '💨', title: '音速ステップ', desc: '力士の機動力＆押し出しの連打反動を軽減！', rarity: 'common', apply: (p) => { p.moveSpeed += 0.3; } },
         { id: 'clutch_push', icon: '💖', title: '土俵際の一発', desc: '自分が土俵際に追い詰められると推力が 2倍！', rarity: 'rare', apply: (p) => { p.hasClutchPower = true; } },
         { id: 'intimidation', icon: '👑', title: '横綱の気迫', desc: '相手の押し出しパワーを 20% 弱体化！', rarity: 'legendary', apply: (p) => { p.enemyPowerDebuff += 0.2; } },
         { id: 'stun_slap', icon: '💥', title: '雷電ハリケーン', desc: '連打時に 15% の確率で相手をノックバック！', rarity: 'legendary', apply: (p) => { p.hasStunSlap = true; } }
@@ -224,7 +217,10 @@
     let streakCount = 0;
     let startTime = 0;
     let totalClicksP1 = 0;
-    let isMatchFinished = false; // 二重終了防止フラグ
+    let isMatchFinished = false;
+
+    // 画面シェイク変数
+    let shakeTimer = 0;
 
     class Rikishi {
         constructor(isPlayer, name, color, avatar, power = 5.0, weight = 120) {
@@ -396,7 +392,7 @@
     const resCpsEl = document.getElementById('res-cps');
     const resStreakEl = document.getElementById('res-streak');
 
-    let p1 = new Rikishi(true, '雷電ちゃん', '#e05297', '⚡', 5.5, 130);
+    let p1 = new Rikishi(true, '雷電丸', '#e05297', '⚡', 5.5, 130);
     let p2 = new Rikishi(false, 'うさ丸', '#059669', '🐰', 2.0, 110);
 
     let particles = [];
@@ -409,9 +405,7 @@
 
     // --- 初期化 ---
     function init() {
-        // 保存された音声トグルラベルを反映
         btnToggleAudio.textContent = audio.enabled ? '🔊 Sound ON' : '🔇 Sound OFF';
-
         setupEventListeners();
         updateHeaderUI();
         requestAnimationFrame(gameLoop);
@@ -442,7 +436,7 @@
             btnToggleAudio.textContent = isEnabled ? '🔊 Sound ON' : '🔇 Sound OFF';
         });
 
-        // スマホ画面タッチ連打対応
+        // タッチ全画面連打
         canvas.addEventListener('touchstart', (e) => {
             audio.init();
             if (gameState === STATE.PLAYING) {
@@ -466,7 +460,6 @@
         btnP2Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p2); });
         btnP2Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p2); });
 
-        // キーボード連打・Spam防御 (e.repeat フィルター)
         window.addEventListener('keydown', (e) => {
             audio.init();
             if (gameState !== STATE.PLAYING || e.repeat) return;
@@ -520,7 +513,7 @@
         gameMode = mode;
         currentRankIdx = 0;
         streakCount = 0;
-        p1 = new Rikishi(true, '雷電ちゃん', '#e05297', '⚡', 5.5, 130);
+        p1 = new Rikishi(true, '雷電丸', '#e05297', '⚡', 5.5, 130);
         
         setupEnemy(mode);
         startCountdown();
@@ -546,9 +539,7 @@
         }
     }
 
-    // DOM XSS 完全サニタイズ生成方式へ移行！
     function renderAcquiredSkills() {
-        // 子要素をクリア
         while (acquiredSkillsList.firstChild) {
             acquiredSkillsList.removeChild(acquiredSkillsList.firstChild);
         }
@@ -569,7 +560,6 @@
         });
     }
 
-    // DOM XSS 完全サニタイズ型 カード生成！
     function showSkillSelect() {
         gameState = STATE.SKILL_SELECT;
         hideAllScreens();
@@ -667,11 +657,12 @@
     }
 
     function finishMatch(winner, kimarite) {
-        if (isMatchFinished) return; // レース条件ガード
+        if (isMatchFinished) return;
         isMatchFinished = true;
 
         gameState = STATE.RESULT;
         speedLinesEl.classList.remove('active');
+        triggerShake(0.6); // 決着シェイク！
         
         const durationSec = ((performance.now() - startTime) / 1000).toFixed(1);
         const cps = (totalClicksP1 / Math.max(1, durationSec)).toFixed(1);
@@ -682,11 +673,11 @@
         if (isP1Win) {
             winsCount++;
             streakCount++;
-            resultTitleEl.textContent = '金 星 ！ 勝 負 あ り 🌸';
+            resultTitleEl.textContent = '金 星 ！ 勝 負 あ り 🍲';
             winnerNameEl.textContent = `東 ${winner.name} の大勝利！`;
             
             if (gameMode !== 'pvp') {
-                btnNextMatch.textContent = '秘伝カード獲得 ➔';
+                btnNextMatch.textContent = '特製ちゃんこ獲得 ➔';
                 btnNextMatch.onclick = () => showSkillSelect();
             } else {
                 btnNextMatch.textContent = '次の取組へ ➔';
@@ -725,7 +716,7 @@
             const r = RANKS[currentRankIdx];
             rankBadge.textContent = `${r.icon} ランク: ${r.name}`;
         } else if (gameMode === 'endless') {
-            rankBadge.textContent = `🔥 サバイバル中`;
+            rankBadge.textContent = `🍲 サバイバル中`;
         } else {
             rankBadge.textContent = `⚔️ 対戦モード`;
         }
@@ -733,7 +724,11 @@
         winsBadge.textContent = `🌸 ${streakCount}連勝中 (通算${winsCount}勝)`;
     }
 
-    // --- アクション処理 ---
+    function triggerShake(sec = 0.2) {
+        shakeTimer = sec;
+    }
+
+    // --- アクション処理 (シェイク・手応え強化) ---
     function handlePush(actor) {
         if (gameState !== STATE.PLAYING) return;
 
@@ -741,6 +736,7 @@
         if (actor === p1) totalClicksP1++;
 
         actor.pushAnim = 1.0;
+        triggerShake(0.08); // タップごとの爽快微振動！
 
         const gInc = 6 * actor.gaugeRate;
         actor.burstGauge = Math.min(100, actor.burstGauge + gInc);
@@ -755,6 +751,7 @@
             speedLinesEl.classList.add('active');
             setTimeout(() => speedLinesEl.classList.remove('active'), 400);
 
+            triggerShake(0.3);
             spawnSparks((actor.x + opponent.x)/2, actor.y, '#0284c7', 15, '見切り！');
             return;
         }
@@ -771,6 +768,7 @@
 
         if (actor.hasStunSlap && Math.random() < 0.15) {
             pushForce *= 1.8;
+            triggerShake(0.25);
             spawnSparks((actor.x + opponent.x)/2, actor.y, '#d97706', 12, 'ハリケーン！');
         }
 
@@ -798,6 +796,7 @@
 
         actor.setStateText('どすこいバースト！');
         audio.playBurst();
+        triggerShake(0.5);
 
         speedLinesEl.classList.add('active');
         setTimeout(() => speedLinesEl.classList.remove('active'), 800);
@@ -880,7 +879,6 @@
         return (dx * dx + dy * dy) > 1.0;
     }
 
-    // パーティクル制限（上限120個でメモリ・描画保護）
     function spawnSparks(x, y, color, count = 8, popText = null) {
         if (particles.length > 120) return;
 
@@ -931,6 +929,7 @@
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // 土俵
         ctx.beginPath();
         ctx.ellipse(DOHYO.cx, DOHYO.cy, DOHYO.rx, DOHYO.ry, 0, 0, Math.PI * 2);
         const dohyoGrad = ctx.createRadialGradient(DOHYO.cx, DOHYO.cy, 30, DOHYO.cx, DOHYO.cy, DOHYO.rx);
@@ -943,14 +942,32 @@
         ctx.strokeStyle = '#e05297';
         ctx.stroke();
 
+        // 俵 (Shikirisen)
         ctx.beginPath();
         ctx.ellipse(DOHYO.cx, DOHYO.cy, DOHYO.rx - 10, DOHYO.ry - 5, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = '#9333ea';
-        ctx.lineWidth = 4;
+        const p1Danger = isOutOfDohyo(p1.x, p1.y, 0.85);
+        const p2Danger = isOutOfDohyo(p2.x, p2.y, 0.85);
+
+        if (p1Danger || p2Danger) {
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 6;
+        } else {
+            ctx.strokeStyle = '#9333ea';
+            ctx.lineWidth = 4;
+        }
         ctx.setLineDash([14, 10]);
         ctx.stroke();
         ctx.setLineDash([]);
 
+        // 土俵際 DANGER 警告のビジュアル表示
+        if (p1Danger || p2Danger) {
+            ctx.font = '900 24px "Mochiy Pop One", sans-serif';
+            ctx.fillStyle = '#ef4444';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚠️ DANGER!', DOHYO.cx, DOHYO.cy - 120);
+        }
+
+        // 仕切り線
         ctx.fillStyle = '#e05297';
         ctx.fillRect(DOHYO.cx - 50, DOHYO.cy - 24, 10, 48);
         ctx.fillRect(DOHYO.cx + 40, DOHYO.cy - 24, 10, 48);
@@ -1050,8 +1067,21 @@
             announceScale = Math.max(1.0, announceScale - dt * 2.8);
         }
 
+        // シェイク減衰
+        if (shakeTimer > 0) {
+            shakeTimer -= dt;
+        }
+
         particles.forEach(p => p.update(dt));
         particles = particles.filter(p => p.life > 0);
+
+        ctx.save();
+        // 画面シェイク適用
+        if (shakeTimer > 0) {
+            const sx = (Math.random() * 8 - 4);
+            const sy = (Math.random() * 8 - 4);
+            ctx.translate(sx, sy);
+        }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawDohyo();
@@ -1059,6 +1089,8 @@
         drawRikishi(p2);
         particles.forEach(p => p.draw(ctx));
         drawAnnounce();
+
+        ctx.restore();
 
         requestAnimationFrame(gameLoop);
     }

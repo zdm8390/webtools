@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SUMO POP! 🌸 はっけよいの国 | パステル相撲アクション</title>
-    <meta name="description" content="パステル＆ゆめかわ和風の世界！1回15秒の超爽快相撲アクションゲーム。タップ連打＆秘伝カードで横綱を目指せ！">
+    <title>音速スモウバトル どすこいの国～ちゃんこ食わんかい～</title>
+    <meta name="description" content="1回15秒の音速バトル！超爽快連打＆はたき込みで相手を吹き飛ばせ！ちゃんこを食べて強くなれ！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,14 +16,14 @@
         <header class="game-header">
             <div class="header-main-info">
                 <h1 class="logo">
-                    <span class="logo-sub">🌸 ゆめかわ×連打アクション 🌸</span>
-                    <span class="logo-main">SUMO <span class="highlight">POP!</span></span>
+                    <span class="logo-sub">⚡ 超速連打×どすこいアクション ⚡</span>
+                    <span class="logo-main">音速スモウバトル <span class="highlight">どすこいの国</span></span>
                 </h1>
                 <button id="btn-top-nav" class="btn-icon-top" type="button" aria-label="タイトル画面に戻る">🏠 TOP</button>
             </div>
             <div class="header-badges">
                 <div class="badge" id="rank-badge" role="status" aria-live="polite">🥉 ランク: ブロンズ</div>
-                <div class="badge" id="wins-badge" role="status" aria-live="polite">🌸 0連勝中</div>
+                <div class="badge" id="wins-badge" role="status" aria-live="polite">🍲 0連勝中</div>
             </div>
         </header>
 
@@ -40,40 +40,55 @@
                 <!-- 1. タイトル画面 -->
                 <section id="screen-title" class="screen-panel active" aria-label="タイトル画面">
                     <div class="title-banner">
-                        <span class="pop-sticker">🌸 どすこいパステル 🍡</span>
-                        <h2>SUMO POP!</h2>
-                        <p class="subtitle">〜 はっけよいの国 〜</p>
+                        <span class="pop-sticker">🍲 ～ちゃんこ食わんかい～ ⚡</span>
+                        <h2 class="title-huge">音速スモウバトル</h2>
+                        <p class="subtitle">どすこいの国へようこそ！</p>
                     </div>
+
+                    <!-- 超わかりやすいビジュアルルール案内 -->
+                    <div class="visual-rules-box">
+                        <div class="v-rule-item">
+                            <span class="v-step">STEP 1</span>
+                            <span class="v-icon">💥</span>
+                            <strong>とにかく連打！</strong>
+                            <small>画面を押して相手を土俵外へ！</small>
+                        </div>
+                        <div class="v-rule-item">
+                            <span class="v-step">STEP 2</span>
+                            <span class="v-icon">🌀</span>
+                            <strong>相手の押しを「はたき」！</strong>
+                            <small>カウンターで一発逆転！</small>
+                        </div>
+                        <div class="v-rule-item">
+                            <span class="v-step">STEP 3</span>
+                            <span class="v-icon">🔥</span>
+                            <strong>「どすこい」連撃！</strong>
+                            <small>ゲージ満タンで必殺突進！</small>
+                        </div>
+                    </div>
+
                     <div class="mode-select" role="group" aria-label="ゲームモード選択">
                         <button id="btn-mode-arcade" class="btn btn-arcade btn-pop-glow" type="button">
                             <span class="btn-emoji" aria-hidden="true">🏆</span>
                             <span class="btn-content">
                                 <span class="btn-title">ランク昇格チャレンジ</span>
-                                <span class="btn-desc">ブロンズから全6ランクを突破しマスターを目指せ！</span>
+                                <span class="btn-desc">全6ランクを突破しマスターを目指せ！</span>
                             </span>
                         </button>
                         <button id="btn-mode-endless" class="btn btn-endless btn-pop-glow" type="button">
-                            <span class="btn-emoji" aria-hidden="true">🍡</span>
+                            <span class="btn-emoji" aria-hidden="true">🍲</span>
                             <span class="btn-content">
-                                <span class="btn-title">連勝サバイバル</span>
-                                <span class="btn-desc">どこまで連勝できるか挑戦！</span>
+                                <span class="btn-title">無限ちゃんこサバイバル</span>
+                                <span class="btn-desc">どこまで連勝できるか限界挑戦！</span>
                             </span>
                         </button>
                         <button id="btn-mode-pvp" class="btn btn-pvp btn-pop-glow" type="button">
-                            <span class="btn-emoji" aria-hidden="true">🎀</span>
+                            <span class="btn-emoji" aria-hidden="true">⚔️</span>
                             <span class="btn-content">
                                 <span class="btn-title">ふたり対戦 (1P vs 2P)</span>
                                 <span class="btn-desc">スマホ1台・PCで白熱バトル！</span>
                             </span>
                         </button>
-                    </div>
-                    <div class="how-to-play">
-                        <h3>🌸 かんたん操作ガイド 🌸</h3>
-                        <div class="controls-guide">
-                            <div class="guide-item"><span class="key">画面タップ / Space</span><span>押し出し (超連打!)</span></div>
-                            <div class="guide-item"><span class="key">はたきボタン / J</span><span>はたき込み (回避カウンター)</span></div>
-                            <div class="guide-item"><span class="key">どすこいボタン / K</span><span>必殺技 (ゲージ全消費)</span></div>
-                        </div>
                     </div>
                 </section>
 
@@ -82,7 +97,7 @@
                     <div class="matchup-container">
                         <div class="rikishi-card player-card">
                             <span class="card-role">東 (あなた)</span>
-                            <h3 id="player-name">雷電ちゃん</h3>
+                            <h3 id="player-name">雷電丸</h3>
                             <div class="rikishi-avatar" id="player-avatar-preview" aria-hidden="true">⚡</div>
                             <div class="stat-bar"><span class="stat-label">腕力</span><div class="bar"><div class="fill" id="p-str-bar"></div></div></div>
                             <div class="stat-bar"><span class="stat-label">体重</span><div class="bar"><div class="fill" id="p-wgt-bar"></div></div></div>
@@ -100,7 +115,7 @@
                     </div>
                     
                     <div class="acquired-skills-wrap">
-                        <span class="skills-label">習得カード:</span>
+                        <span class="skills-label">食べたちゃんこ(強化):</span>
                         <div id="acquired-skills-list" class="skills-list">
                             <span class="no-skill">なし</span>
                         </div>
@@ -111,18 +126,18 @@
                     </div>
                     <div class="matchup-actions">
                         <button id="btn-start-fight" class="btn btn-arcade btn-large btn-pop-glow" type="button">
-                            見合って！立合いスタート！ 🌸
+                            見合って！立合いスタート！ 🍲
                         </button>
                         <button id="btn-matchup-to-top" class="btn btn-secondary" type="button">TOPへ戻る</button>
                     </div>
                 </section>
 
-                <!-- 3. ランダムスキルカード選択画面 (ローグライク) -->
+                <!-- 3. ランダムスキルカード選択画面 -->
                 <section id="screen-skill-select" class="screen-panel hidden" aria-label="スキルカード選択画面">
                     <div class="skill-select-header">
-                        <span class="pop-badge">VICTORY BONUS!</span>
-                        <h2>秘伝カード習得！</h2>
-                        <p>カードをタップして力士をレベルアップ！</p>
+                        <span class="pop-badge">VICTORY CHANKO!</span>
+                        <h2>特製ちゃんこでパワーアップ！</h2>
+                        <p>好きなちゃんこ（カード）を1つ選んでね！</p>
                     </div>
                     
                     <div id="cards-container" class="cards-container" role="listbox" aria-label="秘伝カード一覧">
@@ -172,24 +187,24 @@
                 </section>
             </div>
 
-            <!-- アクション操作ボタン (スマホ・タッチ超強力対応) -->
+            <!-- アクション操作ボタン (超直感的＆高レスポンス設計) -->
             <div id="touch-controls" class="touch-controls" aria-label="タッチ操作パネル">
                 <!-- 1P Controls -->
                 <div class="control-group p1-controls">
-                    <button id="btn-p1-push" class="action-btn push-btn" type="button" aria-label="押し出し（連打）">
+                    <button id="btn-p1-push" class="action-btn push-btn" type="button" aria-label="押し出し（超連打）">
                         <span class="action-emoji" aria-hidden="true">💥</span>
                         <span class="action-label">押す！</span>
-                        <span class="action-sub">(連打!)</span>
+                        <span class="action-sub">(画面タップもOK!)</span>
                     </button>
-                    <button id="btn-p1-dodge" class="action-btn dodge-btn" type="button" aria-label="はたき込み">
+                    <button id="btn-p1-dodge" class="action-btn dodge-btn" type="button" aria-label="はたき込み（回避）">
                         <span class="action-emoji" aria-hidden="true">🌀</span>
                         <span class="action-label">はたき</span>
-                        <span class="action-sub">J</span>
+                        <span class="action-sub">J キー</span>
                     </button>
                     <button id="btn-p1-burst" class="action-btn burst-btn disabled" type="button" aria-label="どすこいバースト" disabled>
                         <span class="action-emoji" aria-hidden="true">🔥</span>
                         <span class="action-label">どすこい!</span>
-                        <span class="action-sub">K</span>
+                        <span class="action-sub">K キー</span>
                     </button>
                 </div>
 
@@ -198,7 +213,7 @@
                     <button id="btn-p2-push" class="action-btn push-btn p2-theme" type="button" aria-label="2P 押し出し">
                         <span class="action-emoji" aria-hidden="true">💥</span>
                         <span class="action-label">押す！</span>
-                        <span class="action-sub">(2P)</span>
+                        <span class="action-sub">(2P: Enter)</span>
                     </button>
                     <button id="btn-p2-dodge" class="action-btn dodge-btn p2-theme" type="button" aria-label="2P はたき込み">
                         <span class="action-emoji" aria-hidden="true">🌀</span>
