@@ -1,6 +1,6 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * メインJavaScript (タイムアタックストップウォッチ・横綱称号・塩弾パリィ)
+ * メインJavaScript (AI生成イラストアバター・タイムアタック・パリィ反射)
  */
 
 (function() {
@@ -184,13 +184,25 @@
 
     const audio = new SoundEngine();
 
+    // 🖼️ アバター画像キャッシュ管理
+    const imageCache = {};
+    function loadAvatarImage(url) {
+        if (!url) return null;
+        if (imageCache[url]) return imageCache[url];
+        const img = new Image();
+        img.src = url;
+        imageCache[url] = img;
+        return img;
+    }
+
+    // ランク階級システム (画像アバターパス付き)
     const RANKS = [
-        { name: 'ブロンズ', icon: '🥉', enemyName: 'うさ丸', aiType: 'rush', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
-        { name: 'シルバー', icon: '🥈', enemyName: 'くまごろう', aiType: 'heavy', strength: 3.4, weight: 130, color: '#0284c7', avatar: '🐻' },
-        { name: 'ゴールド', icon: '🥇', enemyName: 'ねこノ海', aiType: 'counter', strength: 4.8, weight: 145, color: '#d97706', avatar: '🐱' },
-        { name: 'プラチナ', icon: '💎', enemyName: 'ぺんぎん山', aiType: 'rush', strength: 6.2, weight: 165, color: '#0284c7', avatar: '🐧' },
-        { name: 'ダイヤ', icon: '👑', enemyName: '鳳凰丸', aiType: 'counter', strength: 7.6, weight: 185, color: '#9333ea', avatar: '🦅' },
-        { name: 'マスター (ラスボス)', icon: '🐲', enemyName: '金龍丸 ＆ 銀龍丸 (双子2体)', aiType: 'boss_duo', strength: 8.8, weight: 190, color: '#b45309', avatar: '🐉' }
+        { name: 'ブロンズ', icon: '🐰', imgUrl: 'assets/rabbit.jpg', enemyName: 'うさ丸', aiType: 'rush', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
+        { name: 'シルバー', icon: '🐻', imgUrl: null, enemyName: 'くまごろう', aiType: 'heavy', strength: 3.4, weight: 130, color: '#0284c7', avatar: '🐻' },
+        { name: 'ゴールド', icon: '🐱', imgUrl: null, enemyName: 'ねこノ海', aiType: 'counter', strength: 4.8, weight: 145, color: '#d97706', avatar: '🐱' },
+        { name: 'プラチナ', icon: '🐧', imgUrl: null, enemyName: 'ぺんぎん山', aiType: 'rush', strength: 6.2, weight: 165, color: '#0284c7', avatar: '🐧' },
+        { name: 'ダイヤ', icon: '🦅', imgUrl: null, enemyName: '鳳凰丸', aiType: 'counter', strength: 7.6, weight: 185, color: '#9333ea', avatar: '🦅' },
+        { name: 'マスター (ラスボス)', icon: '🐲', imgUrl: 'assets/boss_gold.jpg', enemyName: '金龍丸 ＆ 銀龍丸 (双子2体)', aiType: 'boss_duo', strength: 8.8, weight: 190, color: '#b45309', avatar: '🐉' }
     ];
 
     const RIVAL_NAMES = ['ぽんちゃん', 'もち丸', 'わたがし山', 'いちご龍', 'みるく丸', 'キャンディ海', 'ぷりん山', 'そら丸'];
@@ -238,7 +250,6 @@
     let totalClicksP1 = 0;
     let isMatchFinished = false;
 
-    // ⏱️ タイムアタックストップウォッチ変数
     let totalRunStartTime = 0;
     let totalRunAccumulatedTime = 0;
     let isTimerRunning = false;
@@ -298,11 +309,13 @@
     let enemySaltTimer = 0;
 
     class Rikishi {
-        constructor(isPlayer, name, color, avatar, power = 5.5, weight = 130, aiType = 'rush', startX = 340, startY = 260) {
+        constructor(isPlayer, name, color, avatar, power = 5.5, weight = 130, aiType = 'rush', startX = 340, startY = 260, imgUrl = null) {
             this.isPlayer = isPlayer;
             this.name = name;
             this.color = color;
             this.avatar = avatar;
+            this.imgUrl = imgUrl;
+            this.imageObj = imgUrl ? loadAvatarImage(imgUrl) : null;
             this.basePower = power;
             this.weight = weight;
             this.aiType = aiType;
@@ -484,6 +497,8 @@
     const playerLvlTag = document.getElementById('player-lvl-tag');
     const playerNameEl = document.getElementById('player-name');
     const enemyNameEl = document.getElementById('enemy-name');
+    const playerAvatarPreview = document.getElementById('player-avatar-preview');
+    const enemyAvatarPreview = document.getElementById('enemy-avatar-preview');
     const pStrBar = document.getElementById('p-str-bar');
     const pWgtBar = document.getElementById('p-wgt-bar');
     const pStrNum = document.getElementById('p-str-num');
@@ -509,7 +524,8 @@
     const resExpEl = document.getElementById('res-exp');
     const resLevelEl = document.getElementById('res-level');
 
-    let p1 = new Rikishi(true, '雷電丸', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260);
+    // プレイヤー初期ロード (イラストアバター付)
+    let p1 = new Rikishi(true, '雷電丸', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
     let enemies = [];
 
     let particles = [];
@@ -520,7 +536,6 @@
 
     const DOHYO = { cx: 450, cy: 260, rx: 340, ry: 160 };
 
-    // 時間フォーマット関数 (mm:ss.ms)
     function formatTime(ms) {
         if (!ms || isNaN(ms)) return '00:00.00';
         const totalSec = ms / 1000;
@@ -689,9 +704,8 @@
         playerLevel = 1;
         playerExp = 0;
         streakCount = 0;
-        p1 = new Rikishi(true, '雷電丸', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260);
+        p1 = new Rikishi(true, '雷電丸', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
 
-        // ⏱️ タイムアタック開始
         if (mode === 'arcade') {
             totalRunStartTime = performance.now();
             totalRunAccumulatedTime = 0;
@@ -713,8 +727,31 @@
         if (playerLvlTag) playerLvlTag.textContent = `⭐ Lv.${playerLevel} (あなた)`;
         if (playerNameEl) playerNameEl.textContent = p1.name;
 
-        const mainEnemy = enemies[0] || new Rikishi(false, 'うさ丸', '#059669', '🐰', 2.0, 110);
+        // 🖼️ アバター画像プレビュー更新
+        if (playerAvatarPreview) {
+            if (p1.imgUrl) {
+                playerAvatarPreview.style.backgroundImage = `url('${p1.imgUrl}')`;
+                playerAvatarPreview.style.backgroundSize = 'cover';
+                playerAvatarPreview.textContent = '';
+            } else {
+                playerAvatarPreview.style.backgroundImage = 'none';
+                playerAvatarPreview.textContent = p1.avatar;
+            }
+        }
+
+        const mainEnemy = enemies[0] || new Rikishi(false, 'うさ丸', '#059669', '🐰', 2.0, 110, 'rush', 560, 260, 'assets/rabbit.jpg');
         if (enemyNameEl) enemyNameEl.textContent = (enemies.length > 1) ? `${mainEnemy.name} (2体タッグ)` : mainEnemy.name;
+
+        if (enemyAvatarPreview) {
+            if (mainEnemy.imgUrl) {
+                enemyAvatarPreview.style.backgroundImage = `url('${mainEnemy.imgUrl}')`;
+                enemyAvatarPreview.style.backgroundSize = 'cover';
+                enemyAvatarPreview.textContent = '';
+            } else {
+                enemyAvatarPreview.style.backgroundImage = 'none';
+                enemyAvatarPreview.textContent = mainEnemy.avatar;
+            }
+        }
 
         const pStrVal = Math.floor(p1.currentPower * 10);
         if (pStrBar) pStrBar.style.width = `${Math.min(100, Math.max(0, pStrVal))}%`;
@@ -745,11 +782,11 @@
         if (mode === 'arcade') {
             const enemyData = RANKS[currentRankIdx];
             if (enemyData.aiType === 'boss_duo') {
-                const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 8.8, 190, 'rush', 580, 210);
-                const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#4a5568', '🐉', 8.2, 180, 'counter', 580, 310);
+                const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 8.8, 190, 'rush', 580, 210, 'assets/boss_gold.jpg');
+                const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#4a5568', '🐉', 8.2, 180, 'counter', 580, 310, 'assets/boss_silver.jpg');
                 enemies.push(boss1, boss2);
             } else {
-                const singleEnemy = new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260);
+                const singleEnemy = new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260, enemyData.imgUrl);
                 enemies.push(singleEnemy);
             }
         } else if (mode === 'endless') {
@@ -981,11 +1018,9 @@
                 p1.weight += 5;
             }
 
-            // 🏆 最終マスターランク双子撃破時：タイムアタック完走＆称号授与！
             if (gameMode === 'arcade' && currentRankIdx === RANKS.length - 1) {
                 isTimerRunning = false;
                 
-                // 自己ベスト更新チェック
                 if (!bestTimeMs || totalRunMs < bestTimeMs) {
                     bestTimeMs = totalRunMs;
                     localStorage.setItem('sumo_best_ta_time', String(bestTimeMs));
@@ -994,13 +1029,13 @@
                 let titleName = '🌸 新鋭横綱';
                 let titleDesc = '粘り強く全6ランクを突破した努力の横綱！';
 
-                if (totalRunMs < 105000) { // 1分45秒未満
+                if (totalRunMs < 105000) {
                     titleName = '🚀 超音速神横綱';
                     titleDesc = '伝説の超音速スピード！神の領域に達した最速横綱！';
-                } else if (totalRunMs < 150000) { // 2分30秒未満
+                } else if (totalRunMs < 150000) {
                     titleName = '⚡ 疾風横綱';
                     titleDesc = '電光石火の圧倒的アクションプレイスキル！';
-                } else if (totalRunMs < 210000) { // 3分30秒未満
+                } else if (totalRunMs < 210000) {
                     titleName = '🍲 ちゃんこ大横綱';
                     titleDesc = '見事な全勝昇格！土俵を制した大横綱！';
                 }
@@ -1473,6 +1508,7 @@
         ctx.restore();
     }
 
+    // 🎨 力士アバター描画（画像がある場合は円形クリッピングで画像表示！）
     function drawRikishi(rikishi) {
         if (rikishi.isEliminated) return;
 
@@ -1484,15 +1520,17 @@
         if (rikishi.isDodging) {
             ctx.beginPath();
             ctx.arc(x, y, r + 14, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(2, 132, 199, 0.3)';
+            ctx.fillStyle = 'rgba(2, 132, 199, 0.35)';
             ctx.fill();
         }
 
+        // 影
         ctx.beginPath();
         ctx.ellipse(x, y + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
         ctx.fill();
 
+        // 本体外枠
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = '#fff4e6';
@@ -1501,16 +1539,28 @@
         ctx.strokeStyle = rikishi.color;
         ctx.stroke();
 
-        ctx.beginPath();
-        ctx.arc(x, y, r * 0.82, 0.3, Math.PI - 0.3);
-        ctx.fillStyle = rikishi.color;
-        ctx.fill();
+        // 🖼️ アバター画像描画 (円形クリッピング)
+        if (rikishi.imageObj && rikishi.imageObj.complete && rikishi.imageObj.naturalWidth > 0) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, r - 2, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.drawImage(rikishi.imageObj, x - r, y - r, r * 2, r * 2);
+            ctx.restore();
+        } else {
+            // 絵文字アバターフォールバック
+            ctx.beginPath();
+            ctx.arc(x, y, r * 0.82, 0.3, Math.PI - 0.3);
+            ctx.fillStyle = rikishi.color;
+            ctx.fill();
 
-        ctx.font = `${Math.floor(r * 0.8)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(rikishi.avatar, x, y - 2);
+            ctx.font = `${Math.floor(r * 0.8)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(rikishi.avatar, x, y - 2);
+        }
 
+        // 名前
         ctx.font = '700 14px "Zen Maru Gothic", sans-serif';
         ctx.fillStyle = '#2d2633';
         ctx.shadowColor = '#fff';
