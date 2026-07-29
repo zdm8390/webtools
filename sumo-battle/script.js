@@ -1,6 +1,6 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * メインJavaScript (フリーズ完全根絶・塩弾パリィ反射・プロゲーマーバランス)
+ * メインJavaScript (タイムアタックストップウォッチ・横綱称号・塩弾パリィ)
  */
 
 (function() {
@@ -184,7 +184,6 @@
 
     const audio = new SoundEngine();
 
-    // ランク階級システム
     const RANKS = [
         { name: 'ブロンズ', icon: '🥉', enemyName: 'うさ丸', aiType: 'rush', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
         { name: 'シルバー', icon: '🥈', enemyName: 'くまごろう', aiType: 'heavy', strength: 3.4, weight: 130, color: '#0284c7', avatar: '🐻' },
@@ -239,6 +238,12 @@
     let totalClicksP1 = 0;
     let isMatchFinished = false;
 
+    // ⏱️ タイムアタックストップウォッチ変数
+    let totalRunStartTime = 0;
+    let totalRunAccumulatedTime = 0;
+    let isTimerRunning = false;
+    let bestTimeMs = localStorage.getItem('sumo_best_ta_time') ? parseInt(localStorage.getItem('sumo_best_ta_time')) : null;
+
     let comboP1 = 0;
     let maxComboP1 = 0;
     let comboTimerP1 = 0;
@@ -257,7 +262,7 @@
             this.x = x;
             this.y = y;
             const angle = Math.atan2(targetY - y, targetX - x);
-            const speed = isReflected ? 8.0 : 4.2;
+            const speed = isReflected ? 8.5 : 4.2;
             this.vx = Math.cos(angle) * speed;
             this.vy = Math.sin(angle) * speed;
             this.radius = 9;
@@ -437,6 +442,14 @@
     const screenRankUp = document.getElementById('screen-rank-up');
     const screenResult = document.getElementById('screen-result');
 
+    const totalTimerBadge = document.getElementById('total-timer-badge');
+    const bestTimeValEl = document.getElementById('best-time-val');
+    const yokozunaTitleCard = document.getElementById('yokozuna-title-card');
+    const yTitleNameEl = document.getElementById('y-title-name');
+    const yTotalTimeEl = document.getElementById('y-total-time');
+    const yTitleDescEl = document.getElementById('y-title-desc');
+    const resTotalTimeEl = document.getElementById('res-total-time');
+
     const levelBadge = document.getElementById('level-badge');
     const winsBadge = document.getElementById('wins-badge');
     const speedLinesEl = document.getElementById('speed-lines');
@@ -463,10 +476,6 @@
     const btnP1Burst = document.getElementById('btn-p1-burst');
 
     const p2ControlsGroup = document.getElementById('p2-controls-group');
-    const btnP2Push = document.getElementById('btn-p2-push');
-    const btnP2Dodge = document.getElementById('btn-p2-dodge');
-    const btnP2Burst = document.getElementById('btn-p2-burst');
-
     const dpadUp = document.getElementById('dpad-up');
     const dpadDown = document.getElementById('dpad-down');
     const dpadLeft = document.getElementById('dpad-left');
@@ -511,9 +520,34 @@
 
     const DOHYO = { cx: 450, cy: 260, rx: 340, ry: 160 };
 
+    // 時間フォーマット関数 (mm:ss.ms)
+    function formatTime(ms) {
+        if (!ms || isNaN(ms)) return '00:00.00';
+        const totalSec = ms / 1000;
+        const mins = Math.floor(totalSec / 60);
+        const secs = Math.floor(totalSec % 60);
+        const hundredths = Math.floor((ms % 1000) / 10);
+
+        const mStr = String(mins).padStart(2, '0');
+        const sStr = String(secs).padStart(2, '0');
+        const hStr = String(hundredths).padStart(2, '0');
+
+        return `${mStr}:${sStr}.${hStr}`;
+    }
+
+    function updateTimerUI() {
+        if (isTimerRunning && gameMode === 'arcade') {
+            const currentMs = totalRunAccumulatedTime + (performance.now() - totalRunStartTime);
+            if (totalTimerBadge) totalTimerBadge.textContent = `⏱️ ${formatTime(currentMs)}`;
+        }
+    }
+
     // --- 初期化 ---
     function init() {
         btnToggleAudio.textContent = audio.enabled ? '🔊 Sound ON' : '🔇 Sound OFF';
+        if (bestTimeValEl) {
+            bestTimeValEl.textContent = bestTimeMs ? formatTime(bestTimeMs) : '--:--.--';
+        }
         setupEventListeners();
         updateHeaderUI();
         requestAnimationFrame(gameLoop);
@@ -621,10 +655,16 @@
         playerExp = 0;
         streakCount = 0;
         isMatchFinished = false;
+        isTimerRunning = false;
+        totalRunAccumulatedTime = 0;
         saltBullets = [];
         speedLinesEl.classList.remove('active');
         burstCutinEl.classList.add('hidden');
         eventBanner.classList.add('hidden');
+
+        if (bestTimeValEl) {
+            bestTimeValEl.textContent = bestTimeMs ? formatTime(bestTimeMs) : '--:--.--';
+        }
 
         hideAllScreens();
         screenTitle.classList.add('active');
@@ -650,6 +690,15 @@
         playerExp = 0;
         streakCount = 0;
         p1 = new Rikishi(true, '雷電丸', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260);
+
+        // ⏱️ タイムアタック開始
+        if (mode === 'arcade') {
+            totalRunStartTime = performance.now();
+            totalRunAccumulatedTime = 0;
+            isTimerRunning = true;
+        } else {
+            isTimerRunning = false;
+        }
         
         setupEnemy(mode);
         showMatchupScreen();
@@ -898,7 +947,6 @@
         spawnSparks(DOHYO.cx, DOHYO.cy, '#fde047', 20, 'ハプニング！');
     }
 
-    // 🚨 [勝敗決着時フリーズ根絶・確実な画面遷移ガード]
     function finishMatch(isP1Win, kimarite) {
         if (isMatchFinished) return;
         isMatchFinished = true;
@@ -916,7 +964,11 @@
         const durationSec = ((performance.now() - startTime) / 1000).toFixed(1);
         const cps = (totalClicksP1 / Math.max(1, durationSec)).toFixed(1);
 
+        const totalRunMs = totalRunAccumulatedTime + (performance.now() - totalRunStartTime);
+
         audio.playFanfare(isP1Win);
+
+        if (yokozunaTitleCard) yokozunaTitleCard.classList.add('hidden');
 
         if (isP1Win) {
             winsCount++;
@@ -929,10 +981,43 @@
                 p1.weight += 5;
             }
 
-            resultTitleEl.textContent = (enemies.length > 1) ? '🐉 ラスボス双子完全撃破！ 🐉' : '金 星 ！ 勝 負 あ り 🍲';
-            winnerNameEl.textContent = `東 ${p1.name} の大勝利！`;
-            
-            btnNextMatch.textContent = '✨ 次の取組へ (ちゃんこ獲得) ➔';
+            // 🏆 最終マスターランク双子撃破時：タイムアタック完走＆称号授与！
+            if (gameMode === 'arcade' && currentRankIdx === RANKS.length - 1) {
+                isTimerRunning = false;
+                
+                // 自己ベスト更新チェック
+                if (!bestTimeMs || totalRunMs < bestTimeMs) {
+                    bestTimeMs = totalRunMs;
+                    localStorage.setItem('sumo_best_ta_time', String(bestTimeMs));
+                }
+
+                let titleName = '🌸 新鋭横綱';
+                let titleDesc = '粘り強く全6ランクを突破した努力の横綱！';
+
+                if (totalRunMs < 105000) { // 1分45秒未満
+                    titleName = '🚀 超音速神横綱';
+                    titleDesc = '伝説の超音速スピード！神の領域に達した最速横綱！';
+                } else if (totalRunMs < 150000) { // 2分30秒未満
+                    titleName = '⚡ 疾風横綱';
+                    titleDesc = '電光石火の圧倒的アクションプレイスキル！';
+                } else if (totalRunMs < 210000) { // 3分30秒未満
+                    titleName = '🍲 ちゃんこ大横綱';
+                    titleDesc = '見事な全勝昇格！土俵を制した大横綱！';
+                }
+
+                if (yTitleNameEl) yTitleNameEl.textContent = titleName;
+                if (yTotalTimeEl) yTotalTimeEl.textContent = formatTime(totalRunMs);
+                if (yTitleDescEl) yTitleDescEl.textContent = titleDesc;
+                if (yokozunaTitleCard) yokozunaTitleCard.classList.remove('hidden');
+
+                resultTitleEl.textContent = '🏆 最速横綱・タイムアタック全突破！ 🏆';
+                winnerNameEl.textContent = `全6ランク完走！大勝利！`;
+            } else {
+                resultTitleEl.textContent = '金 星 ！ 勝 負 あ り 🍲';
+                winnerNameEl.textContent = `東 ${p1.name} の勝利！`;
+            }
+
+            btnNextMatch.textContent = (gameMode === 'arcade' && currentRankIdx === RANKS.length - 1) ? '🏆 タイムアタック完了 (TOPへ)' : '✨ 次の取組へ (ちゃんこ獲得) ➔';
             btnNextMatch.classList.remove('hidden');
             btnRetryMatch.classList.add('hidden');
             spawnVictoryConfetti();
@@ -948,9 +1033,8 @@
 
         resultKimariteEl.textContent = `決まり手：${kimarite}`;
         resTimeEl.textContent = `${durationSec}秒`;
-        resCpsEl.textContent = `${cps}回`;
+        if (resTotalTimeEl) resTotalTimeEl.textContent = formatTime(totalRunMs);
         if (resExpEl) resExpEl.textContent = isP1Win ? `+150 EXP` : `0 EXP`;
-        if (resLevelEl) resLevelEl.textContent = `Lv.${playerLevel}`;
 
         updateHeaderUI();
 
@@ -1137,7 +1221,6 @@
         });
     }
 
-    // 🎮 [プロゲーマー機能] 塩飛び道具をジャストパリィ（はたき）で跳ね返し！
     function handleDodge(actor) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
         
@@ -1470,6 +1553,8 @@
     function gameLoop(now) {
         const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
         lastFrameTime = now;
+
+        updateTimerUI();
 
         if (hitStopTimer > 0) {
             hitStopTimer -= dt;

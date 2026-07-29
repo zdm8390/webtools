@@ -1,6 +1,6 @@
 /* ==========================================
    超音速スモウバトル～ちゃんこ食わんかい～
-   スタイルシート (和モダンパステル & 完全レスポンス)
+   スタイルシート (和モダンパステル & タイムアタック対応)
    ========================================== */
 
 :root {
@@ -110,7 +110,8 @@ body {
 
 .header-badges { display: flex; gap: 8px; justify-content: space-between; align-items: center; }
 .badge { background: #fff; border: 1.5px solid var(--washi-purple); padding: 4px 12px; border-radius: 14px; font-size: 0.78rem; color: var(--washi-purple); white-space: nowrap; }
-.badge-level { border-color: var(--washi-amber); color: var(--washi-amber); font-size: 0.85rem; }
+.badge-timer { border-color: var(--washi-amber); background: #fef3c7; color: var(--washi-amber); font-weight: 900; font-family: monospace; font-size: 0.9rem; }
+.badge-level { border-color: var(--washi-purple); color: var(--washi-purple); font-size: 0.85rem; }
 
 /* ビューポート */
 .game-viewport { position: relative; width: 100%; border-radius: 20px; overflow: hidden; background: #fff; border: 3px solid var(--washi-purple); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); display: flex; flex-direction: column; align-items: center; }
@@ -121,7 +122,7 @@ body {
 @keyframes cutinZoom { 0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
 .burst-cutin.hidden { display: none !important; }
 .cutin-text { font-size: 2.2rem; color: #fff; }
-.cutin-sub { font-size: 1.1rem; color: var(--pastel-yellow); }
+.cutin-sub { font-size: 1.1rem; color: #fde047; }
 
 .speed-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; background: repeating-conic-gradient(from 0deg, transparent 0deg 10deg, rgba(126, 107, 143, 0.15) 10deg 12deg); transition: opacity 0.2s ease; z-index: 2; }
 .speed-lines.active { opacity: 1; animation: rotateLines 12s linear infinite; }
@@ -140,7 +141,10 @@ body {
 
 .pop-sticker { display: inline-block; background: var(--washi-purple-light); color: var(--washi-purple); padding: 3px 12px; border-radius: 10px; font-size: 0.8rem; border: 1px solid var(--washi-purple); margin-bottom: 4px; }
 .title-banner .title-huge { font-size: 2rem; color: var(--washi-purple); margin-bottom: 2px; }
-.title-banner .subtitle { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; }
+.title-banner .subtitle { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; }
+
+.best-time-box { background: #fff; border: 2px dashed var(--washi-amber); padding: 6px 16px; border-radius: 14px; font-size: 0.85rem; color: var(--washi-amber); margin-bottom: 12px; }
+.best-time-box strong { font-family: monospace; font-size: 1rem; }
 
 .visual-rules-box { display: flex; gap: 8px; width: 100%; margin-bottom: 14px; }
 .v-rule-item { flex: 1; background: #fff; border: 1.5px solid #e2d8eb; border-radius: 14px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); }
@@ -203,6 +207,15 @@ body {
 #rankup-desc { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 18px; }
 .btn-huge { padding: 14px 28px; font-size: 1.1rem; width: 100%; justify-content: center; }
 
+/* 横綱称号カード */
+.yokozuna-title-card { background: linear-gradient(135deg, #fef3c7, #fffdfa); border: 3px solid var(--washi-amber); border-radius: 18px; padding: 14px; width: 100%; margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 14px rgba(180, 83, 9, 0.15); }
+.yokozuna-title-card.hidden { display: none !important; }
+.y-badge { background: var(--washi-amber); color: #fff; padding: 2px 14px; border-radius: 12px; font-size: 0.78rem; margin-bottom: 4px; }
+.y-title { font-size: 1.5rem; color: var(--washi-amber); font-weight: 900; margin-bottom: 4px; }
+.y-time { font-size: 0.95rem; color: var(--text-dark); margin-bottom: 4px; }
+.y-time strong { font-family: monospace; font-size: 1.1rem; color: var(--washi-amber); }
+.y-desc { font-size: 0.8rem; color: var(--text-muted); }
+
 /* リザルト */
 .result-box { background: #fff; border: 3px solid var(--washi-purple); border-radius: 18px; padding: 16px; width: 100%; }
 #result-title { font-size: 1.8rem; color: var(--washi-purple); }
@@ -217,7 +230,7 @@ body {
 .sub-actions { display: flex; justify-content: center; }
 .btn-sub-link { background: none; border: none; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 6px 12px; }
 
-/* アクション＆バーチャル移動操作パネル (D-PAD) */
+/* 操作パネル (D-PAD) */
 .touch-controls-action {
     width: 100%;
     background: var(--card-washi);
@@ -286,7 +299,6 @@ body {
     .rikishi-card h3 { font-size: 0.95rem; }
 }
 
-/* スマホ横持ちレスポンス */
 @media (max-height: 480px) {
     .touch-controls-action { padding: 4px; gap: 6px; }
     .dpad-btn { width: 32px; height: 32px; min-height: 32px; font-size: 0.85rem; }

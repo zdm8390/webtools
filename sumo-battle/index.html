@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>超音速スモウバトル～ちゃんこ食わんかい～</title>
-    <meta name="description" content="360°全方向自由移動＆本格相撲アクション！敵の卑怯な塩弾飛び道具をかわして撃破せよ！">
+    <meta name="description" content="360°全方向自由移動＆最速横綱タイムアタック！敵の卑怯な塩弾飛び道具をパリィで返して全6ランク最速突破を目指せ！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
         <header class="game-header">
             <div class="header-main-info">
                 <h1 class="logo">
-                    <span class="logo-sub">360°自由移動×本格アクション</span>
+                    <span class="logo-sub">360°自由移動×最速横綱タイムアタック</span>
                     <span class="logo-main">超音速スモウバトル <span class="highlight">～ちゃんこ食わんかい～</span></span>
                 </h1>
                 <button id="btn-top-nav" class="btn-icon-top" type="button" aria-label="タイトル画面に戻る">🏠 TOP</button>
@@ -38,6 +38,7 @@
             </div>
 
             <div class="header-badges">
+                <div class="badge badge-timer" id="total-timer-badge" role="status" aria-live="polite">⏱️ 00:00.00</div>
                 <div class="badge badge-level" id="level-badge" role="status" aria-live="polite">⭐ Lv.1 雷電丸</div>
                 <div class="badge" id="wins-badge" role="status" aria-live="polite">第 1 取組 (0連勝)</div>
             </div>
@@ -45,61 +46,61 @@
 
         <!-- メインゲームエリア -->
         <main class="game-viewport">
-            <!-- 集中線背景エフェクト -->
             <div id="speed-lines" class="speed-lines" aria-hidden="true"></div>
 
-            <!-- 必殺技カットイン演出 -->
             <div id="burst-cutin" class="burst-cutin hidden">
                 <div class="cutin-text">🔥 超・必・殺 🔥</div>
                 <div class="cutin-sub">どすこいバースト！！</div>
             </div>
 
-            <!-- ハプニング告知バナー -->
             <div id="event-banner" class="event-banner hidden">
                 <span id="event-title">🎲 ハプニング発生！</span>
             </div>
 
             <canvas id="sumo-canvas" width="900" height="520" aria-label="相撲ゲーム画面"></canvas>
 
-            <!-- ゲームオーバーレイ (各種状態 UI) -->
             <div id="ui-overlay" class="overlay active">
                 
                 <!-- 1. タイトル画面 -->
                 <section id="screen-title" class="screen-panel active" aria-label="タイトル画面">
                     <div class="title-banner">
-                        <span class="pop-sticker">🍲 本格和風スモウアクション ⚡</span>
+                        <span class="pop-sticker">🏆 目指せ最速横綱！タイムアタック相撲 ⚡</span>
                         <h2 class="title-huge">超音速スモウバトル</h2>
                         <p class="subtitle">～ちゃんこ食わんかい～</p>
+                    </div>
+
+                    <div class="best-time-box" id="best-time-box">
+                        👑 自己ベストクリアタイム: <strong id="best-time-val">--:--.--</strong>
                     </div>
 
                     <!-- ルール案内 -->
                     <div class="visual-rules-box">
                         <div class="v-rule-item">
                             <span class="v-step">STEP 1</span>
-                            <span class="v-icon">🕹️</span>
-                            <strong>WASDで自由移動！</strong>
-                            <small>間合いを取って弾き飛ばせ！</small>
+                            <span class="v-icon">⏱️</span>
+                            <strong>最速横綱を目指せ！</strong>
+                            <small>全6ランク完走タイムを計測！</small>
                         </div>
                         <div class="v-rule-item">
                             <span class="v-step">STEP 2</span>
-                            <span class="v-icon">🧂</span>
-                            <strong>塩飛び道具を回避！</strong>
-                            <small>敵の卑怯な目くらまし弾に注意！</small>
+                            <span class="v-icon">✨</span>
+                            <strong>塩弾をパリィ反射！</strong>
+                            <small>はたきキーで跳ね返して自爆ノックバック！</small>
                         </div>
                         <div class="v-rule-item">
                             <span class="v-step">STEP 3</span>
                             <span class="v-icon">🐲</span>
                             <strong>双子ラスボス撃破！</strong>
-                            <small>全6ランクを制覇してマスターへ！</small>
+                            <small>最速タイムで横綱称号を獲得！</small>
                         </div>
                     </div>
 
                     <div class="mode-select" role="group" aria-label="ゲームモード選択">
                         <button id="btn-mode-arcade" class="btn btn-arcade btn-main-action" type="button">
-                            <span class="btn-emoji" aria-hidden="true">🏆</span>
+                            <span class="btn-emoji" aria-hidden="true">⏱️</span>
                             <span class="btn-content">
-                                <span class="btn-title">ランク昇格チャレンジ</span>
-                                <span class="btn-desc">全6ランク突破を目指して対戦スタート！</span>
+                                <span class="btn-title">ランク昇格タイムアタック</span>
+                                <span class="btn-desc">全6ランク最速突破！最速横綱を目指せ！</span>
                             </span>
                         </button>
                         <button id="btn-mode-endless" class="btn btn-endless" type="button">
@@ -159,17 +160,15 @@
                     </div>
                 </section>
 
-                <!-- 3. ランダムスキルカード選択画面 -->
+                <!-- 3. スキルカード選択画面 -->
                 <section id="screen-skill-select" class="screen-panel hidden" aria-label="スキルカード選択画面">
                     <div class="skill-select-header">
                         <span class="pop-badge">LEVEL UP! 🍲</span>
                         <h2>特製ちゃんこ獲得！</h2>
-                        <p>ちゃんこを食べて能力を永続アップしよう！</p>
+                        <p>ちゃんこを食べて能力を永続アップしよう！（タイマーストップ中）</p>
                     </div>
                     
-                    <div id="cards-container" class="cards-container" role="listbox" aria-label="秘伝カード一覧">
-                        <!-- 動的に3枚のスキルカードが追加される -->
-                    </div>
+                    <div id="cards-container" class="cards-container" role="listbox" aria-label="秘伝カード一覧"></div>
                 </section>
 
                 <!-- 4. ランク昇格ダイアログ -->
@@ -193,19 +192,27 @@
                         </div>
                         <div class="winner-announcement" id="winner-name">東 勝利！</div>
                         <div class="kimarite-badge" id="result-kimarite">決まり手：寄り切り</div>
+
+                        <!-- タイムアタック最終クリア称号カード -->
+                        <div id="yokozuna-title-card" class="yokozuna-title-card hidden">
+                            <div class="y-badge">👑 横綱称号獲得！ 👑</div>
+                            <div class="y-title" id="y-title-name">🚀 超音速神横綱</div>
+                            <div class="y-time">全6ランク総タイム: <strong id="y-total-time">01:45.20</strong></div>
+                            <div class="y-desc" id="y-title-desc">伝説の音速スピード！神の領域に達した横綱！</div>
+                        </div>
                         
                         <div class="result-stats">
                             <div class="r-stat">
-                                <span>タイム</span>
+                                <span>取組タイム</span>
                                 <strong id="res-time">4.2秒</strong>
+                            </div>
+                            <div class="r-stat">
+                                <span>累計タイム</span>
+                                <strong id="res-total-time" class="text-glow">00:15.20</strong>
                             </div>
                             <div class="r-stat">
                                 <span>獲得EXP</span>
                                 <strong id="res-exp" class="text-glow">+150 EXP</strong>
-                            </div>
-                            <div class="r-stat">
-                                <span>現在のLV</span>
-                                <strong id="res-level">Lv.2</strong>
                             </div>
                         </div>
 
@@ -232,7 +239,6 @@
 
             <!-- アクション＆バーチャル移動操作ボタン -->
             <div id="touch-controls" class="touch-controls-action" aria-label="アクション操作パネル">
-                <!-- 左側：バーチャル方向コントローラー (D-PAD) -->
                 <div class="dpad-container" role="group" aria-label="方向キーコントローラー">
                     <button id="dpad-up" class="dpad-btn dpad-u" type="button" aria-label="上方向へ移動">⬆️</button>
                     <div class="dpad-row">
@@ -243,16 +249,15 @@
                     <button id="dpad-down" class="dpad-btn dpad-d" type="button" aria-label="下方向へ移動">⬇️</button>
                 </div>
 
-                <!-- 右側：攻撃アクションボタン -->
                 <div class="control-group p1-controls">
                     <button id="btn-p1-push" class="action-btn push-btn" type="button" aria-label="押し出し（超連打）">
                         <span class="action-emoji" aria-hidden="true">💥</span>
                         <span class="action-label">押す！</span>
                         <span class="action-sub">(Space / 攻撃)</span>
                     </button>
-                    <button id="btn-p1-dodge" class="action-btn dodge-btn" type="button" aria-label="はたき込み（回避）">
-                        <span class="action-emoji" aria-hidden="true">🌀</span>
-                        <span class="action-label">はたき</span>
+                    <button id="btn-p1-dodge" class="action-btn dodge-btn" type="button" aria-label="はたき込み（塩弾パリィ！）">
+                        <span class="action-emoji" aria-hidden="true">✨</span>
+                        <span class="action-label">はたき・パリィ</span>
                         <span class="action-sub">J キー</span>
                     </button>
                     <button id="btn-p1-burst" class="action-btn burst-btn disabled" type="button" aria-label="どすこいバースト" disabled>
@@ -262,7 +267,6 @@
                     </button>
                 </div>
 
-                <!-- 2P Controls (PVP Mode Only) -->
                 <div class="control-group p2-controls hidden" id="p2-controls-group">
                     <button id="btn-p2-push" class="action-btn push-btn p2-theme" type="button" aria-label="2P 押し出し">
                         <span class="action-emoji" aria-hidden="true">💥</span>
