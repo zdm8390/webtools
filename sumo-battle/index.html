@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>音速スモウバトル どすこいの国～ちゃんこ食わんかい～</title>
-    <meta name="description" content="1回15秒の超爽快レベルアップバトル！ちゃんこを食べて強くなり、全6ランクの頂点マスターを目指せ！">
+    <meta name="description" content="全方向自由移動＆アクション相撲！マスターランクのラスボス『双子力士 2体同時襲来』を撃破せよ！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
         <header class="game-header">
             <div class="header-main-info">
                 <h1 class="logo">
-                    <span class="logo-sub">⚡ 超爽快育成アクション ⚡</span>
+                    <span class="logo-sub">⚡ 360°自由移動×本格スモウアクション ⚡</span>
                     <span class="logo-main">音速スモウバトル <span class="highlight">どすこいの国</span></span>
                 </h1>
                 <button id="btn-top-nav" class="btn-icon-top" type="button" aria-label="タイトル画面に戻る">🏠 TOP</button>
@@ -34,7 +34,7 @@
                 <div class="rank-line"></div>
                 <div class="rank-step" id="rmap-4"><span class="r-icon">👑</span><small>ダイヤ</small></div>
                 <div class="rank-line"></div>
-                <div class="rank-step" id="rmap-5"><span class="r-icon">🌸</span><small>マスター</small></div>
+                <div class="rank-step" id="rmap-5"><span class="r-icon">🐲</span><small>マスター (ラスボス2体)</small></div>
             </div>
 
             <div class="header-badges">
@@ -69,28 +69,28 @@
                     <div class="title-banner">
                         <span class="pop-sticker">🍲 ～ちゃんこ食わんかい～ ⚡</span>
                         <h2 class="title-huge">音速スモウバトル</h2>
-                        <p class="subtitle">ちゃんこを食べてレベルアップ！マスターを目指せ！</p>
+                        <p class="subtitle">WASD / 移動キーで駆け巡れ！ラスボスは敵2体タッグ！</p>
                     </div>
 
                     <!-- 超わかりやすいビジュアルルール案内 -->
                     <div class="visual-rules-box">
                         <div class="v-rule-item">
                             <span class="v-step">STEP 1</span>
-                            <span class="v-icon">💥</span>
-                            <strong>タップで連続押し！</strong>
-                            <small>画面を押して相手を撃破！</small>
+                            <span class="v-icon">🕹️</span>
+                            <strong>WASDで自由移動！</strong>
+                            <small>土俵上を自由に動いて間合いを調整！</small>
                         </div>
                         <div class="v-rule-item">
                             <span class="v-step">STEP 2</span>
-                            <span class="v-icon">🍲</span>
-                            <strong>ちゃんこでLVアップ！</strong>
-                            <small>試合ごとにステータス成長！</small>
+                            <span class="v-icon">💥</span>
+                            <strong>接近して押し込み！</strong>
+                            <small>間合いを詰めて連打＆はたき！</small>
                         </div>
                         <div class="v-rule-item">
                             <span class="v-step">STEP 3</span>
-                            <span class="v-icon">🌸</span>
-                            <strong>全6ランク制覇！</strong>
-                            <small>ブロンズからマスターへ！</small>
+                            <span class="v-icon">🐲</span>
+                            <strong>ラスボス2体を撃破！</strong>
+                            <small>最終マスターランクは双子力士2体同時に挑め！</small>
                         </div>
                     </div>
 
@@ -98,8 +98,8 @@
                         <button id="btn-mode-arcade" class="btn btn-arcade btn-pop-glow btn-main-action" type="button">
                             <span class="btn-emoji" aria-hidden="true">🏆</span>
                             <span class="btn-content">
-                                <span class="btn-title">ランク昇格チャレンジ (メイン)</span>
-                                <span class="btn-desc">全6ランク突破を目指して即対戦スタート！</span>
+                                <span class="btn-title">ランク昇格チャレンジ (マスターでラスボス2体)</span>
+                                <span class="btn-desc">WASD自由移動＆全6ランク制覇へ対戦スタート！</span>
                             </span>
                         </button>
                         <button id="btn-mode-endless" class="btn btn-endless btn-pop-glow" type="button">
@@ -113,7 +113,7 @@
                             <span class="btn-emoji" aria-hidden="true">⚔️</span>
                             <span class="btn-content">
                                 <span class="btn-title">ふたり対戦 (1P vs 2P)</span>
-                                <span class="btn-desc">スマホ1台・PCで白熱バトル！</span>
+                                <span class="btn-desc">スマホ1台・PCで白熱アクション！</span>
                             </span>
                         </button>
                     </div>
@@ -159,7 +159,7 @@
                     </div>
                 </section>
 
-                <!-- 3. ランダムスキルカード選択画面 (ちゃんこ育成) -->
+                <!-- 3. ランダムスキルカード選択画面 -->
                 <section id="screen-skill-select" class="screen-panel hidden" aria-label="スキルカード選択画面">
                     <div class="skill-select-header">
                         <span class="pop-badge">LEVEL UP! 🍲</span>
@@ -185,7 +185,7 @@
                     </div>
                 </section>
 
-                <!-- 5. 決着・結果画面 (導線を超シンプル化) -->
+                <!-- 5. 決着・結果画面 -->
                 <section id="screen-result" class="screen-panel hidden" aria-label="取組結果画面">
                     <div class="result-box">
                         <div class="result-pop-header">
@@ -217,7 +217,6 @@
                             </a>
                         </div>
 
-                        <!-- 迷わせない！超目立つメインアクションボタン1個導線 -->
                         <div class="result-actions-simplified">
                             <button id="btn-next-match" class="btn btn-arcade btn-pop-glow btn-main-next" type="button">
                                 ✨ 次の取組へ（ちゃんこ獲得） ➔
@@ -231,14 +230,25 @@
                 </section>
             </div>
 
-            <!-- アクション操作ボタン -->
-            <div id="touch-controls" class="touch-controls" aria-label="タッチ操作パネル">
-                <!-- 1P Controls -->
+            <!-- アクション＆バーチャル移動操作ボタン -->
+            <div id="touch-controls" class="touch-controls-action" aria-label="アクション操作パネル">
+                <!-- 左側：バーチャル方向コントローラー (D-PAD) -->
+                <div class="dpad-container">
+                    <button id="dpad-up" class="dpad-btn dpad-u" type="button" aria-label="上移動">⬆️</button>
+                    <div class="dpad-row">
+                        <button id="dpad-left" class="dpad-btn dpad-l" type="button" aria-label="左移動">⬅️</button>
+                        <span class="dpad-center">🕹️</span>
+                        <button id="dpad-right" class="dpad-btn dpad-r" type="button" aria-label="右移動">➡️</button>
+                    </div>
+                    <button id="dpad-down" class="dpad-btn dpad-d" type="button" aria-label="下移動">⬇️</button>
+                </div>
+
+                <!-- 右側：攻撃アクションボタン -->
                 <div class="control-group p1-controls">
                     <button id="btn-p1-push" class="action-btn push-btn" type="button" aria-label="押し出し（超連打）">
                         <span class="action-emoji" aria-hidden="true">💥</span>
                         <span class="action-label">押す！</span>
-                        <span class="action-sub">(画面タップもOK!)</span>
+                        <span class="action-sub">(Space / 攻撃)</span>
                     </button>
                     <button id="btn-p1-dodge" class="action-btn dodge-btn" type="button" aria-label="はたき込み（回避）">
                         <span class="action-emoji" aria-hidden="true">🌀</span>

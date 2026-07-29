@@ -1,6 +1,6 @@
 /**
  * 音速スモウバトル どすこいの国～ちゃんこ食わんかい～
- * メインJavaScript (レベル育成・超必殺演出・ランク進行マップ・シンプルUI)
+ * メインJavaScript (全方向自由移動 & ラスボス2体同時タッグ戦)
  */
 
 (function() {
@@ -176,14 +176,14 @@
 
     const audio = new SoundEngine();
 
-    // ランク階級システム (全6段階)
+    // ランク階級システム (全6段階 - マスターはラスボス双子2体同時！)
     const RANKS = [
         { name: 'ブロンズ', icon: '🥉', enemyName: 'うさ丸', aiType: 'rush', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
         { name: 'シルバー', icon: '🥈', enemyName: 'くまごろう', aiType: 'heavy', strength: 3.4, weight: 130, color: '#0284c7', avatar: '🐻' },
         { name: 'ゴールド', icon: '🥇', enemyName: 'ねこノ海', aiType: 'counter', strength: 4.8, weight: 145, color: '#d97706', avatar: '🐱' },
         { name: 'プラチナ', icon: '💎', enemyName: 'ぺんぎん山', aiType: 'rush', strength: 6.2, weight: 165, color: '#0284c7', avatar: '🐧' },
         { name: 'ダイヤ', icon: '👑', enemyName: '鳳凰丸', aiType: 'counter', strength: 7.6, weight: 185, color: '#9333ea', avatar: '🦅' },
-        { name: 'マスター', icon: '🌸✨', enemyName: 'ぴよ王', aiType: 'heavy', strength: 9.2, weight: 200, color: '#e05297', avatar: '🐥' }
+        { name: 'マスター (ラスボス)', icon: '🐲', enemyName: '金龍丸 ＆ 銀龍丸 (双子2体)', aiType: 'boss_duo', strength: 8.8, weight: 190, color: '#eab308', avatar: '🐉' }
     ];
 
     const RIVAL_NAMES = ['ぽんちゃん', 'もち丸', 'わたがし山', 'いちご龍', 'みるく丸', 'キャンディ海', 'ぷりん山', 'そら丸'];
@@ -195,14 +195,14 @@
         { id: 'iron_wall', icon: '🛡️', title: '鉄壁の構え', desc: 'はたき受付 +0.15秒＆カウンター力 1.5倍', rarity: 'rare', apply: (p) => { p.dodgeWindow += 0.15; p.counterPower += 0.5; } },
         { id: 'burst_boost', icon: '🔥', title: '激辛どすこい鍋', desc: '必殺技ゲージの増加スピード 2倍！', rarity: 'rare', apply: (p) => { p.gaugeRate *= 2.0; } },
         { id: 'chanko_power', icon: '🍚', title: '超大盛りメガ飯', desc: '体重 +50kg！超安定ド迫力ボディ！', rarity: 'common', apply: (p) => { p.weight += 50; } },
-        { id: 'swift_foot', icon: '💨', title: '音速ステップ', desc: '力士の機動力＆押し出しスピード連打UP！', rarity: 'common', apply: (p) => { p.moveSpeed += 0.4; } },
+        { id: 'swift_foot', icon: '💨', title: '音速ステップ', desc: '自由移動の移動スピード 1.5倍！', rarity: 'common', apply: (p) => { p.moveSpeed += 0.5; } },
         { id: 'clutch_push', icon: '💖', title: '土俵際の一発', desc: '土俵際に追い詰められると推力が 2.5倍！', rarity: 'rare', apply: (p) => { p.hasClutchPower = true; } },
         { id: 'intimidation', icon: '👑', title: '横綱の気迫', desc: '相手の押し出しパワーを 25% 弱体化！', rarity: 'legendary', apply: (p) => { p.enemyPowerDebuff += 0.25; } },
         { id: 'stun_slap', icon: '💥', title: '雷電ハリケーン', desc: '連打時に 20% の確実ノックバック！', rarity: 'legendary', apply: (p) => { p.hasStunSlap = true; } }
     ];
 
     const EVENTS = [
-        { type: 'ice', title: '🧊 ツルツル氷土俵！ (摩擦ゼロ！超すべる！)', apply: () => {} },
+        { type: 'ice', title: '🧊 ツルツル氷土俵！ (摩擦ゼロ！超スライド！)', apply: () => {} },
         { type: 'fever', title: '⚡ 音速フィーバー！ (押す力3倍！)', apply: () => {} },
         { type: 'wind', title: '🌪️ 強烈な突風！ (横風が吹き荒れる！)', apply: () => {} },
         { type: 'chanko', title: '🍲 ちゃんこタイム！ (先に押した方が必殺技満タン)', apply: () => {} }
@@ -241,8 +241,12 @@
     let shakeTimer = 0;
     let hitStopTimer = 0;
 
+    // キー入力状態 (自由移動用)
+    const keysPressed = {};
+    const dpadPressed = { up: false, down: false, left: false, right: false };
+
     class Rikishi {
-        constructor(isPlayer, name, color, avatar, power = 5.5, weight = 130, aiType = 'rush') {
+        constructor(isPlayer, name, color, avatar, power = 5.5, weight = 130, aiType = 'rush', startX = 340, startY = 260) {
             this.isPlayer = isPlayer;
             this.name = name;
             this.color = color;
@@ -250,6 +254,8 @@
             this.basePower = power;
             this.weight = weight;
             this.aiType = aiType;
+            this.startX = startX;
+            this.startY = startY;
 
             this.powerMultiplier = 1.0;
             this.dodgeWindow = 0.35;
@@ -260,14 +266,16 @@
             this.enemyPowerDebuff = 0;
             this.hasStunSlap = false;
             this.acquiredSkills = [];
+            this.isEliminated = false;
 
             this.reset();
         }
 
         reset() {
-            this.x = this.isPlayer ? 340 : 560;
-            this.y = 260;
+            this.x = this.startX;
+            this.y = this.startY;
             this.vx = 0;
+            this.vy = 0;
             this.radius = Math.min(52, 34 + (this.weight * 0.06));
             this.burstGauge = 0;
             this.isDodging = false;
@@ -275,6 +283,7 @@
             this.pushAnim = 0;
             this.stateText = '';
             this.stateTextTimer = 0;
+            this.isEliminated = false;
         }
 
         get currentPower() {
@@ -282,10 +291,14 @@
         }
 
         update(dt) {
-            this.x += this.vx;
+            if (this.isEliminated) return;
 
-            const friction = (currentEvent && currentEvent.type === 'ice') ? 0.97 : 0.80;
+            this.x += this.vx;
+            this.y += this.vy;
+
+            const friction = (currentEvent && currentEvent.type === 'ice') ? 0.98 : 0.82;
             this.vx *= friction;
+            this.vy *= friction;
 
             if (currentEvent && currentEvent.type === 'wind') {
                 this.vx += windDir * 0.45;
@@ -308,7 +321,7 @@
         }
 
         triggerDodge() {
-            if (this.dodgeTimer <= 0) {
+            if (this.dodgeTimer <= 0 && !this.isEliminated) {
                 this.isDodging = true;
                 this.dodgeTimer = this.dodgeWindow;
                 this.setStateText('見切り構え！');
@@ -404,6 +417,12 @@
     const btnP2Dodge = document.getElementById('btn-p2-dodge');
     const btnP2Burst = document.getElementById('btn-p2-burst');
 
+    // D-Pad ボタン
+    const dpadUp = document.getElementById('dpad-up');
+    const dpadDown = document.getElementById('dpad-down');
+    const dpadLeft = document.getElementById('dpad-left');
+    const dpadRight = document.getElementById('dpad-right');
+
     const playerLvlTag = document.getElementById('player-lvl-tag');
     const playerNameEl = document.getElementById('player-name');
     const enemyNameEl = document.getElementById('enemy-name');
@@ -432,8 +451,8 @@
     const resExpEl = document.getElementById('res-exp');
     const resLevelEl = document.getElementById('res-level');
 
-    let p1 = new Rikishi(true, '雷電丸', '#e05297', '⚡', 5.5, 130);
-    let p2 = new Rikishi(false, 'うさ丸', '#059669', '🐰', 2.0, 110);
+    let p1 = new Rikishi(true, '雷電丸', '#e05297', '⚡', 5.5, 130, 'player', 340, 260);
+    let enemies = []; // 敵アレイ (ラスボス戦で2体 simultaneously!)
 
     let particles = [];
     let announceText = '';
@@ -468,7 +487,6 @@
 
         btnNextMatch.addEventListener('click', () => {
             if (gameMode === 'arcade' && winsCount > 0 && winsCount % 2 === 0 && currentRankIdx < RANKS.length - 1) {
-                // 2連勝ごとにランク昇格！
                 currentRankIdx++;
                 showRankUpDialog();
             } else {
@@ -482,6 +500,12 @@
             const isEnabled = audio.toggleAudio();
             btnToggleAudio.textContent = isEnabled ? '🔊 Sound ON' : '🔇 Sound OFF';
         });
+
+        // D-Pad バーチャルボタンのイベント
+        setupDpadEvents(dpadUp, 'up');
+        setupDpadEvents(dpadDown, 'down');
+        setupDpadEvents(dpadLeft, 'left');
+        setupDpadEvents(dpadRight, 'right');
 
         canvas.addEventListener('touchstart', (e) => {
             audio.init();
@@ -502,12 +526,11 @@
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p1); });
         btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p1); });
 
-        btnP2Push.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handlePush(p2); });
-        btnP2Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p2); });
-        btnP2Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p2); });
-
+        // キーボード入力（自由移動 WASD / 矢印キー & アクション）
         window.addEventListener('keydown', (e) => {
             audio.init();
+            keysPressed[e.code] = true;
+
             if (gameState !== STATE.PLAYING || e.repeat) return;
 
             if (e.code === 'Space') {
@@ -518,18 +541,19 @@
             } else if (e.code === 'KeyK') {
                 handleBurst(p1);
             }
-
-            if (gameMode === 'pvp') {
-                if (e.code === 'Enter') {
-                    e.preventDefault();
-                    handlePush(p2);
-                } else if (e.code === 'Numpad1' || e.code === 'Digit1') {
-                    handleDodge(p2);
-                } else if (e.code === 'Numpad2' || e.code === 'Digit2') {
-                    handleBurst(p2);
-                }
-            }
         });
+
+        window.addEventListener('keyup', (e) => {
+            keysPressed[e.code] = false;
+        });
+    }
+
+    function setupDpadEvents(btn, dir) {
+        if (!btn) return;
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); dpadPressed[dir] = true; });
+        btn.addEventListener('pointerup', () => { dpadPressed[dir] = false; });
+        btn.addEventListener('pointerleave', () => { dpadPressed[dir] = false; });
+        btn.addEventListener('touchend', () => { dpadPressed[dir] = false; });
     }
 
     function showTitle() {
@@ -567,7 +591,7 @@
         playerLevel = 1;
         playerExp = 0;
         streakCount = 0;
-        p1 = new Rikishi(true, '雷電丸', '#e05297', '⚡', 5.5, 130);
+        p1 = new Rikishi(true, '雷電丸', '#e05297', '⚡', 5.5, 130, 'player', 340, 260);
         
         setupEnemy(mode);
         showMatchupScreen();
@@ -579,10 +603,11 @@
         uiOverlay.classList.add('active');
         screenMatchup.classList.add('active');
 
-        // ステータス可視化更新
         if (playerLvlTag) playerLvlTag.textContent = `⭐ Lv.${playerLevel} (あなた)`;
         if (playerNameEl) playerNameEl.textContent = p1.name;
-        if (enemyNameEl) enemyNameEl.textContent = p2.name;
+
+        const mainEnemy = enemies[0] || new Rikishi(false, 'うさ丸', '#059669', '🐰', 2.0, 110);
+        if (enemyNameEl) enemyNameEl.textContent = (enemies.length > 1) ? `${mainEnemy.name} (2体タッグ)` : mainEnemy.name;
 
         const pStrVal = Math.floor(p1.currentPower * 10);
         if (pStrBar) pStrBar.style.width = `${Math.min(100, pStrVal)}%`;
@@ -591,12 +616,12 @@
         if (pWgtBar) pWgtBar.style.width = `${Math.min(100, (p1.weight / 250) * 100)}%`;
         if (pWgtNum) pWgtNum.textContent = `${p1.weight}kg`;
 
-        const eStrVal = Math.floor(p2.currentPower * 10);
+        const eStrVal = Math.floor(mainEnemy.currentPower * 10);
         if (eStrBar) eStrBar.style.width = `${Math.min(100, eStrVal)}%`;
         if (eStrNum) eStrNum.textContent = eStrVal;
 
-        if (eWgtBar) eWgtBar.style.width = `${Math.min(100, (p2.weight / 250) * 100)}%`;
-        if (eWgtNum) eWgtNum.textContent = `${p2.weight}kg`;
+        if (eWgtBar) eWgtBar.style.width = `${Math.min(100, (mainEnemy.weight / 250) * 100)}%`;
+        if (eWgtNum) eWgtNum.textContent = `${mainEnemy.weight}kg`;
 
         if (matchupRankEl) {
             matchupRankEl.textContent = `【第 ${totalMatchesCount + 1} 取組】 ランク: ${RANKS[currentRankIdx].name}`;
@@ -607,15 +632,21 @@
     }
 
     function setupEnemy(mode) {
-        if (mode === 'pvp') {
-            p2 = new Rikishi(false, '鳳凰丸 (2P)', '#9333ea', '🦅', 6.0, 140, 'rush');
-            p2ControlsGroup.classList.remove('hidden');
-        } else if (mode === 'arcade') {
-            p2ControlsGroup.classList.add('hidden');
+        enemies = [];
+        p2ControlsGroup.classList.add('hidden');
+
+        if (mode === 'arcade') {
             const enemyData = RANKS[currentRankIdx];
-            p2 = new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType);
+            if (enemyData.aiType === 'boss_duo') {
+                // ラスボス：双子力士 2体同時襲来！
+                const boss1 = new Rikishi(false, '金龍丸 (兄)', '#eab308', '🐲', 8.8, 190, 'rush', 580, 210);
+                const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#94a3b8', '🐉', 8.2, 180, 'counter', 580, 310);
+                enemies.push(boss1, boss2);
+            } else {
+                const singleEnemy = new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260);
+                enemies.push(singleEnemy);
+            }
         } else if (mode === 'endless') {
-            p2ControlsGroup.classList.add('hidden');
             const rName = RIVAL_NAMES[streakCount % RIVAL_NAMES.length];
             const rAvatar = RIVAL_AVATARS[streakCount % RIVAL_AVATARS.length];
             const rColor = RIVAL_COLORS[streakCount % RIVAL_COLORS.length];
@@ -624,12 +655,16 @@
             const aiTypes = ['rush', 'counter', 'heavy'];
             const rAiType = aiTypes[streakCount % 3];
 
-            p2 = new Rikishi(false, `${rName} (${streakCount + 1}人目)`, rColor, rAvatar, rStrength, rWeight, rAiType);
+            enemies.push(new Rikishi(false, `${rName} (${streakCount + 1}人目)`, rColor, rAvatar, rStrength, rWeight, rAiType, 560, 260));
         }
 
         if (enemyTypeBadge) {
-            const aiLabelMap = { 'rush': '⚡ 超突進', 'counter': '🌀 見切り巧者', 'heavy': '⛰️ 超重戦車' };
-            enemyTypeBadge.textContent = `西 (${aiLabelMap[p2.aiType] || 'ライバル'})`;
+            if (enemies.length > 1) {
+                enemyTypeBadge.textContent = `西 (🔥 ラスボス双子2体タッグ襲来！)`;
+            } else {
+                const aiLabelMap = { 'rush': '⚡ 超突進', 'counter': '🌀 見切り巧者', 'heavy': '⛰️ 超重戦車' };
+                enemyTypeBadge.textContent = `西 (${aiLabelMap[enemies[0].aiType] || 'ライバル'})`;
+            }
         }
     }
 
@@ -732,7 +767,12 @@
 
         rankupTitle.textContent = `${prevR.name} ➔ ${curR.name} 昇格！`;
         rankupIcon.textContent = curR.icon;
-        rankupDesc.textContent = `ランク【${curR.name}】に到達！ライバル「${curR.enemyName}」が待っている！全能力ボーナス+20%！`;
+
+        if (curR.aiType === 'boss_duo') {
+            rankupDesc.textContent = `最高峰マスターランク到達！最終決戦は『双子力士 金龍丸＆銀龍丸』の2体同時バトル！！`;
+        } else {
+            rankupDesc.textContent = `ランク【${curR.name}】に到達！ライバル「${curR.enemyName}」が待っている！全能力ボーナス+20%！`;
+        }
 
         p1.powerMultiplier += 0.2;
         p1.weight += 15;
@@ -758,7 +798,7 @@
         burstCutinEl.classList.add('hidden');
 
         p1.reset();
-        p2.reset();
+        enemies.forEach(e => e.reset());
         particles = [];
         totalClicksP1 = 0;
 
@@ -797,7 +837,7 @@
         spawnSparks(DOHYO.cx, DOHYO.cy, '#fde047', 20, 'ハプニング！');
     }
 
-    function finishMatch(winner, kimarite) {
+    function finishMatch(isP1Win, kimarite) {
         if (isMatchFinished) return;
         isMatchFinished = true;
 
@@ -808,7 +848,6 @@
         
         const durationSec = ((performance.now() - startTime) / 1000).toFixed(1);
         const cps = (totalClicksP1 / Math.max(1, durationSec)).toFixed(1);
-        const isP1Win = (winner === p1);
 
         audio.playFanfare(isP1Win);
 
@@ -817,15 +856,14 @@
             streakCount++;
             playerExp += 150;
             
-            // レベルアップ判定
             if (playerExp >= playerLevel * 200) {
                 playerLevel++;
                 p1.basePower += 0.4;
                 p1.weight += 5;
             }
 
-            resultTitleEl.textContent = '金 星 ！ 勝 負 あ り 🍲';
-            winnerNameEl.textContent = `東 ${winner.name} の大勝利！`;
+            resultTitleEl.textContent = (enemies.length > 1) ? '🐉 ラスボス双子完全撃破！ 🐉' : '金 星 ！ 勝 負 あ り 🍲';
+            winnerNameEl.textContent = `東 ${p1.name} の大勝利！`;
             
             btnNextMatch.textContent = '✨ 次の取組へ (ちゃんこ獲得) ➔';
             btnNextMatch.classList.remove('hidden');
@@ -835,7 +873,7 @@
             lossesCount++;
             streakCount = 0;
             resultTitleEl.textContent = '敗 北 ... 勝 負 あ り';
-            winnerNameEl.textContent = `西 ${winner.name} の勝利！`;
+            winnerNameEl.textContent = `西 勝利！`;
             
             btnNextMatch.classList.add('hidden');
             btnRetryMatch.classList.remove('hidden');
@@ -859,7 +897,6 @@
     function updateHeaderUI() {
         if (levelBadge) levelBadge.textContent = `⭐ Lv.${playerLevel} ${p1.name}`;
 
-        // ランクマップ更新
         for (let i = 0; i < 6; i++) {
             const stepEl = document.getElementById(`rmap-${i}`);
             if (stepEl) {
@@ -882,7 +919,29 @@
         shakeTimer = sec;
     }
 
-    // --- 必殺技超カタルシス演出 ---
+    // --- 自由移動物理入力処理 ---
+    function updatePlayerMovement(dt) {
+        if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
+
+        let dx = 0;
+        let dy = 0;
+
+        if (keysPressed['KeyW'] || keysPressed['ArrowUp'] || dpadPressed.up) dy -= 1;
+        if (keysPressed['KeyS'] || keysPressed['ArrowDown'] || dpadPressed.down) dy += 1;
+        if (keysPressed['KeyA'] || keysPressed['ArrowLeft'] || dpadPressed.left) dx -= 1;
+        if (keysPressed['KeyD'] || keysPressed['ArrowRight'] || dpadPressed.right) dx += 1;
+
+        if (dx !== 0 || dy !== 0) {
+            const len = Math.sqrt(dx * dx + dy * dy);
+            dx /= len;
+            dy /= len;
+
+            const speed = 2.2 * p1.moveSpeed;
+            p1.vx += dx * speed;
+            p1.vy += dy * speed;
+        }
+    }
+
     function handleBurst(actor) {
         if (gameState !== STATE.PLAYING) return;
         if (actor.burstGauge < 100) return;
@@ -890,13 +949,7 @@
         actor.burstGauge = 0;
         updateBurstUI();
 
-        const opponent = (actor === p1) ? p2 : p1;
-        const dir = (actor === p1) ? 1 : -1;
-
-        // 0.25秒間のヒットストップ（時間停止）で爽快カタルシス！
         hitStopTimer = 0.25;
-
-        // ド派手金文字カットイン
         burstCutinEl.classList.remove('hidden');
         setTimeout(() => burstCutinEl.classList.add('hidden'), 900);
 
@@ -907,15 +960,18 @@
         speedLinesEl.classList.add('active');
         setTimeout(() => speedLinesEl.classList.remove('active'), 1000);
 
-        // 相手が超ダイナミックに土俵外へ吹っ飛ぶ！ (極大物理推力 55)
-        opponent.vx += dir * 55;
-        spawnSparks((actor.x + opponent.x)/2, actor.y, '#fde047', 45, '超爆破！！');
+        enemies.forEach(opponent => {
+            if (opponent.isEliminated) return;
+            const angle = Math.atan2(opponent.y - actor.y, opponent.x - actor.x);
+            opponent.vx += Math.cos(angle) * 55;
+            opponent.vy += Math.sin(angle) * 55;
+            spawnSparks((actor.x + opponent.x)/2, (actor.y + opponent.y)/2, '#fde047', 45, '超爆破！！');
+        });
     }
 
     function handlePush(actor) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
-        const opponent = (actor === p1) ? p2 : p1;
         if (actor === p1) {
             totalClicksP1++;
             comboP1++;
@@ -943,42 +999,39 @@
         actor.burstGauge = Math.min(100, actor.burstGauge + gInc);
         updateBurstUI();
 
-        if (opponent.isDodging) {
-            const shiftVal = 20 * opponent.counterPower;
-            actor.vx += (actor === p1) ? -shiftVal : shiftVal;
-            opponent.vx += (opponent === p1) ? 14 : -14;
-            audio.playHit();
-            opponent.setStateText('見切り返し！');
-            speedLinesEl.classList.add('active');
-            setTimeout(() => speedLinesEl.classList.remove('active'), 400);
+        enemies.forEach(opponent => {
+            if (opponent.isEliminated) return;
 
-            triggerShake(0.3);
-            spawnSparks((actor.x + opponent.x)/2, actor.y, '#0284c7', 15, '見切り！');
-            return;
-        }
+            const dist = Math.hypot(opponent.x - actor.x, opponent.y - actor.y);
+            if (dist < actor.radius + opponent.radius + 40) {
+                if (opponent.isDodging) {
+                    actor.vx -= (opponent.x - actor.x) * 0.4;
+                    actor.vy -= (opponent.y - actor.y) * 0.4;
+                    audio.playHit();
+                    opponent.setStateText('見切り返し！');
+                    triggerShake(0.3);
+                    spawnSparks(opponent.x, opponent.y, '#0284c7', 15, '見切り！');
+                    return;
+                }
 
-        let clutchMult = 1.0;
-        if (actor.hasClutchPower && isOutOfDohyo(actor.x, actor.y, 0.75)) {
-            clutchMult = 2.5;
-            actor.setStateText('土俵際パワー！');
-        }
+                let clutchMult = 1.0;
+                if (actor.hasClutchPower && isOutOfDohyo(actor.x, actor.y, 0.75)) {
+                    clutchMult = 2.5;
+                    actor.setStateText('土俵際パワー！');
+                }
 
-        const feverMult = (currentEvent && currentEvent.type === 'fever') ? 2.5 : 1.0;
-        const dir = (actor === p1) ? 1 : -1;
-        const debuff = (opponent.enemyPowerDebuff || 0);
-        let pushForce = (3.5 + (actor.currentPower * 0.45)) * (1 - debuff) * clutchMult * feverMult;
+                const feverMult = (currentEvent && currentEvent.type === 'fever') ? 2.5 : 1.0;
+                const debuff = (opponent.enemyPowerDebuff || 0);
+                let pushForce = (3.5 + (actor.currentPower * 0.45)) * (1 - debuff) * clutchMult * feverMult;
 
-        if (actor.hasStunSlap && Math.random() < 0.2) {
-            pushForce *= 1.8;
-            triggerShake(0.25);
-            spawnSparks((actor.x + opponent.x)/2, actor.y, '#d97706', 12, 'ハリケーン！');
-        }
+                const angle = Math.atan2(opponent.y - actor.y, opponent.x - actor.x);
+                opponent.vx += Math.cos(angle) * pushForce;
+                opponent.vy += Math.sin(angle) * pushForce;
 
-        opponent.vx += dir * pushForce;
-        actor.vx += dir * (pushForce * 0.25);
-
-        audio.playHit();
-        spawnSparks((actor.x + opponent.x)/2, actor.y, actor.color, 6);
+                audio.playHit();
+                spawnSparks(opponent.x, opponent.y, actor.color, 6);
+            }
+        });
     }
 
     function handleDodge(actor) {
@@ -994,72 +1047,59 @@
             btnP1Burst.classList.add('disabled');
             btnP1Burst.disabled = true;
         }
-
-        if (p2.burstGauge >= 100) {
-            btnP2Burst.classList.remove('disabled');
-            btnP2Burst.disabled = false;
-        } else {
-            btnP2Burst.classList.add('disabled');
-            btnP2Burst.disabled = true;
-        }
     }
 
     function updateAI(dt) {
-        if (gameState !== STATE.PLAYING || gameMode === 'pvp' || hitStopTimer > 0) return;
+        if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
         aiPushTimer += dt;
-        let pushInterval = Math.max(0.05, 0.28 - (p2.currentPower * 0.024));
+        enemies.forEach(enemy => {
+            if (enemy.isEliminated) return;
 
-        if (p2.aiType === 'counter') {
-            if (comboP1 > 3 && p2.dodgeTimer <= 0 && Math.random() < 0.4) {
-                handleDodge(p2);
-                return;
-            }
-        } else if (p2.aiType === 'heavy') {
-            pushInterval *= 1.3;
-        }
+            // AI追従＆自由移動（プレイヤーへ接近！）
+            const angle = Math.atan2(p1.y - enemy.y, p1.x - enemy.x);
+            const speed = 1.2 * enemy.moveSpeed;
+            enemy.vx += Math.cos(angle) * speed * 0.5;
+            enemy.vy += Math.sin(angle) * speed * 0.5;
 
-        if (aiPushTimer >= pushInterval) {
-            aiPushTimer = 0;
-            if (p1.vx > 6 && Math.random() < 0.2) {
-                handleDodge(p2);
-            } else {
-                handlePush(p2);
+            const pushInterval = Math.max(0.08, 0.32 - (enemy.currentPower * 0.02));
+            if (aiPushTimer >= pushInterval) {
+                const dist = Math.hypot(p1.x - enemy.x, p1.y - enemy.y);
+                if (dist < enemy.radius + p1.radius + 35) {
+                    if (p1.vx > 6 && Math.random() < 0.2) {
+                        enemy.triggerDodge();
+                    } else {
+                        // 敵押し攻撃
+                        p1.vx -= Math.cos(angle) * (2.8 + enemy.currentPower * 0.3);
+                        p1.vy -= Math.sin(angle) * (2.8 + enemy.currentPower * 0.3);
+                        audio.playHit();
+                    }
+                }
             }
+        });
 
-            if (p2.burstGauge >= 100 && Math.random() < 0.7) {
-                handleBurst(p2);
-            }
-        }
+        if (aiPushTimer >= 0.3) aiPushTimer = 0;
     }
 
     function checkRingOut() {
         if (gameState !== STATE.PLAYING || isMatchFinished) return;
 
         const p1Out = isOutOfDohyo(p1.x, p1.y);
-        const p2Out = isOutOfDohyo(p2.x, p2.y);
 
-        if (p1Out || p2Out) {
-            let winner, loser, kimarite;
-            if (p1Out && p2Out) {
-                winner = p1.x > p2.x ? p1 : p2;
-            } else if (p1Out) {
-                winner = p2; loser = p1;
-            } else {
-                winner = p1; loser = p2;
+        enemies.forEach(enemy => {
+            if (!enemy.isEliminated && isOutOfDohyo(enemy.x, enemy.y)) {
+                enemy.isEliminated = true;
+                spawnSparks(enemy.x, enemy.y, '#e05297', 25, 'リングアウト！');
             }
+        });
 
-            if (winner.isDodging || loser.stateText.includes('見切り')) {
-                kimarite = 'はたき込み';
-            } else if (winner.stateText.includes('どすこい')) {
-                kimarite = '突き出し';
-            } else if (Math.abs(winner.vx) > 10) {
-                kimarite = '寄り切り';
-            } else {
-                kimarite = '押し出し';
-            }
+        const activeEnemies = enemies.filter(e => !e.isEliminated);
 
-            finishMatch(winner, kimarite);
+        if (p1Out) {
+            finishMatch(false, '押し出し');
+        } else if (activeEnemies.length === 0) {
+            const kimarite = (enemies.length > 1) ? '双子連撃寄り切り' : '寄り切り';
+            finishMatch(true, kimarite);
         }
     }
 
@@ -1150,9 +1190,8 @@
         ctx.beginPath();
         ctx.ellipse(DOHYO.cx, DOHYO.cy, DOHYO.rx - 10, DOHYO.ry - 5, 0, 0, Math.PI * 2);
         const p1Danger = isOutOfDohyo(p1.x, p1.y, 0.85);
-        const p2Danger = isOutOfDohyo(p2.x, p2.y, 0.85);
 
-        if (p1Danger || p2Danger) {
+        if (p1Danger) {
             ctx.strokeStyle = '#ef4444';
             ctx.lineWidth = 6;
         } else {
@@ -1163,7 +1202,7 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        if (p1Danger || p2Danger) {
+        if (p1Danger) {
             ctx.font = '900 24px "Mochiy Pop One", sans-serif';
             ctx.fillStyle = '#ef4444';
             ctx.textAlign = 'center';
@@ -1179,11 +1218,12 @@
     }
 
     function drawRikishi(rikishi) {
+        if (rikishi.isEliminated) return;
+
         ctx.save();
         const x = rikishi.x;
         const y = rikishi.y;
         const r = rikishi.radius;
-        const pushOffset = rikishi.pushAnim * (rikishi.isPlayer ? 12 : -12);
 
         if (rikishi.isDodging) {
             ctx.beginPath();
@@ -1193,12 +1233,12 @@
         }
 
         ctx.beginPath();
-        ctx.ellipse(x, DOHYO.cy + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
+        ctx.ellipse(x, y + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
         ctx.fill();
 
         ctx.beginPath();
-        ctx.arc(x + pushOffset, y, r, 0, Math.PI * 2);
+        ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = '#fff4e6';
         ctx.fill();
         ctx.lineWidth = 4;
@@ -1206,14 +1246,14 @@
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(x + pushOffset, y, r * 0.82, 0.3, Math.PI - 0.3);
+        ctx.arc(x, y, r * 0.82, 0.3, Math.PI - 0.3);
         ctx.fillStyle = rikishi.color;
         ctx.fill();
 
         ctx.font = `${Math.floor(r * 0.8)}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(rikishi.avatar, x + pushOffset, y - 2);
+        ctx.fillText(rikishi.avatar, x, y - 2);
 
         ctx.font = '900 15px "Mochiy Pop One", sans-serif';
         ctx.fillStyle = '#2b1f33';
@@ -1258,7 +1298,6 @@
         const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
         lastFrameTime = now;
 
-        // ヒットストップ処理 (時間停止)
         if (hitStopTimer > 0) {
             hitStopTimer -= dt;
             requestAnimationFrame(gameLoop);
@@ -1266,8 +1305,11 @@
         }
 
         if (gameState === STATE.PLAYING) {
+            updatePlayerMovement(dt);
+
             p1.update(dt);
-            p2.update(dt);
+            enemies.forEach(e => e.update(dt));
+
             updateAI(dt);
             checkRingOut();
 
@@ -1309,7 +1351,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawDohyo();
         drawRikishi(p1);
-        drawRikishi(p2);
+        enemies.forEach(e => drawRikishi(e));
         particles.forEach(p => p.draw(ctx));
         drawAnnounce();
 
