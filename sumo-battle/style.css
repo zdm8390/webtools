@@ -290,16 +290,8 @@ body {
 .flash-overlay.active { opacity: 0.7; }
 
 .parry-dim-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 230, 109, 0.35);
-    backdrop-filter: blur(2px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.12s ease;
-    z-index: 15;
+    display: none !important;
 }
-.parry-dim-overlay.active { opacity: 1.0; }
 
 .burst-cutin {
     position: absolute;
@@ -307,21 +299,25 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(255, 107, 157, 0.92);
+    background: transparent !important;
+    pointer-events: none;
     z-index: 30;
     animation: popCutin 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .cutin-text {
     font-family: 'M PLUS Rounded 1c', sans-serif;
-    font-size: 3.4rem;
+    font-size: 4.2rem;
     font-weight: 900;
-    color: #ffffff;
-    text-shadow: 0 6px 0 #d84b7d, 0 10px 20px rgba(0,0,0,0.2);
+    color: #0088ff;
+    -webkit-text-stroke: 4px #ffffff;
+    text-shadow: 0 8px 25px rgba(0, 136, 255, 0.5), 0 0 15px rgba(255, 255, 255, 0.9);
+    letter-spacing: 2px;
 }
 
 @keyframes popCutin {
-    0% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
+    0% { transform: scale(0.3) rotate(-6deg); opacity: 0; }
+    50% { transform: scale(1.15) rotate(2deg); opacity: 1; }
     100% { transform: scale(1.0) rotate(0deg); opacity: 1; }
 }
 

@@ -333,11 +333,11 @@
     }
 
     const RANKS = [
-        { name: 'シルバー', icon: '🥈', imgUrl: 'assets/rabbit.jpg', enemyName: '音速うさ丸', aiType: 'rookie_rabbit', strength: 1.8, weight: 70, color: '#059669', avatar: '🐰' },
-        { name: 'ゴールド', icon: '🥇', imgUrl: null, enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 4.8, weight: 260, color: '#0284c7', avatar: '🐻' },
-        { name: 'ダイヤ', icon: '💎', imgUrl: null, enemyName: '閃光ねこノ海', aiType: 'ninja_dodge', strength: 7.2, weight: 140, color: '#d97706', avatar: '🐱' },
-        { name: 'プラチナ', icon: '👑', imgUrl: null, enemyName: '暴風鳳凰丸', aiType: 'salt_master', strength: 9.2, weight: 170, color: '#9333ea', avatar: '🦅' },
-        { name: 'マスター', icon: '🏆', imgUrl: 'assets/boss_gold.jpg', enemyName: '覇王金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 12.0, weight: 210, color: '#b45309', avatar: '🐉' }
+        { name: 'シルバー', icon: '🥈', imgUrl: 'assets/rabbit_cute.jpg', enemyName: '音速うさ丸', aiType: 'rookie_rabbit', strength: 1.8, weight: 70, color: '#059669', avatar: '🐰' },
+        { name: 'ゴールド', icon: '🥇', imgUrl: 'assets/bear_cute.jpg', enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 4.8, weight: 260, color: '#0284c7', avatar: '🐻' },
+        { name: 'ダイヤ', icon: '💎', imgUrl: 'assets/cat_cute.jpg', enemyName: '閃光ねこノ海', aiType: 'ninja_dodge', strength: 7.2, weight: 140, color: '#d97706', avatar: '🐱' },
+        { name: 'プラチナ', icon: '👑', imgUrl: 'assets/phoenix_cute.jpg', enemyName: '暴風鳳凰丸', aiType: 'salt_master', strength: 9.2, weight: 170, color: '#9333ea', avatar: '🦅' },
+        { name: 'マスター', icon: '🏆', imgUrl: 'assets/boss_gold_cute.jpg', enemyName: '覇王金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 12.0, weight: 210, color: '#b45309', avatar: '🐉' }
     ];
 
     const ALL_SKILL_CARDS = [
@@ -525,6 +525,8 @@
             this.pushStock = 3;
             this.stunTimer = 0;
             this.edgeLatchTimer = 0;
+            this.parryBoostTimer = 0;
+            this.parryBoostCount = 0;
 
             this.afterImages = Array.from({ length: GAME_CONFIG.POOL_MAX_AFTER_IMAGES }, () => ({ x: 0, y: 0, life: 0, active: false }));
             this.afterImageHead = 0;
@@ -546,6 +548,8 @@
             this.dodgeTimer = 0;
             this.stunTimer = 0;
             this.edgeLatchTimer = 0;
+            this.parryBoostTimer = 0;
+            this.parryBoostCount = 0;
             this.stateText = '';
             this.stateTextTimer = 0;
             this.isEliminated = false;
@@ -614,6 +618,13 @@
             if (this.dodgeTimer > 0) {
                 this.dodgeTimer -= dt;
                 if (this.dodgeTimer <= 0) this.isDodging = false;
+            }
+
+            if (this.parryBoostTimer > 0) {
+                this.parryBoostTimer -= dt;
+                if (this.parryBoostTimer <= 0 && this.parryBoostCount === 0) {
+                    if (typeof updatePushStockUI === 'function') updatePushStockUI();
+                }
             }
 
             if (this.flashTimer > 0) this.flashTimer -= dt;
@@ -693,7 +704,7 @@
 
     const yokozunaTitleCard = document.getElementById('yokozuna-title-card');
 
-    let p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player.jpg');
+    let p1 = new Rikishi(true, 'エドモーンド', '#ff3377', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player_cute.jpg');
     let enemies = [];
     let announceText = '';
     let announceScale = 1;
@@ -869,7 +880,11 @@
 
     function updatePushStockUI() {
         if (pushBtnLabel) {
-            pushBtnLabel.textContent = `インパクト [Z] (${p1.pushStock})`;
+            if (p1.parryBoostTimer > 0 || p1.parryBoostCount > 0) {
+                pushBtnLabel.textContent = `インパクト [Z] (${p1.pushStock}) 🔥超極太!`;
+            } else {
+                pushBtnLabel.textContent = `インパクト [Z] (${p1.pushStock})`;
+            }
         }
     }
 
@@ -903,7 +918,7 @@
             statsParryCount = 0;
             statsContinueCount = 0;
             isTimerRunning = true;
-            p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player.jpg');
+            p1 = new Rikishi(true, 'エドモーンド', '#ff3377', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player_cute.jpg');
         }
 
         randomizeDohyo();
@@ -943,8 +958,8 @@
         enemies = [];
         const enemyData = RANKS[currentRankIdx];
         if (enemyData.aiType === 'boss_duo') {
-            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.0, 210, 'boss_duo', 580, 210, 'assets/boss_gold.jpg');
-            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 10.5, 190, 'boss_duo', 580, 310, 'assets/boss_silver.jpg');
+            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.0, 210, 'boss_duo', 580, 210, 'assets/boss_gold_cute.jpg');
+            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 10.5, 190, 'boss_duo', 580, 310, 'assets/boss_silver_cute.jpg');
             enemies.push(boss1, boss2);
         } else {
             enemies.push(new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260, enemyData.imgUrl));
@@ -1079,16 +1094,13 @@
     }
 
     function triggerParrySpecialEffect() {
-        if (parryDimOverlayEl) {
-            parryDimOverlayEl.classList.add('active');
-        }
         slowMotionTimer = GAME_CONFIG.PARRY_SLOW_DURATION;
         parryGlowTimer = 0.45;
-        triggerShake(0.4);
+        triggerShake(0.3);
 
-        if (cutinTextContent) cutinTextContent.textContent = '✨ ジャストパリィ成立！ ✨';
+        if (cutinTextContent) cutinTextContent.textContent = 'ジャストパリィ！';
         burstCutinEl.classList.remove('hidden');
-        setTimeout(() => burstCutinEl.classList.add('hidden'), 750);
+        setTimeout(() => burstCutinEl.classList.add('hidden'), 700);
     }
 
     function updateHeaderUI() {
@@ -1159,6 +1171,8 @@
     function handlePush(actor) {
         if (!canPlayerControl()) return;
 
+        let parryPushMultiplier = 1.0;
+
         if (actor === p1) {
             if (p1.pushStock <= 0) {
                 p1.setStateText('弾切れ！パリィで回復');
@@ -1166,21 +1180,32 @@
             }
             p1.pushStock--;
             statsPushCount++;
+
+            // ⚡ ジャストパリィ成功時はインパクトの強度を大幅アップ！
+            if (p1.parryBoostCount > 0 || p1.parryBoostTimer > 0) {
+                parryPushMultiplier = 2.8; // 強度2.8倍！
+                p1.parryBoostCount = Math.max(0, p1.parryBoostCount - 1);
+                p1.parryBoostTimer = 0;
+                spawnSparks(p1.x, p1.y, '#ff3377', 35, '💥 超インパクト！');
+                triggerShake(0.35);
+                audio.playMegaBurst();
+            }
+
             updatePushStockUI();
             addComboHit();
         }
 
         hitStopTimer = GAME_CONFIG.HIT_STOP_DURATION;
-        triggerShake(0.18);
+        triggerShake(parryPushMultiplier > 1.0 ? 0.32 : 0.18);
         audio.playHit();
 
-        spawnSparks(actor.x, actor.y, '#c2410c', 12, '💨 ドスッ！');
+        spawnSparks(actor.x, actor.y, parryPushMultiplier > 1.0 ? '#ff3377' : '#c2410c', 12, '💨 ドスッ！');
 
         if (actor.hasShockwave) {
             enemies.forEach(e => {
                 const angle = Math.atan2(e.y - actor.y, e.x - actor.x);
-                e.vx += Math.cos(angle) * 10;
-                e.vy += Math.sin(angle) * 10;
+                e.vx += Math.cos(angle) * 10 * parryPushMultiplier;
+                e.vy += Math.sin(angle) * 10 * parryPushMultiplier;
             });
             spawnSparks(actor.x, actor.y, '#c2410c', 15, '💥 衝撃波');
         }
@@ -1201,12 +1226,12 @@
 
                 opponent.flashTimer = 0.15;
 
-                const pushForce = GAME_CONFIG.PUSH_KNOCKBACK_FORCE * actor.currentPower;
+                const pushForce = GAME_CONFIG.PUSH_KNOCKBACK_FORCE * actor.currentPower * parryPushMultiplier;
                 const angle = Math.atan2(opponent.y - actor.y, opponent.x - actor.x);
                 opponent.vx += Math.cos(angle) * pushForce;
                 opponent.vy += Math.sin(angle) * pushForce;
 
-                spawnSparks(opponent.x, opponent.y, '#c2410c', 20, '💥 IMPACT!');
+                spawnSparks(opponent.x, opponent.y, parryPushMultiplier > 1.0 ? '#ff3377' : '#c2410c', 20, parryPushMultiplier > 1.0 ? '💥 MEGA IMPACT!' : '💥 IMPACT!');
             }
         });
     }
@@ -1235,11 +1260,13 @@
             if (parryTriggered) {
                 statsParryCount++;
                 p1.pushStock = Math.min(5, p1.pushStock + 1);
+                p1.parryBoostCount = Math.min(3, p1.parryBoostCount + 1);
+                p1.parryBoostTimer = 6.0;
                 updatePushStockUI();
-                p1.setStateText('🌟 ジャストパリィ成立！✨');
+                p1.setStateText('🌟 パリィ成功！インパクト超強化！✨');
                 audio.playParry();
                 triggerParrySpecialEffect();
-                spawnSparks(p1.x, p1.y, '#fde047', 40, '✨ ジャストパリィ！');
+                spawnSparks(p1.x, p1.y, '#ffe66d', 40, '✨ ジャストパリィ！');
             }
         }
     }
