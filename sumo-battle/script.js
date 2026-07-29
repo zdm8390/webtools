@@ -1,27 +1,30 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * アーケードゲームデザイナー仕様 (Nintendo / SEGA / CAPCOM フィール)
+ * Arcade Master Refactoring - Commit 001
+ * 【入力バッファ & オブジェクトプール & 責務分離アーキテクチャ】
  */
 
 (function() {
     'use strict';
 
-    // --- ⚙️ アーケード基本定数定義 (マジックナンバー排除) ---
-    const GAME_CONFIG = {
+    // --- ⚙️ ① 定数化・SOLID設計 (GAME_CONFIG) ---
+    const GAME_CONFIG = Object.freeze({
         CANVAS_WIDTH: 900,
         CANVAS_HEIGHT: 520,
         DOHYO_CX: 450,
         DOHYO_CY: 260,
         DOHYO_RX: 340,
         DOHYO_RY: 160,
+        INPUT_BUFFER_FRAMES: 6,      // アーケード先行入力バッファ
         HIT_STOP_DURATION: 0.09,
-        SLOW_MOTION_DURATION: 0.20,
-        PUSH_KNOCKBACK_FORCE: 12.0,
-        PARTICLE_LIMIT: 200
-    };
+        SLOW_MOTION_DURATION: 0.22,
+        PUSH_KNOCKBACK_FORCE: 12.5,
+        POOL_MAX_PARTICLES: 300,
+        POOL_MAX_BULLETS: 50
+    });
 
-    // --- 🔊 アーケード大重低音 Sound Engine ---
-    class SoundEngine {
+    // --- 🔊 ② サウンド管理クラス (SoundManager) ---
+    class SoundManager {
         constructor() {
             this.ctx = null;
             const savedState = localStorage.getItem('sumo_pop_audio_enabled');
@@ -139,8 +142,134 @@
         }
     }
 
-    const audio = new SoundEngine();
+    const audio = new SoundManager();
 
+    // --- ♻️ ③ オブジェクトプールクラス (ObjectPool) - GC完全排除 ---
+    class Particle {
+        constructor() {
+            this.active = false;
+            this.x = 0; this.y = 0;
+            this.vx = 0; this.vy = 0;
+            this.color = '#fff';
+            this.size = 4;
+            this.maxLife = 1.0;
+            this.life = 0;
+            this.text = null;
+        }
+
+        spawn(x, y, vx, vy, color, size, life, text = null) {
+            this.active = true;
+            this.x = x; this.y = y;
+            this.vx = vx; this.vy = vy;
+            this.color = color;
+            this.size = size;
+            this.maxLife = life;
+            this.life = life;
+            this.text = text;
+        }
+
+        update(dt) {
+            if (!this.active) return;
+            this.x += this.vx;
+            this.y += this.vy;
+            this.vy += this.text ? -1.0 : 0.25;
+            this.life -= dt;
+            if (this.life <= 0) this.active = false;
+        }
+
+        draw(ctx) {
+            if (!this.active) return;
+            ctx.save();
+            const alpha = Math.max(0, this.life / this.maxLife);
+            ctx.globalAlpha = alpha;
+
+            if (this.text) {
+                ctx.font = '900 26px "Shippori Mincho", serif';
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = '#fff';
+                ctx.shadowBlur = 10;
+                ctx.fillText(this.text, this.x, this.y);
+            } else {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+    }
+
+    class ObjectPool {
+        constructor(createFn, maxSize) {
+            this.pool = Array.from({ length: maxSize }, () => createFn());
+        }
+
+        get() {
+            for (let i = 0; i < this.pool.length; i++) {
+                if (!this.pool[i].active) return this.pool[i];
+            }
+            return null; // プールが満杯の場合はスキップ
+        }
+
+        updateAll(dt) {
+            for (let i = 0; i < this.pool.length; i++) {
+                if (this.pool[i].active) this.pool[i].update(dt);
+            }
+        }
+
+        drawAll(ctx) {
+            for (let i = 0; i < this.pool.length; i++) {
+                if (this.pool[i].active) this.pool[i].draw(ctx);
+            }
+        }
+
+        clearAll() {
+            for (let i = 0; i < this.pool.length; i++) this.pool[i].active = false;
+        }
+    }
+
+    const particlePool = new ObjectPool(() => new Particle(), GAME_CONFIG.POOL_MAX_PARTICLES);
+
+    function spawnSparks(x, y, color, count = 10, popText = null) {
+        if (popText) {
+            const p = particlePool.get();
+            if (p) p.spawn(x, y - 20, 0, -1.2, color, 0, 0.8, popText);
+        }
+
+        for (let i = 0; i < count; i++) {
+            const p = particlePool.get();
+            if (!p) break;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 3 + Math.random() * 10;
+            p.spawn(
+                x, y,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed,
+                color,
+                4 + Math.random() * 6,
+                0.3 + Math.random() * 0.4
+            );
+        }
+    }
+
+    function spawnVictoryConfetti() {
+        const colors = ['#c2410c', '#b45309', '#1e1b4b', '#ffffff', '#fde047'];
+        for (let i = 0; i < 100; i++) {
+            const p = particlePool.get();
+            if (!p) break;
+            p.spawn(
+                GAME_CONFIG.DOHYO_CX + (Math.random() * 450 - 225),
+                60,
+                Math.random() * 6 - 3,
+                Math.random() * 6 + 3,
+                colors[Math.floor(Math.random() * colors.length)],
+                6 + Math.random() * 6,
+                2.8
+            );
+        }
+    }
+
+    // 🖼️ アバター画像管理
     const imageCache = {};
     function loadAvatarImage(url) {
         if (!url) return null;
@@ -151,7 +280,7 @@
         return img;
     }
 
-    // 👾 超・個性敵デザイン（一目でルール把握）
+    // 👾 敵性格AIデータ
     const RANKS = [
         { name: '超高速ウサギ', icon: '🐰', imgUrl: 'assets/rabbit.jpg', enemyName: '音速うさ丸', aiType: 'speed_rush', strength: 2.2, weight: 90, color: '#059669', avatar: '🐰' },
         { name: '不動超重量クマ', icon: '🐻', imgUrl: null, enemyName: '不動くまごろう', aiType: 'super_heavy', strength: 4.5, weight: 250, color: '#0284c7', avatar: '🐻' },
@@ -160,7 +289,6 @@
         { name: '全部入り双子決戦', icon: '🐲', imgUrl: 'assets/boss_gold.jpg', enemyName: '金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 9.5, weight: 195, color: '#b45309', avatar: '🐉' }
     ];
 
-    // 🍲 直感成長カード（「別ゲームになった！」と思える劇的変化）
     const ALL_SKILL_CARDS = [
         { id: 'giant', icon: '🍚', title: '超メガ巨大化！', desc: '体格2倍！相手を紙くずのように押し飛ばす！', apply: (p) => { p.radiusScale *= 1.8; p.powerMultiplier += 3.0; } },
         { id: 'speed', icon: '⚡', title: '光速ステップ', desc: '移動速度3倍！残像を引き連れてリング内を爆走！', apply: (p) => { p.moveSpeed *= 3.0; p.hasAfterImage = true; } },
@@ -196,13 +324,25 @@
     let slowMotionTimer = 0;
     let selectedCardIndex = 0;
 
+    // 🕹️ 先行入力バッファ管理
+    let inputBuffer = { pushFrames: 0, dodgeFrames: 0 };
+
     const keysPressed = {};
     const dpadPressed = { up: false, down: false, left: false, right: false };
 
     class SaltBullet {
         constructor(x, y, targetX, targetY, isReflected = false) {
-            this.x = x;
-            this.y = y;
+            this.active = false;
+            this.x = x; this.y = y;
+            this.vx = 0; this.vy = 0;
+            this.radius = 11;
+            this.life = 2.5;
+            this.isReflected = isReflected;
+        }
+
+        spawn(x, y, targetX, targetY, isReflected = false) {
+            this.active = true;
+            this.x = x; this.y = y;
             const angle = Math.atan2(targetY - y, targetX - x);
             const speed = isReflected ? 11.0 : 6.0;
             this.vx = Math.cos(angle) * speed;
@@ -211,12 +351,17 @@
             this.life = 2.5;
             this.isReflected = isReflected;
         }
+
         update(dt) {
+            if (!this.active) return;
             this.x += this.vx;
             this.y += this.vy;
             this.life -= dt;
+            if (this.life <= 0) this.active = false;
         }
+
         draw(ctx) {
+            if (!this.active) return;
             ctx.save();
             ctx.shadowColor = this.isReflected ? 'rgba(253, 224, 71, 1.0)' : 'rgba(0,0,0,0.4)';
             ctx.shadowBlur = this.isReflected ? 14 : 5;
@@ -233,7 +378,7 @@
         }
     }
 
-    let saltBullets = [];
+    const saltBulletPool = new ObjectPool(() => new SaltBullet(0, 0, 0, 0), GAME_CONFIG.POOL_MAX_BULLETS);
     let enemySaltTimer = 0;
 
     class Rikishi {
@@ -259,6 +404,7 @@
             this.isEliminated = false;
 
             this.afterImages = [];
+            this.aiState = 'normal'; // 'normal', 'panic', 'angry'
 
             this.reset();
         }
@@ -277,10 +423,13 @@
             this.isEliminated = false;
             this.flashTimer = 0;
             this.afterImages = [];
+            this.aiState = 'normal';
         }
 
         get currentPower() {
-            return this.basePower * this.powerMultiplier;
+            let mult = this.powerMultiplier;
+            if (this.aiState === 'angry') mult *= 1.8; // 憤怒オーラ時は推力1.8倍！
+            return this.basePower * mult;
         }
 
         update(dt) {
@@ -329,45 +478,6 @@
         }
     }
 
-    class Particle {
-        constructor(x, y, vx, vy, color, size, life, text = null) {
-            this.x = x;
-            this.y = y;
-            this.vx = vx;
-            this.vy = vy;
-            this.color = color;
-            this.size = size;
-            this.maxLife = life;
-            this.life = life;
-            this.text = text;
-        }
-        update(dt) {
-            this.x += this.vx;
-            this.y += this.vy;
-            this.vy += this.text ? -1.0 : 0.25;
-            this.life -= dt;
-        }
-        draw(ctx) {
-            ctx.save();
-            const alpha = Math.max(0, this.life / this.maxLife);
-            ctx.globalAlpha = alpha;
-
-            if (this.text) {
-                ctx.font = '900 26px "Shippori Mincho", serif';
-                ctx.fillStyle = this.color;
-                ctx.shadowColor = '#fff';
-                ctx.shadowBlur = 10;
-                ctx.fillText(this.text, this.x, this.y);
-            } else {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-        }
-    }
-
     const canvas = document.getElementById('sumo-canvas');
     const ctx = canvas.getContext('2d');
 
@@ -411,7 +521,6 @@
 
     let p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player.jpg');
     let enemies = [];
-    let particles = [];
     let announceText = '';
     let announceScale = 1;
     let announceTimer = 0;
@@ -449,10 +558,10 @@
 
         canvas.addEventListener('pointerdown', () => {
             audio.init();
-            if (gameState === STATE.PLAYING) handlePush(p1);
+            if (gameState === STATE.PLAYING) queuePushInput();
         });
 
-        btnP1Push.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handlePush(p1); });
+        btnP1Push.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); queuePushInput(); });
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p1); });
         btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p1); });
 
@@ -485,13 +594,17 @@
                 }
             } else if (gameState === STATE.PLAYING) {
                 if (e.repeat) return;
-                if (e.code === 'Space') handlePush(p1);
+                if (e.code === 'Space') queuePushInput();
                 else if (e.code === 'KeyJ') handleDodge(p1);
                 else if (e.code === 'KeyK') handleBurst(p1);
             }
         });
 
         window.addEventListener('keyup', (e) => { keysPressed[e.code] = false; });
+    }
+
+    function queuePushInput() {
+        inputBuffer.pushFrames = GAME_CONFIG.INPUT_BUFFER_FRAMES; // 6フレーム先行入力予約！
     }
 
     function setupDpadEvents(btn, dir) {
@@ -506,7 +619,9 @@
         currentRankIdx = 0;
         winsCount = 0;
         isMatchFinished = false;
-        saltBullets = [];
+        saltBulletPool.clearAll();
+        particlePool.clearAll();
+
         speedLinesEl.classList.remove('active');
         burstCutinEl.classList.add('hidden');
         eventBanner.classList.add('hidden');
@@ -537,11 +652,11 @@
         hideAllScreens();
         gameState = STATE.PLAYING;
         isMatchFinished = false;
-        saltBullets = [];
+        saltBulletPool.clearAll();
+        particlePool.clearAll();
 
         p1.reset();
         enemies.forEach(e => e.reset());
-        particles = [];
         comboCount = 0;
         comboDisplayEl.classList.add('hidden');
 
@@ -567,7 +682,7 @@
 
     function showSkillSelectPopup() {
         gameState = STATE.SKILL_SELECT;
-        saltBullets = [];
+        saltBulletPool.clearAll();
         selectedCardIndex = 0;
         hideAllScreens();
         screenSkillSelect.classList.add('active');
@@ -622,7 +737,6 @@
         spawnSparks(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, '#fde047', 30, 'ハプニング！！');
     }
 
-    // 🏆 リングアウト時の最高のご褒美演出（0.20秒スローモーション ＋ 画面ホワイトフラッシュ ＋ 巨大明朝テキスト ＋ 金銀紙吹雪）
     function finishMatch(isP1Win) {
         if (isMatchFinished) return;
         isMatchFinished = true;
@@ -637,7 +751,7 @@
 
         speedLinesEl.classList.remove('active');
         eventBanner.classList.add('hidden');
-        saltBullets = [];
+        saltBulletPool.clearAll();
         audio.playFanfare(isP1Win);
 
         if (isP1Win) {
@@ -689,7 +803,6 @@
 
     function triggerShake(sec = 0.2) { shakeTimer = sec; }
 
-    // ⚡ リアルタイムコンボ称賛システム（1秒に1回プレイヤーを褒めちぎる！）
     function addComboHit() {
         comboCount++;
         comboTimer = 1.2;
@@ -741,18 +854,15 @@
         });
     }
 
-    // 💥 押した瞬間が超気持ちいいマルチレイヤー打撃演出！
     function handlePush(actor) {
-        if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
+        if (gameState !== STATE.PLAYING) return;
 
         if (actor === p1) addComboHit();
 
-        // 0.09秒ヒットストップ ＋ 画面振動
         hitStopTimer = GAME_CONFIG.HIT_STOP_DURATION;
         triggerShake(0.18);
         audio.playHit();
 
-        // 💨 豪快な土煙＆衝撃波
         spawnSparks(actor.x, actor.y, '#c2410c', 12, '💨 ドスッ！');
 
         actor.burstGauge = Math.min(100, actor.burstGauge + 15);
@@ -778,7 +888,7 @@
                     return;
                 }
 
-                opponent.flashTimer = 0.15; // 敵一瞬ホワイトフラッシュリアクション！
+                opponent.flashTimer = 0.15;
 
                 const pushForce = GAME_CONFIG.PUSH_KNOCKBACK_FORCE * actor.currentPower;
                 const angle = Math.atan2(opponent.y - actor.y, opponent.x - actor.x);
@@ -795,8 +905,8 @@
         
         const success = actor.triggerDodge();
         if (success && actor === p1) {
-            saltBullets.forEach(b => {
-                if (!b.isReflected && Math.hypot(p1.x - b.x, p1.y - b.y) < p1.radius + 70) {
+            saltBulletPool.pool.forEach(b => {
+                if (b.active && !b.isReflected && Math.hypot(p1.x - b.x, p1.y - b.y) < p1.radius + 70) {
                     b.isReflected = true;
                     const activeEnemies = enemies.filter(e => !e.isEliminated);
                     const target = activeEnemies[0] || p1;
@@ -813,7 +923,7 @@
         }
     }
 
-    // 👾 超・個性敵AI制御
+    // 👾 敵性格AI（焦り・怒りステート動的変化）
     function updateAI(dt) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
@@ -826,6 +936,17 @@
             const dy = p1.y - enemy.y;
             const dist = Math.hypot(dx, dy);
 
+            // 土俵際チェック ➔ 「焦り（パニック）」ステート化！
+            const isNearRingEdge = isOutOfDohyo(enemy.x, enemy.y, 0.8);
+            if (isNearRingEdge) {
+                enemy.aiState = 'panic';
+                enemy.setStateText('土俵際焦り！💦');
+            } else if (winsCount >= 3) {
+                enemy.aiState = 'angry'; // 3連勝以上で敵が怒り（憤怒）オーラ化！
+            } else {
+                enemy.aiState = 'normal';
+            }
+
             if (enemy.aiType === 'speed_rush') {
                 const angle = Math.atan2(dy, dx) + Math.sin(performance.now() * 0.012) * 1.6;
                 enemy.vx += Math.cos(angle) * 2.6;
@@ -837,7 +958,7 @@
             } else if (enemy.aiType === 'ninja_dodge') {
                 if (dist < 200 && Math.random() < 0.12) {
                     enemy.triggerDodge();
-                    enemy.x = p1.x - Math.cos(Math.atan2(dy, dx)) * 120; // プレイヤーの真裏に瞬間移動！
+                    enemy.x = p1.x - Math.cos(Math.atan2(dy, dx)) * 120;
                     enemy.y = p1.y - Math.sin(Math.atan2(dy, dx)) * 120;
                 }
                 const angle = Math.atan2(dy, dx);
@@ -851,7 +972,8 @@
 
             const interval = enemy.aiType === 'salt_master' ? 0.9 : 2.5;
             if (enemySaltTimer >= interval) {
-                saltBullets.push(new SaltBullet(enemy.x, enemy.y, p1.x, p1.y));
+                const b = saltBulletPool.get();
+                if (b) b.spawn(enemy.x, enemy.y, p1.x, p1.y);
             }
         });
 
@@ -859,13 +981,15 @@
     }
 
     function updateSaltBullets(dt) {
-        saltBullets.forEach(b => b.update(dt));
+        saltBulletPool.updateAll(dt);
 
-        saltBullets.forEach(b => {
+        saltBulletPool.pool.forEach(b => {
+            if (!b.active) return;
+
             if (b.isReflected) {
                 enemies.forEach(enemy => {
                     if (!enemy.isEliminated && Math.hypot(enemy.x - b.x, enemy.y - b.y) < enemy.radius + b.radius) {
-                        b.life = -1;
+                        b.active = false;
                         enemy.vx += b.vx * 2.5;
                         enemy.vy += b.vy * 2.5;
                         enemy.setStateText('爆破反撃ヒット！💥');
@@ -885,7 +1009,7 @@
                 }
 
                 if (Math.hypot(p1.x - b.x, p1.y - b.y) < p1.radius + b.radius) {
-                    b.life = -1;
+                    b.active = false;
                     p1.vx -= b.vx * 1.5;
                     p1.vy -= b.vy * 1.5;
                     triggerShake(0.2);
@@ -893,8 +1017,6 @@
                 }
             }
         });
-
-        saltBullets = saltBullets.filter(b => b.life > 0);
     }
 
     function checkRingOut() {
@@ -918,43 +1040,10 @@
         }
     }
 
-    function isOutOfDohyo(x, y) {
-        const dx = (x - GAME_CONFIG.DOHYO_CX) / GAME_CONFIG.DOHYO_RX;
-        const dy = (y - GAME_CONFIG.DOHYO_CY) / GAME_CONFIG.DOHYO_RY;
+    function isOutOfDohyo(x, y, scale = 1.0) {
+        const dx = (x - GAME_CONFIG.DOHYO_CX) / (GAME_CONFIG.DOHYO_RX * scale);
+        const dy = (y - GAME_CONFIG.DOHYO_CY) / (GAME_CONFIG.DOHYO_RY * scale);
         return (dx * dx + dy * dy) > 1.0;
-    }
-
-    function spawnSparks(x, y, color, count = 10, popText = null) {
-        if (particles.length > GAME_CONFIG.PARTICLE_LIMIT) return;
-        if (popText) particles.push(new Particle(x, y - 20, 0, -1.2, color, 0, 0.8, popText));
-
-        for (let i = 0; i < count; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 3 + Math.random() * 10;
-            particles.push(new Particle(
-                x, y,
-                Math.cos(angle) * speed,
-                Math.sin(angle) * speed,
-                color,
-                4 + Math.random() * 6,
-                0.3 + Math.random() * 0.4
-            ));
-        }
-    }
-
-    function spawnVictoryConfetti() {
-        const colors = ['#c2410c', '#b45309', '#1e1b4b', '#ffffff', '#fde047'];
-        for (let i = 0; i < 100; i++) {
-            particles.push(new Particle(
-                GAME_CONFIG.DOHYO_CX + (Math.random() * 450 - 225),
-                60,
-                Math.random() * 6 - 3,
-                Math.random() * 6 + 3,
-                colors[Math.floor(Math.random() * colors.length)],
-                6 + Math.random() * 6,
-                2.8
-            ));
-        }
     }
 
     function triggerAnnouncement(text, duration = 0.8) {
@@ -1004,7 +1093,6 @@
         const y = rikishi.y;
         const r = rikishi.radius;
 
-        // 残像描画（光速ステップ時）
         rikishi.afterImages.forEach(img => {
             ctx.save();
             ctx.globalAlpha = img.life * 2.5;
@@ -1094,9 +1182,18 @@
         let dt = Math.min(0.1, (now - lastFrameTime) / 1000);
         lastFrameTime = now;
 
+        // 🕹️ 先行入力バッファの処理！
+        if (inputBuffer.pushFrames > 0) {
+            inputBuffer.pushFrames--;
+            if (gameState === STATE.PLAYING && hitStopTimer <= 0) {
+                handlePush(p1);
+                inputBuffer.pushFrames = 0; // 消費完了
+            }
+        }
+
         if (slowMotionTimer > 0) {
             slowMotionTimer -= dt;
-            dt *= 0.25; // 0.25倍スローモーション！
+            dt *= 0.25;
         }
 
         if (hitStopTimer > 0) {
@@ -1139,8 +1236,7 @@
 
         if (shakeTimer > 0) shakeTimer -= dt;
 
-        particles.forEach(p => p.update(dt));
-        particles = particles.filter(p => p.life > 0);
+        particlePool.updateAll(dt);
 
         ctx.save();
         if (shakeTimer > 0) {
@@ -1153,8 +1249,8 @@
         drawDohyo();
         drawRikishi(p1);
         enemies.forEach(e => drawRikishi(e));
-        saltBullets.forEach(b => b.draw(ctx));
-        particles.forEach(p => p.draw(ctx));
+        saltBulletPool.drawAll(ctx);
+        particlePool.drawAll(ctx);
         drawAnnounce();
 
         ctx.restore();
