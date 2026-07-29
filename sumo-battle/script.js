@@ -1,6 +1,6 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * メインJavaScript (透過アバター・敵超強化AI・ボタン改行防止)
+ * メインJavaScript (伝統和風美・エドモーンド最速横綱モード専心)
  */
 
 (function() {
@@ -195,17 +195,13 @@
     }
 
     const RANKS = [
-        { name: 'ブロンズ', icon: '🐰', imgUrl: 'assets/rabbit.jpg', enemyName: 'うさ丸', aiType: 'rush', strength: 2.5, weight: 110, color: '#059669', avatar: '🐰' },
-        { name: 'シルバー', icon: '🐻', imgUrl: null, enemyName: 'くまごろう', aiType: 'heavy', strength: 3.8, weight: 130, color: '#0284c7', avatar: '🐻' },
-        { name: 'ゴールド', icon: '🐱', imgUrl: null, enemyName: 'ねこノ海', aiType: 'counter', strength: 5.2, weight: 145, color: '#d97706', avatar: '🐱' },
-        { name: 'プラチナ', icon: '🐧', imgUrl: null, enemyName: 'ぺんぎん山', aiType: 'rush', strength: 6.8, weight: 165, color: '#0284c7', avatar: '🐧' },
-        { name: 'ダイヤ', icon: '🦅', imgUrl: null, enemyName: '鳳凰丸', aiType: 'counter', strength: 8.2, weight: 185, color: '#9333ea', avatar: '🦅' },
-        { name: 'マスター (ラスボス)', icon: '🐲', imgUrl: 'assets/boss_gold.jpg', enemyName: '金龍丸 ＆ 銀龍丸 (双子2体)', aiType: 'boss_duo', strength: 9.5, weight: 195, color: '#b45309', avatar: '🐉' }
+        { name: '序ノ口', icon: '🐰', imgUrl: 'assets/rabbit.jpg', enemyName: 'うさ丸', aiType: 'rush', strength: 2.5, weight: 110, color: '#059669', avatar: '🐰' },
+        { name: '十両', icon: '🐻', imgUrl: null, enemyName: 'くまごろう', aiType: 'heavy', strength: 3.8, weight: 130, color: '#0284c7', avatar: '🐻' },
+        { name: '前頭', icon: '🐱', imgUrl: null, enemyName: 'ねこノ海', aiType: 'counter', strength: 5.2, weight: 145, color: '#d97706', avatar: '🐱' },
+        { name: '小結', icon: '🐧', imgUrl: null, enemyName: 'ぺんぎん山', aiType: 'rush', strength: 6.8, weight: 165, color: '#0284c7', avatar: '🐧' },
+        { name: '大関', icon: '🦅', imgUrl: null, enemyName: '鳳凰丸', aiType: 'counter', strength: 8.2, weight: 185, color: '#9333ea', avatar: '🦅' },
+        { name: '横綱 (双子決戦)', icon: '🐲', imgUrl: 'assets/boss_gold.jpg', enemyName: '金龍丸 ＆ 銀龍丸 (双子2体)', aiType: 'boss_duo', strength: 9.5, weight: 195, color: '#b45309', avatar: '🐉' }
     ];
-
-    const RIVAL_NAMES = ['ぽんちゃん', 'もち丸', 'わたがし山', 'いちご龍', 'みるく丸', 'キャンディ海', 'ぷりん山', 'そら丸'];
-    const RIVAL_AVATARS = ['🍓', '🍡', '🐥', '🐰', '🐻', '🐱', '🦄', '🐼'];
-    const RIVAL_COLORS = ['#7e6b8f', '#b45309', '#0284c7', '#9333ea', '#059669', '#d977a5'];
 
     const ALL_SKILL_CARDS = [
         { id: 'push_power', icon: '🍲', title: '特上ちゃんこ', desc: '押し出し攻撃力 +30% (腕力成長！)', rarity: 'common', apply: (p) => { p.powerMultiplier += 0.3; } },
@@ -429,7 +425,7 @@
             ctx.globalAlpha = alpha;
 
             if (this.text) {
-                ctx.font = '700 20px "Zen Maru Gothic", sans-serif';
+                ctx.font = '700 20px "Shippori Mincho", serif';
                 ctx.fillStyle = this.color;
                 ctx.shadowColor = '#fff';
                 ctx.shadowBlur = 6;
@@ -475,7 +471,6 @@
     const btnToTitle = document.getElementById('btn-to-title');
 
     const btnModeArcade = document.getElementById('btn-mode-arcade');
-    const btnModeEndless = document.getElementById('btn-mode-endless');
     const btnModePvp = document.getElementById('btn-mode-pvp');
     const btnStartFight = document.getElementById('btn-start-fight');
     const btnRankupContinue = document.getElementById('btn-rankup-continue');
@@ -524,7 +519,7 @@
     const resExpEl = document.getElementById('res-exp');
     const resLevelEl = document.getElementById('res-level');
 
-    let p1 = new Rikishi(true, 'エドモーンド', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
+    let p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
     let enemies = [];
 
     let particles = [];
@@ -556,7 +551,6 @@
         }
     }
 
-    // --- 初期化 ---
     function init() {
         btnToggleAudio.textContent = audio.enabled ? '🔊 Sound ON' : '🔇 Sound OFF';
         if (bestTimeValEl) {
@@ -569,7 +563,6 @@
 
     function setupEventListeners() {
         btnModeArcade.addEventListener('click', (e) => { e.preventDefault(); resetAndStartMode('arcade'); });
-        btnModeEndless.addEventListener('click', (e) => { e.preventDefault(); resetAndStartMode('endless'); });
         btnModePvp.addEventListener('click', (e) => { e.preventDefault(); resetAndStartMode('pvp'); });
 
         btnTopNav.addEventListener('click', showTitle);
@@ -640,8 +633,6 @@
                 if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space' || e.code === 'Digit1') {
                     e.preventDefault();
                     resetAndStartMode('arcade');
-                } else if (e.code === 'Digit2') {
-                    resetAndStartMode('endless');
                 } else if (e.code === 'Digit3') {
                     resetAndStartMode('pvp');
                 }
@@ -764,7 +755,7 @@
         playerLevel = 1;
         playerExp = 0;
         streakCount = 0;
-        p1 = new Rikishi(true, 'エドモーンド', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
+        p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
 
         if (mode === 'arcade') {
             totalRunStartTime = performance.now();
@@ -798,8 +789,8 @@
             }
         }
 
-        const mainEnemy = enemies[0] || new Rikishi(false, 'うさ丸', '#059669', '🐰', 2.0, 110, 'rush', 560, 260, 'assets/rabbit.jpg');
-        if (enemyNameEl) enemyNameEl.textContent = (enemies.length > 1) ? `${mainEnemy.name} (2体タッグ)` : mainEnemy.name;
+        const mainEnemy = enemies[0] || new Rikishi(false, 'うさ丸', '#059669', '🐰', 2.5, 110, 'rush', 560, 260, 'assets/rabbit.jpg');
+        if (enemyNameEl) enemyNameEl.textContent = (enemies.length > 1) ? `${mainEnemy.name} (双子決戦)` : mainEnemy.name;
 
         if (enemyAvatarPreview) {
             if (mainEnemy.imgUrl) {
@@ -827,7 +818,7 @@
         if (eWgtNum) eWgtNum.textContent = `${mainEnemy.weight}kg`;
 
         if (matchupRankEl) {
-            matchupRankEl.textContent = `【第 ${totalMatchesCount + 1} 取組】 ランク: ${RANKS[currentRankIdx].name}`;
+            matchupRankEl.textContent = `【第 ${totalMatchesCount + 1} 取組】 幕内番付: ${RANKS[currentRankIdx].name}`;
         }
 
         renderAcquiredSkills();
@@ -841,28 +832,18 @@
         if (mode === 'arcade') {
             const enemyData = RANKS[currentRankIdx];
             if (enemyData.aiType === 'boss_duo') {
-                const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 8.8, 190, 'rush', 580, 210, 'assets/boss_gold.jpg');
-                const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#4a5568', '🐉', 8.2, 180, 'counter', 580, 310, 'assets/boss_silver.jpg');
+                const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 9.5, 195, 'rush', 580, 210, 'assets/boss_gold.jpg');
+                const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 8.8, 185, 'counter', 580, 310, 'assets/boss_silver.jpg');
                 enemies.push(boss1, boss2);
             } else {
                 const singleEnemy = new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260, enemyData.imgUrl);
                 enemies.push(singleEnemy);
             }
-        } else if (mode === 'endless') {
-            const rName = RIVAL_NAMES[streakCount % RIVAL_NAMES.length];
-            const rAvatar = RIVAL_AVATARS[streakCount % RIVAL_AVATARS.length];
-            const rColor = RIVAL_COLORS[streakCount % RIVAL_COLORS.length];
-            const rStrength = 2.4 + (streakCount * 0.7);
-            const rWeight = 110 + (streakCount * 12);
-            const aiTypes = ['rush', 'counter', 'heavy'];
-            const rAiType = aiTypes[streakCount % 3];
-
-            enemies.push(new Rikishi(false, `${rName} (${streakCount + 1}人目)`, rColor, rAvatar, rStrength, rWeight, rAiType, 560, 260));
         }
 
         if (enemyTypeBadge) {
             if (enemies.length > 1) {
-                enemyTypeBadge.textContent = `西 (双子タッグ！)`;
+                enemyTypeBadge.textContent = `西 (双子決戦！)`;
             } else {
                 const aiLabelMap = { 'rush': '⚡ 超突進', 'counter': '🌀 見切り巧者', 'heavy': '⛰️ 超重戦車' };
                 enemyTypeBadge.textContent = `西 (${aiLabelMap[enemies[0].aiType] || 'ライバル'})`;
@@ -975,9 +956,9 @@
         rankupIcon.textContent = curR.icon;
 
         if (curR.aiType === 'boss_duo') {
-            rankupDesc.textContent = `最高峰マスターランク到達！最終決戦は『双子力士 金龍丸＆銀龍丸』の2体同時バトル！！`;
+            rankupDesc.textContent = `幕内最高峰【横綱】到達！最終決戦は『双子力士 金龍丸＆銀龍丸』の2体同時バトル！！`;
         } else {
-            rankupDesc.textContent = `ランク【${curR.name}】に到達！ライバル「${curR.enemyName}」が待っている！全能力ボーナス+20%！`;
+            rankupDesc.textContent = `番付【${curR.name}】に昇格！強敵「${curR.enemyName}」が待っている！全能力ボーナス+20%！`;
         }
 
         p1.powerMultiplier += 0.2;
@@ -1107,8 +1088,8 @@
                 if (yTitleDescEl) yTitleDescEl.textContent = titleDesc;
                 if (yokozunaTitleCard) yokozunaTitleCard.classList.remove('hidden');
 
-                resultTitleEl.textContent = '🏆 最速横綱・タイムアタック全突破！ 🏆';
-                winnerNameEl.textContent = `全6ランク完走！大勝利！`;
+                resultTitleEl.textContent = '🏆 最速横綱・全6ランク完走！ 🏆';
+                winnerNameEl.textContent = `全6ランク完走！天下無双の大勝利！`;
             } else {
                 resultTitleEl.textContent = '金 星 ！ 勝 負 あ り 🍲';
                 winnerNameEl.textContent = `東 ${p1.name} の勝利！`;
@@ -1263,7 +1244,7 @@
             if (comboP1 > maxComboP1) maxComboP1 = comboP1;
 
             if (comboP1 % 4 === 0) {
-                spawnSparks(p1.x, p1.y - 30, '#7e6b8f', 6, `${comboP1} COMBO!`);
+                spawnSparks(p1.x, p1.y - 30, '#c2410c', 6, `${comboP1} COMBO!`);
             }
         }
 
@@ -1288,7 +1269,6 @@
 
             const dist = Math.hypot(opponent.x - actor.x, opponent.y - actor.y);
             if (dist < actor.radius + opponent.radius + 40) {
-                // 🔴 [ご要望 3 敵強烈化] 単純突進プレイヤーへの見切り返し・はたき確率大幅アップ！
                 if (opponent.isDodging || Math.random() < 0.35) {
                     opponent.triggerDodge();
                     actor.vx -= (opponent.x - actor.x) * 0.7;
@@ -1358,7 +1338,6 @@
         }
     }
 
-    // 🔴 [ご要望 3 敵超強化AI] 右押しっぱなしプレイヤーを上下回避・バックステップ＆塩乱射で迎撃！
     function updateAI(dt) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
@@ -1372,14 +1351,12 @@
             const dy = p1.y - enemy.y;
             const dist = Math.hypot(dx, dy);
 
-            // プレイヤーが右（直進）に押してきている場合、スマート回避移動！
             let targetAngle = Math.atan2(dy, dx);
 
-            // 右押し（p1.vx > 2）を感知したら側面にスライド移動回避！
             if (p1.vx > 2 && dist < 220) {
-                targetAngle += (Math.sin(performance.now() * 0.005) > 0 ? 1.2 : -1.2); // サイドステップ！
+                targetAngle += (Math.sin(performance.now() * 0.005) > 0 ? 1.2 : -1.2);
                 if (Math.random() < 0.15) {
-                    enemy.triggerDodge(); // 引きはたき！
+                    enemy.triggerDodge();
                 }
             }
 
@@ -1387,7 +1364,6 @@
             enemy.vx += Math.cos(targetAngle) * speed * 0.6;
             enemy.vy += Math.sin(targetAngle) * speed * 0.6;
 
-            // 🧂 塩飛び道具のガンガン連射（1.4秒〜2.0秒間隔！）
             const saltInterval = Math.max(1.2, 2.4 - (currentRankIdx * 0.3));
             if (enemySaltTimer >= saltInterval) {
                 saltBullets.push(new SaltBullet(enemy.x, enemy.y, p1.x, p1.y));
@@ -1454,7 +1430,7 @@
         enemies.forEach(enemy => {
             if (!enemy.isEliminated && isOutOfDohyo(enemy.x, enemy.y)) {
                 enemy.isEliminated = true;
-                spawnSparks(enemy.x, enemy.y, '#7e6b8f', 25, 'リングアウト！');
+                spawnSparks(enemy.x, enemy.y, '#6b21a8', 25, 'リングアウト！');
             }
         });
 
@@ -1496,7 +1472,7 @@
     }
 
     function spawnVictoryConfetti() {
-        const colors = ['#7e6b8f', '#b45309', '#0284c7', '#ffffff', '#9333ea'];
+        const colors = ['#6b21a8', '#b45309', '#c2410c', '#ffffff', '#1e1b4b'];
         for (let i = 0; i < 80; i++) {
             if (particles.length >= 120) break;
             particles.push(new Particle(
@@ -1517,10 +1493,11 @@
         announceTimer = duration;
     }
 
+    // 🏯 本格和風土俵グラフィック描画
     function drawDohyo() {
         ctx.save();
 
-        let bg1 = '#faf7fc', bg2 = '#efe8f5';
+        let bg1 = '#fbf9f5', bg2 = '#f5f0e6';
         if (currentEvent && currentEvent.type === 'ice') {
             bg1 = '#e0f2fe'; bg2 = '#bae6fd';
         } else if (currentEvent && currentEvent.type === 'fever') {
@@ -1544,13 +1521,13 @@
             dohyoGrad.addColorStop(1, '#7dd3fc');
         } else {
             dohyoGrad.addColorStop(0, '#fffdfa');
-            dohyoGrad.addColorStop(0.85, '#f7eeea');
-            dohyoGrad.addColorStop(1, '#efe8f5');
+            dohyoGrad.addColorStop(0.85, '#f7f1e5');
+            dohyoGrad.addColorStop(1, '#ebdcc9');
         }
         ctx.fillStyle = dohyoGrad;
         ctx.fill();
         ctx.lineWidth = 6;
-        ctx.strokeStyle = '#7e6b8f';
+        ctx.strokeStyle = '#1e1b4b';
         ctx.stroke();
 
         // 俵
@@ -1562,29 +1539,28 @@
             ctx.strokeStyle = '#dc2626';
             ctx.lineWidth = 5;
         } else {
-            ctx.strokeStyle = '#7e6b8f';
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#c2410c';
+            ctx.lineWidth = 3.5;
         }
         ctx.setLineDash([14, 10]);
         ctx.stroke();
         ctx.setLineDash([]);
 
         if (p1Danger) {
-            ctx.font = '700 22px "Zen Maru Gothic", sans-serif';
+            ctx.font = '900 24px "Shippori Mincho", serif';
             ctx.fillStyle = '#dc2626';
             ctx.textAlign = 'center';
-            ctx.fillText('⚠️ DANGER!', DOHYO.cx, DOHYO.cy - 120);
+            ctx.fillText('⚠️ 土俵際危急！', DOHYO.cx, DOHYO.cy - 120);
         }
 
         // 仕切り線
-        ctx.fillStyle = '#7e6b8f';
+        ctx.fillStyle = '#1e1b4b';
         ctx.fillRect(DOHYO.cx - 50, DOHYO.cy - 24, 8, 48);
         ctx.fillRect(DOHYO.cx + 42, DOHYO.cy - 24, 8, 48);
 
         ctx.restore();
     }
 
-    // 🖼️ 🔴 ご要望 2 修正：円形外枠（ボーダー stroke）を消去し、透過画像を美しく描画！
     function drawRikishi(rikishi) {
         if (rikishi.isEliminated) return;
 
@@ -1596,17 +1572,15 @@
         if (rikishi.isDodging) {
             ctx.beginPath();
             ctx.arc(x, y, r + 14, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(2, 132, 199, 0.35)';
+            ctx.fillStyle = 'rgba(194, 65, 12, 0.35)';
             ctx.fill();
         }
 
-        // 影
         ctx.beginPath();
         ctx.ellipse(x, y + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
         ctx.fill();
 
-        // 🖼️ 透過画像アバター描画 (外枠ボーダー stroke 無し)
         if (rikishi.imageObj && rikishi.imageObj.complete && rikishi.imageObj.naturalWidth > 0) {
             ctx.save();
             ctx.beginPath();
@@ -1615,7 +1589,6 @@
             ctx.drawImage(rikishi.imageObj, x - r, y - r, r * 2, r * 2);
             ctx.restore();
         } else {
-            // 絵文字アバター (ボーダー無し)
             ctx.beginPath();
             ctx.arc(x, y, r, 0, Math.PI * 2);
             ctx.fillStyle = rikishi.color;
@@ -1627,16 +1600,15 @@
             ctx.fillText(rikishi.avatar, x, y - 2);
         }
 
-        // 名前
-        ctx.font = '700 14px "Zen Maru Gothic", sans-serif';
-        ctx.fillStyle = '#2d2633';
+        ctx.font = '900 15px "Shippori Mincho", serif';
+        ctx.fillStyle = '#1c1917';
         ctx.shadowColor = '#fff';
-        ctx.shadowBlur = 4;
+        ctx.shadowBlur = 5;
         ctx.fillText(rikishi.name, x, y - r - 14);
 
         if (rikishi.stateTextTimer > 0) {
-            ctx.font = '700 16px "Zen Maru Gothic", sans-serif';
-            ctx.fillStyle = '#7e6b8f';
+            ctx.font = '900 17px "Shippori Mincho", serif';
+            ctx.fillStyle = '#c2410c';
             ctx.fillText(rikishi.stateText, x, y - r - 34);
         }
 
@@ -1649,17 +1621,17 @@
         ctx.translate(DOHYO.cx, DOHYO.cy - 60);
         ctx.scale(announceScale, announceScale);
 
-        ctx.font = '900 48px "Zen Maru Gothic", sans-serif';
+        ctx.font = '900 52px "Shippori Mincho", serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        ctx.fillStyle = '#7e6b8f';
+        ctx.fillStyle = '#1e1b4b';
         ctx.shadowColor = '#fff';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 12;
         ctx.fillText(announceText, 0, 0);
 
         ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 5;
         ctx.strokeText(announceText, 0, 0);
 
         ctx.restore();
