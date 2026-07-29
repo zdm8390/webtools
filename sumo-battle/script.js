@@ -1,9 +1,7 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * 🌟 ジャストパリィ極上演出対応版
- * 1. 画面薄暗暗転 (Parry Dim)
- * 2. キャラクター達がネオン黄金オーラで光輝く
- * 3. 超スローモーション Matrix 時間停止効果
+ * 1. インパクト (Space / Z / J) & パリィ (X / K / Shift) キーボード完全割り当て
+ * 2. 相手との接触時「互いに少し後ろへ下がる（はじき反発インパルス）」物理強化
  */
 
 (function() {
@@ -412,7 +410,7 @@
     let shakeTimer = 0;
     let hitStopTimer = 0;
     let slowMotionTimer = 0;
-    let parryGlowTimer = 0; // 🌟 ジャストパリィ専用キャラ黄金発光タイマー
+    let parryGlowTimer = 0;
     let selectedCardIndex = 0;
 
     let GAME_STATE_TIME = 0;
@@ -457,7 +455,6 @@
             if (!this.active) return;
             ctx.save();
 
-            // 🌟 ジャストパリィ時の強烈黄金光輝
             if (parryGlowTimer > 0 && this.isReflected) {
                 ctx.shadowColor = '#fde047';
                 ctx.shadowBlur = 30;
@@ -609,7 +606,7 @@
     const levelBadge = document.getElementById('level-badge');
     const speedLinesEl = document.getElementById('speed-lines');
     const flashOverlayEl = document.getElementById('flash-overlay');
-    const parryDimOverlayEl = document.getElementById('parry-dim-overlay'); // 🌟 暗転ディム
+    const parryDimOverlayEl = document.getElementById('parry-dim-overlay');
     const burstCutinEl = document.getElementById('burst-cutin');
     const eventBanner = document.getElementById('event-banner');
     const eventTitleEl = document.getElementById('event-title');
@@ -686,6 +683,7 @@
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleDodge(p1); });
         btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleBurst(p1); });
 
+        // 🔴 1. 要望対応：キーボード割り当ての完全拡張
         window.addEventListener('keydown', (e) => {
             audio.init();
             keysPressed[e.code] = true;
@@ -715,9 +713,19 @@
                 }
             } else if (gameState === STATE.PLAYING && canPlayerControl()) {
                 if (e.repeat) return;
-                if (e.code === 'Space') queuePushInput();
-                else if (e.code === 'KeyJ') handleDodge(p1);
-                else if (e.code === 'KeyK') handleBurst(p1);
+                
+                // 💥 インパクト（押す）: Space ＋ Z ＋ J
+                if (e.code === 'Space' || e.code === 'KeyZ' || e.code === 'KeyJ') {
+                    queuePushInput();
+                } 
+                // ✨ パリィ（はたき）: X ＋ K ＋ Shift
+                else if (e.code === 'KeyX' || e.code === 'KeyK' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+                    handleDodge(p1);
+                } 
+                // 🔥 どすこいバースト: C ＋ L
+                else if (e.code === 'KeyC' || e.code === 'KeyL') {
+                    handleBurst(p1);
+                }
             }
         });
 
@@ -918,13 +926,12 @@
         setTimeout(() => flashOverlayEl.classList.remove('active'), 250);
     }
 
-    // 🌟 画面薄暗暗転ディム ＋ スローモーション ＋ キャラクターネオン黄金発光演出の発火！
     function triggerParrySpecialEffect() {
         if (parryDimOverlayEl) {
             parryDimOverlayEl.classList.add('active');
         }
-        slowMotionTimer = GAME_CONFIG.PARRY_SLOW_DURATION; // 0.45秒間の極上スローモーション！
-        parryGlowTimer = 0.45; // 0.45秒間のネオン黄金オーラ発光！
+        slowMotionTimer = GAME_CONFIG.PARRY_SLOW_DURATION;
+        parryGlowTimer = 0.45;
         triggerShake(0.4);
     }
 
@@ -1041,7 +1048,6 @@
         });
     }
 
-    // 🌟 ジャストパリィ成功時の極上演出トリガー！
     function handleDodge(actor) {
         if (!canPlayerControl() || hitStopTimer > 0) return;
         
@@ -1065,12 +1071,13 @@
             if (parryTriggered) {
                 p1.setStateText('🌟 ジャストパリィ成立！✨');
                 audio.playParry();
-                triggerParrySpecialEffect(); // 🌟 暗転ディム ＋ ネオン黄金光彩 ＋ 超スローモーション発火！
+                triggerParrySpecialEffect();
                 spawnSparks(p1.x, p1.y, '#fde047', 40, '✨ ジャストパリィ！');
             }
         }
     }
 
+    // 🔴 2. 要望対応：接触時にお互いに少し後ろへ下がる（はじかれ反発インパルス）物理強化！
     function checkCharacterCollisions() {
         const allRikishi = [p1, ...enemies].filter(r => r && !r.isEliminated);
         
@@ -1089,16 +1096,19 @@
                     const nx = dx / dist;
                     const ny = dy / dist;
 
+                    // 重なり位置補正
                     const pushFactor = 0.5;
                     r1.x -= nx * overlap * pushFactor;
                     r1.y -= ny * overlap * pushFactor;
                     r2.x += nx * overlap * pushFactor;
                     r2.y += ny * overlap * pushFactor;
 
-                    r1.vx -= nx * 1.5;
-                    r1.vy -= ny * 1.5;
-                    r2.vx += nx * 1.5;
-                    r2.vy += ny * 1.5;
+                    // 💥 接触時の「互いに少し後ろへ下がる」はじき反発インパルス！
+                    const bounceImpulse = 4.2;
+                    r1.vx -= nx * bounceImpulse;
+                    r1.vy -= ny * bounceImpulse;
+                    r2.vx += nx * bounceImpulse;
+                    r2.vy += ny * bounceImpulse;
                 }
             }
         }
@@ -1273,7 +1283,6 @@
         ctx.restore();
     }
 
-    // 🌟 キャラクター描画（ジャストパリィ時にまばゆくネオン黄金発光！）
     function drawRikishi(rikishi) {
         if (rikishi.isEliminated) return;
 
@@ -1282,7 +1291,6 @@
         const y = rikishi.y;
         const r = rikishi.radius;
 
-        // 🌟 パリィ成功時のキャラ黄金ネオンオーラ発光！
         if (parryGlowTimer > 0) {
             ctx.shadowColor = '#fde047';
             ctx.shadowBlur = 35;
@@ -1394,7 +1402,6 @@
             }
         }
 
-        // 🌟 パリィタイマー更新 ＆ 暗転解除
         if (parryGlowTimer > 0) {
             parryGlowTimer -= dt;
             if (parryGlowTimer <= 0 && parryDimOverlayEl) {
@@ -1404,7 +1411,7 @@
 
         if (slowMotionTimer > 0) {
             slowMotionTimer -= dt;
-            dt *= 0.18; // 超ディープスロー効果！
+            dt *= 0.18;
         }
 
         if (hitStopTimer > 0) {
