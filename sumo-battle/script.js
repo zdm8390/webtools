@@ -1,12 +1,16 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * Code Review & Game Design Refactoring - Commit 002 (rev.txt 全指摘完全対応)
+ * 5大要望改善完全対応版
+ * 1. 開始前動作完全ブロック
+ * 2. キャラクター物理接触・重なり防止判定
+ * 3. 敵AI自滅リングアウト防止ステアリング
+ * 4. 階級（シルバー/ゴールド/ダイヤ/プラチナ/マスター）
+ * 5. 高難易度インテリジェントAI
  */
 
 (function() {
     'use strict';
 
-    // --- ⚙️ ① 定数化・SOLID設計 (GAME_CONFIG) ---
     const GAME_CONFIG = Object.freeze({
         CANVAS_WIDTH: 900,
         CANVAS_HEIGHT: 520,
@@ -17,13 +21,12 @@
         INPUT_BUFFER_FRAMES: 6,
         HIT_STOP_DURATION: 0.09,
         SLOW_MOTION_DURATION: 0.22,
-        PUSH_KNOCKBACK_FORCE: 12.5,
+        PUSH_KNOCKBACK_FORCE: 13.0,
         POOL_MAX_PARTICLES: 300,
         POOL_MAX_BULLETS: 60,
         POOL_MAX_AFTER_IMAGES: 20
     });
 
-    // --- 🔊 ② サウンド管理クラス (SoundManager - 未実装メソッド追加) ---
     class SoundManager {
         constructor() {
             this.ctx = null;
@@ -101,7 +104,6 @@
             } catch (e) {}
         }
 
-        // 🔴 [rev.txt 指摘1対応] 未実装だったメソッドの追加
         playDodge() {
             if (!this.enabled) return;
             this.init();
@@ -123,7 +125,6 @@
             } catch (e) {}
         }
 
-        // 🔴 [rev.txt 指摘1対応] 未実装だったメソッドの追加
         playCardSelect() {
             if (!this.enabled) return;
             this.init();
@@ -175,7 +176,6 @@
 
     const audio = new SoundManager();
 
-    // --- ♻️ ③ フリーリスト（O(1)高速検索）対応 ObjectPool - GC完全排除 ---
     class Particle {
         constructor() {
             this.active = false;
@@ -230,7 +230,6 @@
         }
     }
 
-    // 🔴 [rev.txt 指摘3対応] O(1) フリーリスト探索 ObjectPool
     class FastObjectPool {
         constructor(createFn, maxSize) {
             this.pool = Array.from({ length: maxSize }, () => createFn());
@@ -258,7 +257,7 @@
                 if (item.active) {
                     item.update(dt);
                     if (!item.active) {
-                        this.freeStack.push(i); // 自動回収
+                        this.freeStack.push(i);
                     }
                 }
             }
@@ -331,16 +330,15 @@
         return img;
     }
 
-    // 🔴 [rev.txt 酷評・デザイン覚醒対応] 明確な攻略法の異なる超個性敵データ！
+    // 🔴 4. 要求ごとの階級名（シルバー、ゴールド、ダイヤ、プラチナ、マスター）＆高難易度化！
     const RANKS = [
-        { name: '音速ウサギ', icon: '🐰', imgUrl: 'assets/rabbit.jpg', enemyName: '超高速うさ丸', aiType: 'speed_rush', strength: 1.8, weight: 65, color: '#059669', avatar: '🐰' },
-        { name: '不動巨漢クマ', icon: '🐻', imgUrl: null, enemyName: '超重量くまごろう', aiType: 'super_heavy', strength: 5.5, weight: 260, color: '#0284c7', avatar: '🐻' },
-        { name: '影分身ネコ', icon: '🐱', imgUrl: null, enemyName: '見切りねこノ海', aiType: 'ninja_dodge', strength: 6.2, weight: 130, color: '#d97706', avatar: '🐱' },
-        { name: '暴風塩乱射タカ', icon: '🦅', imgUrl: null, enemyName: '塩弾幕鳳凰丸', aiType: 'salt_master', strength: 7.8, weight: 160, color: '#9333ea', avatar: '🦅' },
-        { name: '全部入り双子決戦', icon: '🐲', imgUrl: 'assets/boss_gold.jpg', enemyName: '金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 9.8, weight: 200, color: '#b45309', avatar: '🐉' }
+        { name: 'シルバー', icon: '🥈', imgUrl: 'assets/rabbit.jpg', enemyName: '音速うさ丸', aiType: 'speed_rush', strength: 2.8, weight: 80, color: '#059669', avatar: '🐰' },
+        { name: 'ゴールド', icon: '🥇', imgUrl: null, enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 6.8, weight: 280, color: '#0284c7', avatar: '🐻' },
+        { name: 'ダイヤ', icon: '💎', imgUrl: null, enemyName: '閃光ねこノ海', aiType: 'ninja_dodge', strength: 8.2, weight: 140, color: '#d97706', avatar: '🐱' },
+        { name: 'プラチナ', icon: '👑', imgUrl: null, enemyName: '暴風鳳凰丸', aiType: 'salt_master', strength: 9.6, weight: 170, color: '#9333ea', avatar: '🦅' },
+        { name: 'マスター', icon: '🏆', imgUrl: 'assets/boss_gold.jpg', enemyName: '覇王金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 12.5, weight: 210, color: '#b45309', avatar: '🐉' }
     ];
 
-    // 🔴 [rev.txt 指摘対応] 戦術と選択のジレンマが生まれる劇的カード！
     const ALL_SKILL_CARDS = [
         { id: 'giant', icon: '🍚', title: '超メガ巨大化！', desc: '体が2倍巨大化＆推力3倍！(※狭い土俵際では自分も落ちやすいリスクあり)', apply: (p) => { p.radiusScale *= 1.8; p.powerMultiplier += 3.0; } },
         { id: 'speed', icon: '⚡', title: '光速ステップ', desc: '移動速度3倍＆残像発生！(※勢いあまって自爆リングアウトに注意)', apply: (p) => { p.moveSpeed *= 3.0; p.hasAfterImage = true; } },
@@ -348,20 +346,18 @@
         { id: 'auto_parry', icon: '✨', title: '黄金自動パリィ', desc: '相手の塩弾・打撃を100%反撃！(※自分から押せない代わりに強力カウンター)', apply: (p) => { p.hasAutoParry = true; } }
     ];
 
-    // 🔴 [rev.txt 指摘対応] 実際にゲームルールと物理を変える破天荒イベント！
     const EVENTS = [
         { 
             type: 'rotate', 
             title: '🌀 土俵高速回転！ (強い遠心力で全員が外へ引っ張られる！)', 
             apply: (dt, rikishiList) => {
-                const angle = GAME_STATE_TIME * 1.5;
                 rikishiList.forEach(r => {
                     if (r.active && !r.isEliminated) {
                         const dx = r.x - GAME_CONFIG.DOHYO_CX;
                         const dy = r.y - GAME_CONFIG.DOHYO_CY;
                         const dist = Math.hypot(dx, dy);
                         if (dist > 10) {
-                            r.vx += (dx / dist) * 1.8; // 遠心力！
+                            r.vx += (dx / dist) * 1.8;
                             r.vy += (dy / dist) * 1.8;
                         }
                     }
@@ -420,7 +416,7 @@
     let slowMotionTimer = 0;
     let selectedCardIndex = 0;
 
-    let GAME_STATE_TIME = 0; // 🔴 [rev.txt 指摘6対応] ゲーム内経過時間（performance.now廃止）
+    let GAME_STATE_TIME = 0;
 
     let inputBuffer = { pushFrames: 0, dodgeFrames: 0 };
 
@@ -442,7 +438,7 @@
             this.active = true;
             this.x = x; this.y = y;
             const angle = Math.atan2(targetY - y, targetX - x);
-            const speed = isReflected ? 11.0 : 6.0;
+            const speed = isReflected ? 12.5 : 7.5;
             this.vx = Math.cos(angle) * speed;
             this.vy = Math.sin(angle) * speed;
             this.radius = 11;
@@ -500,11 +496,9 @@
             this.hasAutoParry = false;
             this.isEliminated = false;
 
-            // 🔴 [rev.txt 指摘2対応] afterImages の固定長リングバッファ管理（配列生成ゼロ）
             this.afterImages = Array.from({ length: GAME_CONFIG.POOL_MAX_AFTER_IMAGES }, () => ({ x: 0, y: 0, life: 0, active: false }));
             this.afterImageHead = 0;
 
-            // 🔴 [rev.txt 指摘4対応] 敵個別タイマー（タイマー共有の解消）
             this.saltTimer = Math.random() * 1.5;
             this.aiState = 'normal';
 
@@ -532,8 +526,8 @@
 
         get currentPower() {
             let mult = this.powerMultiplier;
-            if (this.aiState === 'angry') mult *= 2.2;
-            else if (this.aiState === 'panic') mult *= 0.5; // パニック時は推力半減！
+            if (this.aiState === 'angry') mult *= 2.4;
+            else if (this.aiState === 'panic') mult *= 0.7;
             return this.basePower * mult;
         }
 
@@ -563,7 +557,6 @@
                 this.addAfterImage();
             }
 
-            // 🔴 [rev.txt 指摘2対応] 通常 for ループによる更新（forEach / filter 配列生成完全排除）
             for (let i = 0; i < this.afterImages.length; i++) {
                 const img = this.afterImages[i];
                 if (img.active) {
@@ -678,12 +671,12 @@
 
         canvas.addEventListener('pointerdown', () => {
             audio.init();
-            if (gameState === STATE.PLAYING) queuePushInput();
+            if (canPlayerControl()) queuePushInput();
         });
 
-        btnP1Push.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); queuePushInput(); });
-        btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p1); });
-        btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p1); });
+        btnP1Push.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) queuePushInput(); });
+        btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleDodge(p1); });
+        btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleBurst(p1); });
 
         window.addEventListener('keydown', (e) => {
             audio.init();
@@ -712,7 +705,7 @@
                     e.preventDefault();
                     btnNextMatch.click();
                 }
-            } else if (gameState === STATE.PLAYING) {
+            } else if (gameState === STATE.PLAYING && canPlayerControl()) {
                 if (e.repeat) return;
                 if (e.code === 'Space') queuePushInput();
                 else if (e.code === 'KeyJ') handleDodge(p1);
@@ -723,8 +716,15 @@
         window.addEventListener('keyup', (e) => { keysPressed[e.code] = false; });
     }
 
+    // 🔴 1. 開始前（カウントダウン・アナウンス表示中）の動作完全ブロック関数！
+    function canPlayerControl() {
+        return (gameState === STATE.PLAYING && announceTimer <= 0 && !isMatchFinished);
+    }
+
     function queuePushInput() {
-        inputBuffer.pushFrames = GAME_CONFIG.INPUT_BUFFER_FRAMES;
+        if (canPlayerControl()) {
+            inputBuffer.pushFrames = GAME_CONFIG.INPUT_BUFFER_FRAMES;
+        }
     }
 
     function setupDpadEvents(btn, dir) {
@@ -780,11 +780,11 @@
         comboCount = 0;
         comboDisplayEl.classList.add('hidden');
 
-        triggerAnnouncement('はっけよい！のこった！💥', 0.7);
+        triggerAnnouncement('はっけよい！のこった！💥', 0.8);
         audio.playTaiko(260, 0.3, 1.0);
 
         if (Math.random() < 0.6) {
-            setTimeout(triggerRandomEvent, 1500);
+            setTimeout(triggerRandomEvent, 1600);
         }
     }
 
@@ -792,8 +792,8 @@
         enemies = [];
         const enemyData = RANKS[currentRankIdx];
         if (enemyData.aiType === 'boss_duo') {
-            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 9.5, 195, 'super_heavy', 580, 210, 'assets/boss_gold.jpg');
-            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 8.8, 180, 'ninja_dodge', 580, 310, 'assets/boss_silver.jpg');
+            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.5, 210, 'super_heavy', 580, 210, 'assets/boss_gold.jpg');
+            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 11.0, 190, 'ninja_dodge', 580, 310, 'assets/boss_silver.jpg');
             enemies.push(boss1, boss2);
         } else {
             enemies.push(new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260, enemyData.imgUrl));
@@ -881,9 +881,9 @@
 
             if (currentRankIdx === RANKS.length - 1) {
                 if (yokozunaTitleCard) yokozunaTitleCard.classList.remove('hidden');
-                btnNextMatch.textContent = '🏆 全勝制覇！TOPへ';
+                btnNextMatch.textContent = '🏆 全階級制覇！TOPへ';
             } else {
-                btnNextMatch.textContent = '🔥 次の強敵へ進む [Enter] ➔';
+                btnNextMatch.textContent = '🔥 次の階級へ進む [Enter] ➔';
             }
             spawnVictoryConfetti();
         } else {
@@ -938,7 +938,8 @@
     }
 
     function updatePlayerMovement(dt) {
-        if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
+        // 🔴 1. アナウンス中・未開始時は移動完全停止！
+        if (!canPlayerControl() || hitStopTimer > 0) return;
 
         let dx = 0, dy = 0;
         if (keysPressed['KeyW'] || keysPressed['ArrowUp'] || dpadPressed.up) dy -= 1;
@@ -948,13 +949,13 @@
 
         if (dx !== 0 || dy !== 0) {
             const len = Math.hypot(dx, dy);
-            p1.vx += (dx / len) * 3.2 * p1.moveSpeed;
-            p1.vy += (dy / len) * 3.2 * p1.moveSpeed;
+            p1.vx += (dx / len) * 3.4 * p1.moveSpeed;
+            p1.vy += (dy / len) * 3.4 * p1.moveSpeed;
         }
     }
 
     function handleBurst(actor) {
-        if (gameState !== STATE.PLAYING || actor.burstGauge < 100) return;
+        if (!canPlayerControl() || actor.burstGauge < 100) return;
 
         actor.burstGauge = 0;
         hitStopTimer = 0.20;
@@ -968,15 +969,14 @@
         enemies.forEach(opponent => {
             if (opponent.isEliminated) return;
             const angle = Math.atan2(opponent.y - actor.y, opponent.x - actor.x);
-            opponent.vx += Math.cos(angle) * 85;
-            opponent.vy += Math.sin(angle) * 85;
+            opponent.vx += Math.cos(angle) * 90;
+            opponent.vy += Math.sin(angle) * 90;
             spawnSparks(opponent.x, opponent.y, '#fde047', 60, '超爆破！！');
         });
     }
 
-    // 🔴 [rev.txt 指摘7対応] CombatSystem 的な打撃ヒット＆物理判定処理
     function handlePush(actor) {
-        if (gameState !== STATE.PLAYING) return;
+        if (!canPlayerControl()) return;
 
         if (actor === p1) addComboHit();
 
@@ -991,8 +991,8 @@
         if (actor.hasShockwave) {
             enemies.forEach(e => {
                 const angle = Math.atan2(e.y - actor.y, e.x - actor.x);
-                e.vx += Math.cos(angle) * 25;
-                e.vy += Math.sin(angle) * 25;
+                e.vx += Math.cos(angle) * 28;
+                e.vy += Math.sin(angle) * 28;
             });
             spawnSparks(actor.x, actor.y, '#c2410c', 25, '💥 ギガ衝撃波！');
         }
@@ -1002,10 +1002,12 @@
 
             const dist = Math.hypot(opponent.x - actor.x, opponent.y - actor.y);
             if (dist < actor.radius + opponent.radius + 50) {
-                if (opponent.isDodging) {
-                    actor.vx -= (opponent.x - actor.x) * 0.8;
-                    actor.vy -= (opponent.y - actor.y) * 0.8;
-                    opponent.setStateText('見切り回避！');
+                // 🔴 5. 高難易度化：敵のカウンター見切り・パリィ反撃！
+                if (opponent.isDodging || (Math.random() < (currentRankIdx * 0.12))) {
+                    opponent.triggerDodge();
+                    actor.vx -= (opponent.x - actor.x) * 1.2;
+                    actor.vy -= (opponent.y - actor.y) * 1.2;
+                    opponent.setStateText('カウンター見切り！✨');
                     return;
                 }
 
@@ -1022,7 +1024,7 @@
     }
 
     function handleDodge(actor) {
-        if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
+        if (!canPlayerControl() || hitStopTimer > 0) return;
         
         const success = actor.triggerDodge();
         if (success && actor === p1) {
@@ -1032,8 +1034,8 @@
                     const activeEnemies = enemies.filter(e => !e.isEliminated);
                     const target = activeEnemies[0] || p1;
                     const angle = Math.atan2(target.y - b.y, target.x - b.x);
-                    b.vx = Math.cos(angle) * 11;
-                    b.vy = Math.sin(angle) * 11;
+                    b.vx = Math.cos(angle) * 12;
+                    b.vy = Math.sin(angle) * 12;
 
                     p1.setStateText('ジャストパリィ！✨');
                     audio.playParry();
@@ -1044,60 +1046,103 @@
         }
     }
 
-    // 🔴 [rev.txt 指摘4, 6対応] 敵個別AI・タイマー所有 & ゲーム時間(dt)同期行動変容！
+    // 🔴 2. キャラクター物理接触・重なり補正処理 (重なり完全防止)
+    function checkCharacterCollisions() {
+        const allRikishi = [p1, ...enemies].filter(r => r && !r.isEliminated);
+        
+        for (let i = 0; i < allRikishi.length; i++) {
+            for (let j = i + 1; j < allRikishi.length; j++) {
+                const r1 = allRikishi[i];
+                const r2 = allRikishi[j];
+
+                const dx = r2.x - r1.x;
+                const dy = r2.y - r1.y;
+                const dist = Math.hypot(dx, dy);
+                const minDist = r1.radius + r2.radius;
+
+                if (dist < minDist && dist > 0.001) {
+                    const overlap = minDist - dist;
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+
+                    // 互いに押し戻す（位置補正）
+                    const pushFactor = 0.5;
+                    r1.x -= nx * overlap * pushFactor;
+                    r1.y -= ny * overlap * pushFactor;
+                    r2.x += nx * overlap * pushFactor;
+                    r2.y += ny * overlap * pushFactor;
+
+                    // 速度の反発（はじき）
+                    r1.vx -= nx * 1.5;
+                    r1.vy -= ny * 1.5;
+                    r2.vx += nx * 1.5;
+                    r2.vy += ny * 1.5;
+                }
+            }
+        }
+    }
+
+    // 🔴 3 & 5. 敵AI：自滅リングアウト防止ステアリング ＆ インテリジェント高難易度行動！
     function updateAI(dt) {
-        if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
+        if (gameState !== STATE.PLAYING || announceTimer > 0 || hitStopTimer > 0) return;
 
         enemies.forEach(enemy => {
             if (enemy.isEliminated) return;
 
-            enemy.saltTimer += dt; // 敵ごとに独立したタイマー！
+            enemy.saltTimer += dt;
 
             const dx = p1.x - enemy.x;
             const dy = p1.y - enemy.y;
             const dist = Math.hypot(dx, dy);
 
-            // 🔴 [rev.txt 指摘対応] 土俵際判定 ➔ 「焦り（パニック）」で操作ミス＆押し負け！
-            const isNearRingEdge = isOutOfDohyo(enemy.x, enemy.y, 0.8);
-            if (isNearRingEdge) {
+            // 土俵縁（80%の範囲）への接近検出
+            const distFromCenter = Math.hypot(enemy.x - GAME_CONFIG.DOHYO_CX, enemy.y - GAME_CONFIG.DOHYO_CY);
+            const isNearEdge = isOutOfDohyo(enemy.x, enemy.y, 0.75);
+
+            let moveX = 0;
+            let moveY = 0;
+
+            // 🔴 3. 敵の自滅リングアウト完全防止ベクトル！
+            if (isNearEdge) {
+                const centerAngle = Math.atan2(GAME_CONFIG.DOHYO_CY - enemy.y, GAME_CONFIG.DOHYO_CX - enemy.x);
+                moveX += Math.cos(centerAngle) * 4.0; // 中央へ戻る強力なステアリング！
+                moveY += Math.sin(centerAngle) * 4.0;
                 enemy.aiState = 'panic';
-                enemy.setStateText('土俵際パニック！💦');
-            } else if (winsCount >= 3) {
-                enemy.aiState = 'angry'; // 3連勝で強烈憤怒！
+            } else if (winsCount >= 2) {
+                enemy.aiState = 'angry';
             } else {
                 enemy.aiState = 'normal';
             }
 
-            // 🔴 [rev.txt 酷評全対応] 敵ごとの明確に異なるゲーム攻略パターン！
+            // 🔴 5. 高難易度攻撃・動きパターン
             if (enemy.aiType === 'speed_rush') {
-                // 1. ウサギ（速いが超軽い！一撃で吹き飛ぶ爽快ターゲット）
-                const angle = Math.atan2(dy, dx) + Math.sin(GAME_STATE_TIME * 3.0) * 1.6;
-                enemy.vx += Math.cos(angle) * 2.8;
-                enemy.vy += Math.sin(angle) * 2.8;
+                const angle = Math.atan2(dy, dx) + Math.sin(GAME_STATE_TIME * 4.0) * 1.2;
+                moveX += Math.cos(angle) * 3.6;
+                moveY += Math.sin(angle) * 3.6;
             } else if (enemy.aiType === 'super_heavy') {
-                // 2. クマ（全然飛ばない！真正面から押せず側面へ回り込む攻略）
                 const angle = Math.atan2(dy, dx);
-                enemy.vx += Math.cos(angle) * 0.9;
-                enemy.vy += Math.sin(angle) * 0.9;
+                moveX += Math.cos(angle) * 1.4;
+                moveY += Math.sin(angle) * 1.4;
             } else if (enemy.aiType === 'ninja_dodge') {
-                // 3. ネコ（正面から押すと見切られる！背面から突く攻略）
-                if (dist < 200 && Math.random() < 0.12) {
+                if (dist < 180 && Math.random() < 0.18) {
                     enemy.triggerDodge();
-                    enemy.x = p1.x - Math.cos(Math.atan2(dy, dx)) * 130;
-                    enemy.y = p1.y - Math.sin(Math.atan2(dy, dx)) * 130;
+                    enemy.x = p1.x - Math.cos(Math.atan2(dy, dx)) * 140;
+                    enemy.y = p1.y - Math.sin(Math.atan2(dy, dx)) * 140;
                 }
                 const angle = Math.atan2(dy, dx);
-                enemy.vx += Math.cos(angle) * 1.6;
-                enemy.vy += Math.sin(angle) * 1.6;
+                moveX += Math.cos(angle) * 2.2;
+                moveY += Math.sin(angle) * 2.2;
             } else if (enemy.aiType === 'salt_master') {
-                // 4. タカ（距離を置いて塩弾幕 🧂 をバラ撒く！塩をパリィし接近するシューティング攻略）
                 const angle = Math.atan2(-dy, -dx);
-                enemy.vx += Math.cos(angle) * 1.3;
-                enemy.vy += Math.sin(angle) * 1.3;
+                moveX += Math.cos(angle) * 1.8;
+                moveY += Math.sin(angle) * 1.8;
             }
 
-            // 塩弾発射（個別の敵タイマー参照）
-            const interval = enemy.aiType === 'salt_master' ? 0.9 : 2.5;
+            enemy.vx += moveX;
+            enemy.vy += moveY;
+
+            // 高難易度・塩乱射
+            const interval = enemy.aiType === 'salt_master' ? 0.7 : 1.8;
             if (enemy.saltTimer >= interval) {
                 enemy.saltTimer = 0;
                 const b = saltBulletPool.get();
@@ -1136,8 +1181,8 @@
 
                 if (Math.hypot(p1.x - b.x, p1.y - b.y) < p1.radius + b.radius) {
                     b.active = false;
-                    p1.vx -= b.vx * 1.5;
-                    p1.vy -= b.vy * 1.5;
+                    p1.vx -= b.vx * 1.6;
+                    p1.vy -= b.vy * 1.6;
                     triggerShake(0.2);
                     audio.playHit();
                 }
@@ -1219,7 +1264,6 @@
         const y = rikishi.y;
         const r = rikishi.radius;
 
-        // 🔴 [rev.txt 指摘2対応] afterImages の通常 for ループ描画
         for (let i = 0; i < rikishi.afterImages.length; i++) {
             const img = rikishi.afterImages[i];
             if (img.active) {
@@ -1313,12 +1357,12 @@
         lastFrameTime = now;
 
         if (gameState === STATE.PLAYING) {
-            GAME_STATE_TIME += dt; // 🔴 [rev.txt 指摘6対応] ゲーム内時間ベース化
+            GAME_STATE_TIME += dt;
         }
 
         if (inputBuffer.pushFrames > 0) {
             inputBuffer.pushFrames--;
-            if (gameState === STATE.PLAYING && hitStopTimer <= 0) {
+            if (canPlayerControl() && hitStopTimer <= 0) {
                 handlePush(p1);
                 inputBuffer.pushFrames = 0;
             }
@@ -1340,12 +1384,14 @@
 
             p1.update(dt);
             enemies.forEach(e => e.update(dt));
-            updateSaltBullets(dt);
+            
+            // 🔴 2. キャラクター同士の円形物理衝突・重なり即時補正判定！
+            checkCharacterCollisions();
 
+            updateSaltBullets(dt);
             updateAI(dt);
             checkRingOut();
 
-            // 🔴 [rev.txt 指摘対応] イベントのゲームプレイ直接影響処理！
             if (currentEvent && currentEvent.apply) {
                 currentEvent.apply(dt, [p1, ...enemies]);
             }

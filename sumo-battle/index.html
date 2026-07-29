@@ -7,7 +7,7 @@
     <meta name="description" content="Nintendo, SEGA, CAPCOMスピリッツが宿る！ボタンを押した瞬間に快感最高潮の極上アーケードスモウアクション！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@900&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@900&family=Zen+Maru Gothic:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,17 +24,17 @@
                 </div>
             </div>
 
-            <!-- 超直感・階級進行インジケーター -->
+            <!-- 超直感・階級進行インジケーター (シルバー/ゴールド/ダイヤ/プラチナ/マスター) -->
             <div class="rank-map-container" aria-label="幕内番付">
-                <div class="rank-step active" id="rmap-0">🐰<small>超高速</small></div>
+                <div class="rank-step active" id="rmap-0">🥈<small>シルバー</small></div>
                 <div class="rank-line"></div>
-                <div class="rank-step" id="rmap-1">🐻<small>超重量</small></div>
+                <div class="rank-step" id="rmap-1">🥇<small>ゴールド</small></div>
                 <div class="rank-line"></div>
-                <div class="rank-step" id="rmap-2">🐱<small>影分身</small></div>
+                <div class="rank-step" id="rmap-2">💎<small>ダイヤ</small></div>
                 <div class="rank-line"></div>
-                <div class="rank-step" id="rmap-3">🦅<small>塩弾幕</small></div>
+                <div class="rank-step" id="rmap-3">👑<small>プラチナ</small></div>
                 <div class="rank-line"></div>
-                <div class="rank-step" id="rmap-4">🐲<small>双子決戦</small></div>
+                <div class="rank-step" id="rmap-4">🏆<small>マスター</small></div>
             </div>
         </header>
 
@@ -59,7 +59,7 @@
 
             <canvas id="sumo-canvas" width="900" height="520" aria-label="相撲ゲーム画面"></canvas>
 
-            <!-- 🎯 UIオーバーレイ（待たせない・迷わせない） -->
+            <!-- 🎯 UIオーバーレイ -->
             <div id="ui-overlay" class="overlay active">
                 
                 <!-- 1. 爆速スタートタイトル画面 -->
@@ -96,17 +96,17 @@
                 <!-- 3. 熱狂勝利リザルト -->
                 <section id="screen-result" class="screen-panel hidden">
                     <div class="result-box">
-                        <h2 id="result-title">💥 どすこい大勝利！ 💥</h2>
-                        <div class="winner-announcement" id="winner-name">東 エドモーンド の圧勝！</div>
+                        <h2 id="result-title">💥 豪快決まり手：寄り切り！！ 💥</h2>
+                        <div class="winner-announcement" id="winner-name">東 エドモーンド の天下無双！</div>
                         
                         <div id="yokozuna-title-card" class="yokozuna-title-card hidden">
-                            <div class="y-title" id="y-title-name">🚀 超音速神横綱</div>
-                            <div class="y-desc" id="y-title-desc">全敵をぶっ飛ばして全勝制覇！</div>
+                            <div class="y-title" id="y-title-name">🏆 マスター勝利者！超音速神横綱</div>
+                            <div class="y-desc" id="y-title-desc">強敵全ステージをぶっ飛ばして完全制覇！</div>
                         </div>
 
                         <div class="result-actions-simplified">
                             <button id="btn-next-match" class="btn btn-arcade btn-main-next" type="button">
-                                🔥 次の勝負へ！ [Enter] ➔
+                                🔥 次の階級へ進む！ [Enter] ➔
                             </button>
                             <button id="btn-to-title" class="btn-sub-link" type="button">タイトルへ戻る (Esc)</button>
                         </div>
