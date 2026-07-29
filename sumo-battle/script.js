@@ -1,6 +1,6 @@
 /**
  * 音速スモウバトル どすこいの国～ちゃんこ食わんかい～
- * メインJavaScript (ランダムハプニング・AIタイプ・コンボシステム)
+ * メインJavaScript (レベル育成・超必殺演出・ランク進行マップ・シンプルUI)
  */
 
 (function() {
@@ -130,13 +130,14 @@
             } catch (e) {}
         }
 
-        playBurst() {
+        playMegaBurst() {
             if (!this.enabled) return;
             this.init();
             if (!this.ctx) return;
-            this.playTaiko(300, 0.4, 1.0);
-            setTimeout(() => this.playTaiko(240, 0.3, 0.9), 100);
-            setTimeout(() => this.playTaiko(180, 0.3, 0.8), 200);
+            this.playTaiko(400, 0.6, 1.0);
+            setTimeout(() => this.playTaiko(300, 0.5, 0.9), 100);
+            setTimeout(() => this.playTaiko(200, 0.4, 0.8), 200);
+            setTimeout(() => this.playTaiko(100, 0.5, 1.0), 300);
         }
 
         playCardSelect() {
@@ -175,7 +176,7 @@
 
     const audio = new SoundEngine();
 
-    // ランク階級システム
+    // ランク階級システム (全6段階)
     const RANKS = [
         { name: 'ブロンズ', icon: '🥉', enemyName: 'うさ丸', aiType: 'rush', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
         { name: 'シルバー', icon: '🥈', enemyName: 'くまごろう', aiType: 'heavy', strength: 3.4, weight: 130, color: '#0284c7', avatar: '🐻' },
@@ -190,21 +191,20 @@
     const RIVAL_COLORS = ['#e05297', '#d97706', '#0284c7', '#9333ea', '#059669', '#ffb3d9'];
 
     const ALL_SKILL_CARDS = [
-        { id: 'push_power', icon: '🍲', title: '特上ちゃんこ', desc: '押し出しの攻撃力が 25% アップ！', rarity: 'common', apply: (p) => { p.powerMultiplier += 0.25; } },
-        { id: 'iron_wall', icon: '🛡️', title: '鉄壁の構え', desc: 'はたき込みの受付窓 +0.15秒＆カウンター力強化', rarity: 'rare', apply: (p) => { p.dodgeWindow += 0.15; p.counterPower += 0.3; } },
-        { id: 'burst_boost', icon: '🔥', title: '激辛どすこい鍋', desc: '必殺技ゲージの増加スピードが 1.8倍！', rarity: 'rare', apply: (p) => { p.gaugeRate *= 1.8; } },
-        { id: 'chanko_power', icon: '🍚', title: '超大盛り飯', desc: '体重 +40kg！相手に押されにくくなる！', rarity: 'common', apply: (p) => { p.weight += 40; } },
-        { id: 'swift_foot', icon: '💨', title: '音速ステップ', desc: '力士の機動力＆押し出しの連打反動を軽減！', rarity: 'common', apply: (p) => { p.moveSpeed += 0.3; } },
-        { id: 'clutch_push', icon: '💖', title: '土俵際の一発', desc: '自分が土俵際に追い詰められると推力が 2倍！', rarity: 'rare', apply: (p) => { p.hasClutchPower = true; } },
-        { id: 'intimidation', icon: '👑', title: '横綱の気迫', desc: '相手の押し出しパワーを 20% 弱体化！', rarity: 'legendary', apply: (p) => { p.enemyPowerDebuff += 0.2; } },
-        { id: 'stun_slap', icon: '💥', title: '雷電ハリケーン', desc: '連打時に 15% の確率で相手をノックバック！', rarity: 'legendary', apply: (p) => { p.hasStunSlap = true; } }
+        { id: 'push_power', icon: '🍲', title: '特上ちゃんこ', desc: '押し出し攻撃力 +30% (腕力成長！)', rarity: 'common', apply: (p) => { p.powerMultiplier += 0.3; } },
+        { id: 'iron_wall', icon: '🛡️', title: '鉄壁の構え', desc: 'はたき受付 +0.15秒＆カウンター力 1.5倍', rarity: 'rare', apply: (p) => { p.dodgeWindow += 0.15; p.counterPower += 0.5; } },
+        { id: 'burst_boost', icon: '🔥', title: '激辛どすこい鍋', desc: '必殺技ゲージの増加スピード 2倍！', rarity: 'rare', apply: (p) => { p.gaugeRate *= 2.0; } },
+        { id: 'chanko_power', icon: '🍚', title: '超大盛りメガ飯', desc: '体重 +50kg！超安定ド迫力ボディ！', rarity: 'common', apply: (p) => { p.weight += 50; } },
+        { id: 'swift_foot', icon: '💨', title: '音速ステップ', desc: '力士の機動力＆押し出しスピード連打UP！', rarity: 'common', apply: (p) => { p.moveSpeed += 0.4; } },
+        { id: 'clutch_push', icon: '💖', title: '土俵際の一発', desc: '土俵際に追い詰められると推力が 2.5倍！', rarity: 'rare', apply: (p) => { p.hasClutchPower = true; } },
+        { id: 'intimidation', icon: '👑', title: '横綱の気迫', desc: '相手の押し出しパワーを 25% 弱体化！', rarity: 'legendary', apply: (p) => { p.enemyPowerDebuff += 0.25; } },
+        { id: 'stun_slap', icon: '💥', title: '雷電ハリケーン', desc: '連打時に 20% の確実ノックバック！', rarity: 'legendary', apply: (p) => { p.hasStunSlap = true; } }
     ];
 
-    // ランダムハプニングイベントの種類
     const EVENTS = [
-        { type: 'ice', title: '🧊 ツルツル氷土俵！ (超すべる！)', apply: () => {} },
+        { type: 'ice', title: '🧊 ツルツル氷土俵！ (摩擦ゼロ！超すべる！)', apply: () => {} },
         { type: 'fever', title: '⚡ 音速フィーバー！ (押す力3倍！)', apply: () => {} },
-        { type: 'wind', title: '🌪️ 強烈な突風！ (追い風・向かい風)', apply: () => {} },
+        { type: 'wind', title: '🌪️ 強烈な突風！ (横風が吹き荒れる！)', apply: () => {} },
         { type: 'chanko', title: '🍲 ちゃんこタイム！ (先に押した方が必殺技満タン)', apply: () => {} }
     ];
 
@@ -212,6 +212,7 @@
         TITLE: 'TITLE',
         MATCHUP: 'MATCHUP',
         SKILL_SELECT: 'SKILL_SELECT',
+        RANK_UP: 'RANK_UP',
         COUNTDOWN: 'COUNTDOWN',
         PLAYING: 'PLAYING',
         RESULT: 'RESULT'
@@ -220,6 +221,9 @@
     let gameState = STATE.TITLE;
     let gameMode = 'arcade';
     let currentRankIdx = 0;
+    let totalMatchesCount = 0;
+    let playerLevel = 1;
+    let playerExp = 0;
     let winsCount = 0;
     let lossesCount = 0;
     let streakCount = 0;
@@ -227,7 +231,6 @@
     let totalClicksP1 = 0;
     let isMatchFinished = false;
 
-    // コンボ & ハプニング管理
     let comboP1 = 0;
     let maxComboP1 = 0;
     let comboTimerP1 = 0;
@@ -236,9 +239,10 @@
     let windDir = 1;
 
     let shakeTimer = 0;
+    let hitStopTimer = 0;
 
     class Rikishi {
-        constructor(isPlayer, name, color, avatar, power = 5.0, weight = 120, aiType = 'rush') {
+        constructor(isPlayer, name, color, avatar, power = 5.5, weight = 130, aiType = 'rush') {
             this.isPlayer = isPlayer;
             this.name = name;
             this.color = color;
@@ -264,7 +268,7 @@
             this.x = this.isPlayer ? 340 : 560;
             this.y = 260;
             this.vx = 0;
-            this.radius = Math.min(48, 34 + (this.weight * 0.06));
+            this.radius = Math.min(52, 34 + (this.weight * 0.06));
             this.burstGauge = 0;
             this.isDodging = false;
             this.dodgeTimer = 0;
@@ -280,13 +284,11 @@
         update(dt) {
             this.x += this.vx;
 
-            // 氷土俵ハプニングの時は摩擦軽減
-            const friction = (currentEvent && currentEvent.type === 'ice') ? 0.96 : 0.82;
+            const friction = (currentEvent && currentEvent.type === 'ice') ? 0.97 : 0.80;
             this.vx *= friction;
 
-            // 突風ハプニング
             if (currentEvent && currentEvent.type === 'wind') {
-                this.vx += windDir * 0.4;
+                this.vx += windDir * 0.45;
             }
 
             if (this.dodgeTimer > 0) {
@@ -346,10 +348,10 @@
             ctx.globalAlpha = alpha;
 
             if (this.text) {
-                ctx.font = '900 20px "Mochiy Pop One", sans-serif';
+                ctx.font = '900 22px "Mochiy Pop One", sans-serif';
                 ctx.fillStyle = this.color;
                 ctx.shadowColor = '#fff';
-                ctx.shadowBlur = 4;
+                ctx.shadowBlur = 6;
                 ctx.fillText(this.text, this.x, this.y);
             } else {
                 ctx.fillStyle = this.color;
@@ -369,11 +371,13 @@
     const screenTitle = document.getElementById('screen-title');
     const screenMatchup = document.getElementById('screen-matchup');
     const screenSkillSelect = document.getElementById('screen-skill-select');
+    const screenRankUp = document.getElementById('screen-rank-up');
     const screenResult = document.getElementById('screen-result');
 
-    const rankBadge = document.getElementById('rank-badge');
+    const levelBadge = document.getElementById('level-badge');
     const winsBadge = document.getElementById('wins-badge');
     const speedLinesEl = document.getElementById('speed-lines');
+    const burstCutinEl = document.getElementById('burst-cutin');
     const eventBanner = document.getElementById('event-banner');
     const eventTitleEl = document.getElementById('event-title');
 
@@ -385,6 +389,7 @@
     const btnModeEndless = document.getElementById('btn-mode-endless');
     const btnModePvp = document.getElementById('btn-mode-pvp');
     const btnStartFight = document.getElementById('btn-start-fight');
+    const btnRankupContinue = document.getElementById('btn-rankup-continue');
 
     const btnNextMatch = document.getElementById('btn-next-match');
     const btnRetryMatch = document.getElementById('btn-retry-match');
@@ -399,25 +404,33 @@
     const btnP2Dodge = document.getElementById('btn-p2-dodge');
     const btnP2Burst = document.getElementById('btn-p2-burst');
 
+    const playerLvlTag = document.getElementById('player-lvl-tag');
     const playerNameEl = document.getElementById('player-name');
     const enemyNameEl = document.getElementById('enemy-name');
-    const playerAvatarEl = document.getElementById('player-avatar-preview');
-    const enemyAvatarEl = document.getElementById('enemy-avatar-preview');
     const pStrBar = document.getElementById('p-str-bar');
     const pWgtBar = document.getElementById('p-wgt-bar');
+    const pStrNum = document.getElementById('p-str-num');
+    const pWgtNum = document.getElementById('p-wgt-num');
     const eStrBar = document.getElementById('e-str-bar');
     const eWgtBar = document.getElementById('e-wgt-bar');
+    const eStrNum = document.getElementById('e-str-num');
+    const eWgtNum = document.getElementById('e-wgt-num');
+
     const matchupRankEl = document.getElementById('matchup-rank');
     const enemyTypeBadge = document.getElementById('enemy-type-badge');
     const acquiredSkillsList = document.getElementById('acquired-skills-list');
     const cardsContainer = document.getElementById('cards-container');
 
+    const rankupTitle = document.getElementById('rankup-title');
+    const rankupIcon = document.getElementById('rankup-icon');
+    const rankupDesc = document.getElementById('rankup-desc');
+
     const resultTitleEl = document.getElementById('result-title');
     const winnerNameEl = document.getElementById('winner-name');
     const resultKimariteEl = document.getElementById('result-kimarite');
     const resTimeEl = document.getElementById('res-time');
-    const resCpsEl = document.getElementById('res-cps');
-    const resComboEl = document.getElementById('res-combo');
+    const resExpEl = document.getElementById('res-exp');
+    const resLevelEl = document.getElementById('res-level');
 
     let p1 = new Rikishi(true, '雷電丸', '#e05297', '⚡', 5.5, 130);
     let p2 = new Rikishi(false, 'うさ丸', '#059669', '🐰', 2.0, 110);
@@ -449,12 +462,20 @@
 
         btnStartFight.addEventListener('click', startCountdown);
 
-        btnNextMatch.addEventListener('click', () => {
-            if (gameMode === 'arcade') {
-                currentRankIdx = Math.min(RANKS.length - 1, currentRankIdx + 1);
-            }
-            startCountdown();
+        btnRankupContinue.addEventListener('click', () => {
+            showSkillSelect();
         });
+
+        btnNextMatch.addEventListener('click', () => {
+            if (gameMode === 'arcade' && winsCount > 0 && winsCount % 2 === 0 && currentRankIdx < RANKS.length - 1) {
+                // 2連勝ごとにランク昇格！
+                currentRankIdx++;
+                showRankUpDialog();
+            } else {
+                showSkillSelect();
+            }
+        });
+
         btnRetryMatch.addEventListener('click', () => startCountdown());
 
         btnToggleAudio.addEventListener('click', () => {
@@ -511,13 +532,16 @@
         });
     }
 
-    // --- ゲームフロー管理 ---
     function showTitle() {
         gameState = STATE.TITLE;
         currentRankIdx = 0;
+        totalMatchesCount = 0;
+        playerLevel = 1;
+        playerExp = 0;
         streakCount = 0;
         isMatchFinished = false;
         speedLinesEl.classList.remove('active');
+        burstCutinEl.classList.add('hidden');
         eventBanner.classList.add('hidden');
 
         hideAllScreens();
@@ -532,17 +556,54 @@
         screenTitle.classList.remove('active');
         screenMatchup.classList.remove('active');
         screenSkillSelect.classList.remove('active');
+        screenRankUp.classList.remove('active');
         screenResult.classList.remove('active');
     }
 
     function resetAndStartMode(mode) {
         gameMode = mode;
         currentRankIdx = 0;
+        totalMatchesCount = 0;
+        playerLevel = 1;
+        playerExp = 0;
         streakCount = 0;
         p1 = new Rikishi(true, '雷電丸', '#e05297', '⚡', 5.5, 130);
         
         setupEnemy(mode);
-        startCountdown();
+        showMatchupScreen();
+    }
+
+    function showMatchupScreen() {
+        gameState = STATE.MATCHUP;
+        hideAllScreens();
+        uiOverlay.classList.add('active');
+        screenMatchup.classList.add('active');
+
+        // ステータス可視化更新
+        if (playerLvlTag) playerLvlTag.textContent = `⭐ Lv.${playerLevel} (あなた)`;
+        if (playerNameEl) playerNameEl.textContent = p1.name;
+        if (enemyNameEl) enemyNameEl.textContent = p2.name;
+
+        const pStrVal = Math.floor(p1.currentPower * 10);
+        if (pStrBar) pStrBar.style.width = `${Math.min(100, pStrVal)}%`;
+        if (pStrNum) pStrNum.textContent = pStrVal;
+
+        if (pWgtBar) pWgtBar.style.width = `${Math.min(100, (p1.weight / 250) * 100)}%`;
+        if (pWgtNum) pWgtNum.textContent = `${p1.weight}kg`;
+
+        const eStrVal = Math.floor(p2.currentPower * 10);
+        if (eStrBar) eStrBar.style.width = `${Math.min(100, eStrVal)}%`;
+        if (eStrNum) eStrNum.textContent = eStrVal;
+
+        if (eWgtBar) eWgtBar.style.width = `${Math.min(100, (p2.weight / 250) * 100)}%`;
+        if (eWgtNum) eWgtNum.textContent = `${p2.weight}kg`;
+
+        if (matchupRankEl) {
+            matchupRankEl.textContent = `【第 ${totalMatchesCount + 1} 取組】 ランク: ${RANKS[currentRankIdx].name}`;
+        }
+
+        renderAcquiredSkills();
+        updateHeaderUI();
     }
 
     function setupEnemy(mode) {
@@ -566,7 +627,6 @@
             p2 = new Rikishi(false, `${rName} (${streakCount + 1}人目)`, rColor, rAvatar, rStrength, rWeight, rAiType);
         }
 
-        // AIタイプラベル
         if (enemyTypeBadge) {
             const aiLabelMap = { 'rush': '⚡ 超突進', 'counter': '🌀 見切り巧者', 'heavy': '⛰️ 超重戦車' };
             enemyTypeBadge.textContent = `西 (${aiLabelMap[p2.aiType] || 'ライバル'})`;
@@ -645,11 +705,8 @@
                 card.apply(p1);
                 p1.acquiredSkills.push(card);
                 
-                if (gameMode === 'arcade') {
-                    currentRankIdx = Math.min(RANKS.length - 1, currentRankIdx + 1);
-                }
                 setupEnemy(gameMode);
-                startCountdown();
+                showMatchupScreen();
             };
 
             cardEl.addEventListener('click', selectHandler);
@@ -664,18 +721,41 @@
         });
     }
 
+    function showRankUpDialog() {
+        gameState = STATE.RANK_UP;
+        hideAllScreens();
+        uiOverlay.classList.add('active');
+        screenRankUp.classList.add('active');
+
+        const curR = RANKS[currentRankIdx];
+        const prevR = RANKS[currentRankIdx - 1];
+
+        rankupTitle.textContent = `${prevR.name} ➔ ${curR.name} 昇格！`;
+        rankupIcon.textContent = curR.icon;
+        rankupDesc.textContent = `ランク【${curR.name}】に到達！ライバル「${curR.enemyName}」が待っている！全能力ボーナス+20%！`;
+
+        p1.powerMultiplier += 0.2;
+        p1.weight += 15;
+
+        audio.playFanfare(true);
+        spawnVictoryConfetti();
+        updateHeaderUI();
+    }
+
     function startCountdown() {
         uiOverlay.classList.remove('active');
         hideAllScreens();
         gameState = STATE.COUNTDOWN;
         isMatchFinished = false;
 
+        totalMatchesCount++;
         comboP1 = 0;
         maxComboP1 = 0;
         comboTimerP1 = 0;
         currentEvent = null;
         eventTimer = 0;
         eventBanner.classList.add('hidden');
+        burstCutinEl.classList.add('hidden');
 
         p1.reset();
         p2.reset();
@@ -696,9 +776,8 @@
             gameState = STATE.PLAYING;
             startTime = performance.now();
 
-            // 70%の確率でランダムハプニングを予約発生！
             if (Math.random() < 0.75) {
-                setTimeout(triggerRandomEvent, 2500 + Math.random() * 2000);
+                setTimeout(triggerRandomEvent, 2200 + Math.random() * 2000);
             }
         }, 1800);
     }
@@ -707,13 +786,13 @@
         if (gameState !== STATE.PLAYING || isMatchFinished) return;
         const selected = EVENTS[Math.floor(Math.random() * EVENTS.length)];
         currentEvent = selected;
-        eventTimer = 6.0; // 6秒間持続
+        eventTimer = 6.0;
         windDir = Math.random() < 0.5 ? 1 : -1;
 
         eventTitleEl.textContent = selected.title;
         eventBanner.classList.remove('hidden');
         triggerShake(0.3);
-        audio.playBurst();
+        audio.playMegaBurst();
 
         spawnSparks(DOHYO.cx, DOHYO.cy, '#fde047', 20, 'ハプニング！');
     }
@@ -736,17 +815,19 @@
         if (isP1Win) {
             winsCount++;
             streakCount++;
+            playerExp += 150;
+            
+            // レベルアップ判定
+            if (playerExp >= playerLevel * 200) {
+                playerLevel++;
+                p1.basePower += 0.4;
+                p1.weight += 5;
+            }
+
             resultTitleEl.textContent = '金 星 ！ 勝 負 あ り 🍲';
             winnerNameEl.textContent = `東 ${winner.name} の大勝利！`;
             
-            if (gameMode !== 'pvp') {
-                btnNextMatch.textContent = '特製ちゃんこ獲得 ➔';
-                btnNextMatch.onclick = () => showSkillSelect();
-            } else {
-                btnNextMatch.textContent = '次の取組へ ➔';
-                btnNextMatch.onclick = () => { setupEnemy(gameMode); startCountdown(); };
-            }
-
+            btnNextMatch.textContent = '✨ 次の取組へ (ちゃんこ獲得) ➔';
             btnNextMatch.classList.remove('hidden');
             btnRetryMatch.classList.add('hidden');
             spawnVictoryConfetti();
@@ -763,7 +844,8 @@
         resultKimariteEl.textContent = `決まり手：${kimarite}`;
         resTimeEl.textContent = `${durationSec}秒`;
         resCpsEl.textContent = `${cps}回`;
-        if (resComboEl) resComboEl.textContent = `${maxComboP1}連撃`;
+        if (resExpEl) resExpEl.textContent = isP1Win ? `+150 EXP` : `0 EXP`;
+        if (resLevelEl) resLevelEl.textContent = `Lv.${playerLevel}`;
 
         updateHeaderUI();
 
@@ -775,31 +857,69 @@
     }
 
     function updateHeaderUI() {
-        if (gameMode === 'arcade') {
-            const r = RANKS[currentRankIdx];
-            rankBadge.textContent = `${r.icon} ランク: ${r.name}`;
-        } else if (gameMode === 'endless') {
-            rankBadge.textContent = `🍲 サバイバル中`;
-        } else {
-            rankBadge.textContent = `⚔️ 対戦モード`;
+        if (levelBadge) levelBadge.textContent = `⭐ Lv.${playerLevel} ${p1.name}`;
+
+        // ランクマップ更新
+        for (let i = 0; i < 6; i++) {
+            const stepEl = document.getElementById(`rmap-${i}`);
+            if (stepEl) {
+                if (i === currentRankIdx) {
+                    stepEl.className = 'rank-step active';
+                } else if (i < currentRankIdx) {
+                    stepEl.className = 'rank-step reached';
+                } else {
+                    stepEl.className = 'rank-step';
+                }
+            }
         }
 
-        winsBadge.textContent = `🌸 ${streakCount}連勝中 (通算${winsCount}勝)`;
+        if (winsBadge) {
+            winsBadge.textContent = `第 ${totalMatchesCount + 1} 取組 (${streakCount}連勝中)`;
+        }
     }
 
     function triggerShake(sec = 0.2) {
         shakeTimer = sec;
     }
 
-    // --- アクション処理 (コンボ & ハプニング連動) ---
-    function handlePush(actor) {
+    // --- 必殺技超カタルシス演出 ---
+    function handleBurst(actor) {
         if (gameState !== STATE.PLAYING) return;
+        if (actor.burstGauge < 100) return;
+
+        actor.burstGauge = 0;
+        updateBurstUI();
+
+        const opponent = (actor === p1) ? p2 : p1;
+        const dir = (actor === p1) ? 1 : -1;
+
+        // 0.25秒間のヒットストップ（時間停止）で爽快カタルシス！
+        hitStopTimer = 0.25;
+
+        // ド派手金文字カットイン
+        burstCutinEl.classList.remove('hidden');
+        setTimeout(() => burstCutinEl.classList.add('hidden'), 900);
+
+        actor.setStateText('極大どすこい！！');
+        audio.playMegaBurst();
+        triggerShake(0.7);
+
+        speedLinesEl.classList.add('active');
+        setTimeout(() => speedLinesEl.classList.remove('active'), 1000);
+
+        // 相手が超ダイナミックに土俵外へ吹っ飛ぶ！ (極大物理推力 55)
+        opponent.vx += dir * 55;
+        spawnSparks((actor.x + opponent.x)/2, actor.y, '#fde047', 45, '超爆破！！');
+    }
+
+    function handlePush(actor) {
+        if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
         const opponent = (actor === p1) ? p2 : p1;
         if (actor === p1) {
             totalClicksP1++;
             comboP1++;
-            comboTimerP1 = 0.8; // 0.8秒以内に連打を続けるとコンボ継続！
+            comboTimerP1 = 0.8;
             if (comboP1 > maxComboP1) maxComboP1 = comboP1;
 
             if (comboP1 % 4 === 0) {
@@ -810,14 +930,13 @@
         actor.pushAnim = 1.0;
         triggerShake(0.08);
 
-        // ちゃんこタイムイベント：先に押したら必殺即時全回復！
         if (currentEvent && currentEvent.type === 'chanko') {
             actor.burstGauge = 100;
             updateBurstUI();
             currentEvent = null;
             eventBanner.classList.add('hidden');
             actor.setStateText('ちゃんこ横取り！');
-            audio.playBurst();
+            audio.playMegaBurst();
         }
 
         const gInc = 6 * actor.gaugeRate;
@@ -840,18 +959,16 @@
 
         let clutchMult = 1.0;
         if (actor.hasClutchPower && isOutOfDohyo(actor.x, actor.y, 0.75)) {
-            clutchMult = 2.0;
+            clutchMult = 2.5;
             actor.setStateText('土俵際パワー！');
         }
 
-        // 音速フィーバーハプニング：押す力 2.5倍！
         const feverMult = (currentEvent && currentEvent.type === 'fever') ? 2.5 : 1.0;
-
         const dir = (actor === p1) ? 1 : -1;
         const debuff = (opponent.enemyPowerDebuff || 0);
         let pushForce = (3.5 + (actor.currentPower * 0.45)) * (1 - debuff) * clutchMult * feverMult;
 
-        if (actor.hasStunSlap && Math.random() < 0.15) {
+        if (actor.hasStunSlap && Math.random() < 0.2) {
             pushForce *= 1.8;
             triggerShake(0.25);
             spawnSparks((actor.x + opponent.x)/2, actor.y, '#d97706', 12, 'ハリケーン！');
@@ -865,29 +982,8 @@
     }
 
     function handleDodge(actor) {
-        if (gameState !== STATE.PLAYING) return;
+        if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
         actor.triggerDodge();
-    }
-
-    function handleBurst(actor) {
-        if (gameState !== STATE.PLAYING) return;
-        if (actor.burstGauge < 100) return;
-
-        actor.burstGauge = 0;
-        updateBurstUI();
-
-        const opponent = (actor === p1) ? p2 : p1;
-        const dir = (actor === p1) ? 1 : -1;
-
-        actor.setStateText('どすこいバースト！');
-        audio.playBurst();
-        triggerShake(0.5);
-
-        speedLinesEl.classList.add('active');
-        setTimeout(() => speedLinesEl.classList.remove('active'), 800);
-
-        opponent.vx += dir * 32;
-        spawnSparks((actor.x + opponent.x)/2, actor.y, '#d97706', 35, 'ドゴーン！');
     }
 
     function updateBurstUI() {
@@ -908,22 +1004,18 @@
         }
     }
 
-    // 敵AIタイプロジック（単調さ打破！）
     function updateAI(dt) {
-        if (gameState !== STATE.PLAYING || gameMode === 'pvp') return;
+        if (gameState !== STATE.PLAYING || gameMode === 'pvp' || hitStopTimer > 0) return;
 
         aiPushTimer += dt;
         let pushInterval = Math.max(0.05, 0.28 - (p2.currentPower * 0.024));
 
-        // AIタイプ別の行動ロジック
         if (p2.aiType === 'counter') {
-            // 見切り巧者タイプ：プレイヤーが連打しまくっている時に即座に見切り！
             if (comboP1 > 3 && p2.dodgeTimer <= 0 && Math.random() < 0.4) {
                 handleDodge(p2);
                 return;
             }
         } else if (p2.aiType === 'heavy') {
-            // 重戦車タイプ：少し間隔をおいて一撃重い押し
             pushInterval *= 1.3;
         }
 
@@ -1021,7 +1113,6 @@
     function drawDohyo() {
         ctx.save();
 
-        // 氷土俵ハプニング時の背景カラー変化
         let bg1 = '#fff5fa', bg2 = '#f3e8f8';
         if (currentEvent && currentEvent.type === 'ice') {
             bg1 = '#e0f2fe'; bg2 = '#bae6fd';
@@ -1167,13 +1258,19 @@
         const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
         lastFrameTime = now;
 
+        // ヒットストップ処理 (時間停止)
+        if (hitStopTimer > 0) {
+            hitStopTimer -= dt;
+            requestAnimationFrame(gameLoop);
+            return;
+        }
+
         if (gameState === STATE.PLAYING) {
             p1.update(dt);
             p2.update(dt);
             updateAI(dt);
             checkRingOut();
 
-            // コンボタイマー更新
             if (comboTimerP1 > 0) {
                 comboTimerP1 -= dt;
                 if (comboTimerP1 <= 0) {
@@ -1181,7 +1278,6 @@
                 }
             }
 
-            // ハプニングタイマー更新
             if (eventTimer > 0) {
                 eventTimer -= dt;
                 if (eventTimer <= 0) {
