@@ -1,6 +1,6 @@
 /* ==========================================
    超音速スモウバトル～ちゃんこ食わんかい～
-   スタイルシート (和モダンパステル & キーボードフォーカス対応)
+   スタイルシート (透過アバター＆改行不可ボタン)
    ========================================== */
 
 :root {
@@ -172,7 +172,9 @@ body {
 .rikishi-card { flex: 1; background: #fff; border: 2px solid var(--washi-purple); border-radius: 16px; padding: 10px; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
 .card-role { font-size: 0.75rem; color: var(--washi-purple); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 100%; }
 .rikishi-card h3 { font-size: 1.1rem; margin: 2px 0 6px 0; color: var(--text-dark); }
-.rikishi-avatar { width: 54px; height: 54px; border-radius: 50%; background: var(--washi-purple-light); margin-bottom: 8px; border: 1.5px solid var(--washi-purple); display: flex; justify-content: center; align-items: center; font-size: 1.8rem; }
+
+/* 🖼️ ご要望 2 修正：アバタープレビューの円形外枠（ボーダー）消去 */
+.rikishi-avatar { width: 56px; height: 56px; border-radius: 50%; background: transparent; margin-bottom: 8px; border: none; display: flex; justify-content: center; align-items: center; font-size: 2rem; }
 
 .stat-bar { width: 100%; display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-dark); margin-bottom: 2px; }
 .bar { flex: 1; height: 8px; background: #f1e4f5; border-radius: 4px; overflow: hidden; }
@@ -188,7 +190,7 @@ body {
 
 .matchup-actions { display: flex; gap: 8px; width: 100%; justify-content: center; }
 
-/* スキルカード選択 (キーボードフォーカススタイル) */
+/* スキルカード選択 */
 .skill-select-header h2 { font-size: 1.25rem; color: var(--washi-purple); }
 .pop-badge { display: inline-block; background: var(--washi-purple); color: #fff; padding: 3px 12px; border-radius: 12px; font-size: 0.75rem; margin-bottom: 4px; }
 .cards-container { display: flex; gap: 10px; width: 100%; margin-top: 10px; justify-content: center; }
@@ -253,8 +255,10 @@ body {
 .action-btn { flex: 1; padding: 10px 4px; min-height: 52px; border: 2px solid var(--text-dark); border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 3px 0px rgba(0, 0, 0, 0.1); transition: transform 0.05s ease; touch-action: manipulation; }
 .action-btn:active { transform: translateY(2px); box-shadow: 0 1px 0px rgba(0, 0, 0, 0.1); }
 .action-emoji { font-size: 1.25rem; }
-.action-label { font-size: 0.95rem; }
-.action-sub { font-size: 0.6rem; opacity: 0.9; }
+
+/* 🔴 ご要望 1 & 4 修正：改行不可ボタンテキストスタイル */
+.nowrap-label { white-space: nowrap !important; font-size: 0.88rem !important; word-break: keep-all !important; }
+.action-sub { font-size: 0.6rem; opacity: 0.9; white-space: nowrap; }
 
 .push-btn { flex: 1.4; background: var(--washi-purple); color: #fff; }
 .dodge-btn { background: var(--washi-indigo); color: #fff; }
@@ -298,6 +302,7 @@ body {
     .matchup-container { gap: 4px; }
     .rikishi-avatar { width: 44px; height: 44px; font-size: 1.4rem; margin-bottom: 4px; }
     .rikishi-card h3 { font-size: 0.95rem; }
+    .nowrap-label { font-size: 0.72rem !important; }
 }
 
 @media (max-height: 480px) {

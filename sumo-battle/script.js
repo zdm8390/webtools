@@ -1,6 +1,6 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * メインJavaScript (主人公エドモーンド・全UIキーボード遷移対応・深層プロバランス)
+ * メインJavaScript (透過アバター・敵超強化AI・ボタン改行防止)
  */
 
 (function() {
@@ -195,12 +195,12 @@
     }
 
     const RANKS = [
-        { name: 'ブロンズ', icon: '🐰', imgUrl: 'assets/rabbit.jpg', enemyName: 'うさ丸', aiType: 'rush', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
-        { name: 'シルバー', icon: '🐻', imgUrl: null, enemyName: 'くまごろう', aiType: 'heavy', strength: 3.4, weight: 130, color: '#0284c7', avatar: '🐻' },
-        { name: 'ゴールド', icon: '🐱', imgUrl: null, enemyName: 'ねこノ海', aiType: 'counter', strength: 4.8, weight: 145, color: '#d97706', avatar: '🐱' },
-        { name: 'プラチナ', icon: '🐧', imgUrl: null, enemyName: 'ぺんぎん山', aiType: 'rush', strength: 6.2, weight: 165, color: '#0284c7', avatar: '🐧' },
-        { name: 'ダイヤ', icon: '🦅', imgUrl: null, enemyName: '鳳凰丸', aiType: 'counter', strength: 7.6, weight: 185, color: '#9333ea', avatar: '🦅' },
-        { name: 'マスター (ラスボス)', icon: '🐲', imgUrl: 'assets/boss_gold.jpg', enemyName: '金龍丸 ＆ 銀龍丸 (双子2体)', aiType: 'boss_duo', strength: 8.8, weight: 190, color: '#b45309', avatar: '🐉' }
+        { name: 'ブロンズ', icon: '🐰', imgUrl: 'assets/rabbit.jpg', enemyName: 'うさ丸', aiType: 'rush', strength: 2.5, weight: 110, color: '#059669', avatar: '🐰' },
+        { name: 'シルバー', icon: '🐻', imgUrl: null, enemyName: 'くまごろう', aiType: 'heavy', strength: 3.8, weight: 130, color: '#0284c7', avatar: '🐻' },
+        { name: 'ゴールド', icon: '🐱', imgUrl: null, enemyName: 'ねこノ海', aiType: 'counter', strength: 5.2, weight: 145, color: '#d97706', avatar: '🐱' },
+        { name: 'プラチナ', icon: '🐧', imgUrl: null, enemyName: 'ぺんぎん山', aiType: 'rush', strength: 6.8, weight: 165, color: '#0284c7', avatar: '🐧' },
+        { name: 'ダイヤ', icon: '🦅', imgUrl: null, enemyName: '鳳凰丸', aiType: 'counter', strength: 8.2, weight: 185, color: '#9333ea', avatar: '🦅' },
+        { name: 'マスター (ラスボス)', icon: '🐲', imgUrl: 'assets/boss_gold.jpg', enemyName: '金龍丸 ＆ 銀龍丸 (双子2体)', aiType: 'boss_duo', strength: 9.5, weight: 195, color: '#b45309', avatar: '🐉' }
     ];
 
     const RIVAL_NAMES = ['ぽんちゃん', 'もち丸', 'わたがし山', 'いちご龍', 'みるく丸', 'キャンディ海', 'ぷりん山', 'そら丸'];
@@ -263,7 +263,7 @@
     let shakeTimer = 0;
     let hitStopTimer = 0;
 
-    let selectedCardIndex = 0; // スキル選択時のキーボードフォーカス位置
+    let selectedCardIndex = 0;
 
     const keysPressed = {};
     const dpadPressed = { up: false, down: false, left: false, right: false };
@@ -273,7 +273,7 @@
             this.x = x;
             this.y = y;
             const angle = Math.atan2(targetY - y, targetX - x);
-            const speed = isReflected ? 8.5 : 4.2;
+            const speed = isReflected ? 8.5 : 4.8;
             this.vx = Math.cos(angle) * speed;
             this.vy = Math.sin(angle) * speed;
             this.radius = 9;
@@ -524,7 +524,6 @@
     const resExpEl = document.getElementById('res-exp');
     const resLevelEl = document.getElementById('res-level');
 
-    // 🔴 [ご要望反映] 主人公「エドモーンド」へ改名！
     let p1 = new Rikishi(true, 'エドモーンド', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
     let enemies = [];
 
@@ -623,7 +622,6 @@
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p1); });
         btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p1); });
 
-        // ⌨️ 全画面・全UIキーボード遷移イベント
         window.addEventListener('keydown', (e) => {
             audio.init();
             keysPressed[e.code] = true;
@@ -638,7 +636,6 @@
                 return;
             }
 
-            // 1. タイトル画面でのキー操作
             if (gameState === STATE.TITLE) {
                 if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space' || e.code === 'Digit1') {
                     e.preventDefault();
@@ -648,16 +645,12 @@
                 } else if (e.code === 'Digit3') {
                     resetAndStartMode('pvp');
                 }
-            }
-            // 2. マッチアップ画面でのキー操作
-            else if (gameState === STATE.MATCHUP) {
+            } else if (gameState === STATE.MATCHUP) {
                 if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
                     e.preventDefault();
                     startCountdown();
                 }
-            }
-            // 3. スキルカード選択画面でのキー操作 (A/D or 矢印キーでカードカーソル移動 ➔ Enter決定)
-            else if (gameState === STATE.SKILL_SELECT) {
+            } else if (gameState === STATE.SKILL_SELECT) {
                 const cards = cardsContainer.children;
                 if (cards.length > 0) {
                     if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
@@ -673,16 +666,12 @@
                         }
                     }
                 }
-            }
-            // 4. ランク昇格ダイアログでのキー操作
-            else if (gameState === STATE.RANK_UP) {
+            } else if (gameState === STATE.RANK_UP) {
                 if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
                     e.preventDefault();
                     showSkillSelect();
                 }
-            }
-            // 5. リザルト画面でのキー操作
-            else if (gameState === STATE.RESULT) {
+            } else if (gameState === STATE.RESULT) {
                 if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
                     e.preventDefault();
                     if (!btnNextMatch.classList.contains('hidden')) {
@@ -691,9 +680,7 @@
                         btnRetryMatch.click();
                     }
                 }
-            }
-            // 6. プレイ中のキー操作
-            else if (gameState === STATE.PLAYING) {
+            } else if (gameState === STATE.PLAYING) {
                 if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab'].includes(e.code)) {
                     e.preventDefault();
                 }
@@ -908,7 +895,7 @@
         gameState = STATE.SKILL_SELECT;
         eventBanner.classList.add('hidden');
         saltBullets = [];
-        selectedCardIndex = 0; // キーボード選択リセット
+        selectedCardIndex = 0;
         hideAllScreens();
         screenSkillSelect.classList.add('active');
         uiOverlay.classList.add('active');
@@ -1301,13 +1288,15 @@
 
             const dist = Math.hypot(opponent.x - actor.x, opponent.y - actor.y);
             if (dist < actor.radius + opponent.radius + 40) {
-                if (opponent.isDodging) {
-                    actor.vx -= (opponent.x - actor.x) * 0.4;
-                    actor.vy -= (opponent.y - actor.y) * 0.4;
+                // 🔴 [ご要望 3 敵強烈化] 単純突進プレイヤーへの見切り返し・はたき確率大幅アップ！
+                if (opponent.isDodging || Math.random() < 0.35) {
+                    opponent.triggerDodge();
+                    actor.vx -= (opponent.x - actor.x) * 0.7;
+                    actor.vy -= (opponent.y - actor.y) * 0.7;
                     audio.playHit();
-                    opponent.setStateText('見切り返し！');
+                    opponent.setStateText('見切りはたき！💥');
                     triggerShake(0.3);
-                    spawnSparks(opponent.x, opponent.y, '#0284c7', 15, '見切り！');
+                    spawnSparks(opponent.x, opponent.y, '#0284c7', 15, 'カウンター！');
                     return;
                 }
 
@@ -1369,6 +1358,7 @@
         }
     }
 
+    // 🔴 [ご要望 3 敵超強化AI] 右押しっぱなしプレイヤーを上下回避・バックステップ＆塩乱射で迎撃！
     function updateAI(dt) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
@@ -1378,35 +1368,46 @@
         enemies.forEach(enemy => {
             if (enemy.isEliminated) return;
 
-            const angle = Math.atan2(p1.y - enemy.y, p1.x - enemy.x);
-            const speed = 1.2 * enemy.moveSpeed;
-            enemy.vx += Math.cos(angle) * speed * 0.5;
-            enemy.vy += Math.sin(angle) * speed * 0.5;
+            const dx = p1.x - enemy.x;
+            const dy = p1.y - enemy.y;
+            const dist = Math.hypot(dx, dy);
 
-            const saltInterval = (currentRankIdx >= 4) ? 2.0 : 3.0;
+            // プレイヤーが右（直進）に押してきている場合、スマート回避移動！
+            let targetAngle = Math.atan2(dy, dx);
+
+            // 右押し（p1.vx > 2）を感知したら側面にスライド移動回避！
+            if (p1.vx > 2 && dist < 220) {
+                targetAngle += (Math.sin(performance.now() * 0.005) > 0 ? 1.2 : -1.2); // サイドステップ！
+                if (Math.random() < 0.15) {
+                    enemy.triggerDodge(); // 引きはたき！
+                }
+            }
+
+            const speed = (1.6 + (currentRankIdx * 0.35)) * enemy.moveSpeed;
+            enemy.vx += Math.cos(targetAngle) * speed * 0.6;
+            enemy.vy += Math.sin(targetAngle) * speed * 0.6;
+
+            // 🧂 塩飛び道具のガンガン連射（1.4秒〜2.0秒間隔！）
+            const saltInterval = Math.max(1.2, 2.4 - (currentRankIdx * 0.3));
             if (enemySaltTimer >= saltInterval) {
                 saltBullets.push(new SaltBullet(enemy.x, enemy.y, p1.x, p1.y));
-                enemy.setStateText('卑怯な塩投げ！🧂');
+                enemy.setStateText('塩乱射！🧂💥');
                 audio.playHit();
             }
 
-            const pushInterval = Math.max(0.08, 0.32 - (enemy.currentPower * 0.02));
+            const pushInterval = Math.max(0.06, 0.28 - (enemy.currentPower * 0.02));
             if (aiPushTimer >= pushInterval) {
-                const dist = Math.hypot(p1.x - enemy.x, p1.y - enemy.y);
-                if (dist < enemy.radius + p1.radius + 35) {
-                    if (p1.vx > 6 && Math.random() < 0.2) {
-                        enemy.triggerDodge();
-                    } else {
-                        p1.vx -= Math.cos(angle) * (2.8 + enemy.currentPower * 0.3);
-                        p1.vy -= Math.sin(angle) * (2.8 + enemy.currentPower * 0.3);
-                        audio.playHit();
-                    }
+                if (dist < enemy.radius + p1.radius + 40) {
+                    const pushAngle = Math.atan2(p1.y - enemy.y, p1.x - enemy.x);
+                    p1.vx -= Math.cos(pushAngle) * (3.5 + enemy.currentPower * 0.4);
+                    p1.vy -= Math.sin(pushAngle) * (3.5 + enemy.currentPower * 0.4);
+                    audio.playHit();
                 }
             }
         });
 
-        if (enemySaltTimer >= 3.0) enemySaltTimer = 0;
-        if (aiPushTimer >= 0.3) aiPushTimer = 0;
+        if (enemySaltTimer >= 2.4) enemySaltTimer = 0;
+        if (aiPushTimer >= 0.28) aiPushTimer = 0;
     }
 
     function updateSaltBullets(dt) {
@@ -1583,6 +1584,7 @@
         ctx.restore();
     }
 
+    // 🖼️ 🔴 ご要望 2 修正：円形外枠（ボーダー stroke）を消去し、透過画像を美しく描画！
     function drawRikishi(rikishi) {
         if (rikishi.isEliminated) return;
 
@@ -1598,38 +1600,34 @@
             ctx.fill();
         }
 
+        // 影
         ctx.beginPath();
         ctx.ellipse(x, y + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
         ctx.fill();
 
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff4e6';
-        ctx.fill();
-        ctx.lineWidth = 3.5;
-        ctx.strokeStyle = rikishi.color;
-        ctx.stroke();
-
+        // 🖼️ 透過画像アバター描画 (外枠ボーダー stroke 無し)
         if (rikishi.imageObj && rikishi.imageObj.complete && rikishi.imageObj.naturalWidth > 0) {
             ctx.save();
             ctx.beginPath();
-            ctx.arc(x, y, r - 2, 0, Math.PI * 2);
+            ctx.arc(x, y, r, 0, Math.PI * 2);
             ctx.clip();
             ctx.drawImage(rikishi.imageObj, x - r, y - r, r * 2, r * 2);
             ctx.restore();
         } else {
+            // 絵文字アバター (ボーダー無し)
             ctx.beginPath();
-            ctx.arc(x, y, r * 0.82, 0.3, Math.PI - 0.3);
+            ctx.arc(x, y, r, 0, Math.PI * 2);
             ctx.fillStyle = rikishi.color;
             ctx.fill();
 
-            ctx.font = `${Math.floor(r * 0.8)}px sans-serif`;
+            ctx.font = `${Math.floor(r * 0.85)}px sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(rikishi.avatar, x, y - 2);
         }
 
+        // 名前
         ctx.font = '700 14px "Zen Maru Gothic", sans-serif';
         ctx.fillStyle = '#2d2633';
         ctx.shadowColor = '#fff';
