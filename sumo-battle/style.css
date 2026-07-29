@@ -1,14 +1,17 @@
 /* ----------------------------------------------------
    超音速スモウバトル～ちゃんこ食わんかい～
-   和風モダニズム ＆ Yahoo!募金 ＆ アーケード名言CSS
+   NINTENDO & CAPCOM スピリッツ：ネオポップ＆モダンCSS
 ---------------------------------------------------- */
 
 :root {
-    --primary-red: #c2410c;
-    --accent-gold: #fde047;
-    --deep-bg: #fbf9f5;
+    --primary-red: #ea580c;
+    --accent-gold: #fbbf24;
+    --pop-pink: #ec4899;
+    --pop-blue: #3b82f6;
+    --pop-green: #10b981;
+    --deep-bg: #0f172a;
     --navy-ink: #1e1b4b;
-    --card-bg: rgba(255, 255, 255, 0.95);
+    --card-bg: rgba(255, 255, 255, 0.98);
 }
 
 * {
@@ -20,8 +23,8 @@
 }
 
 body {
-    background-color: #0f172a;
-    color: #1e293b;
+    background-color: #020617;
+    color: #0f172a;
     font-family: 'Zen Maru Gothic', sans-serif;
     overflow: hidden;
     height: 100vh;
@@ -37,22 +40,23 @@ body {
     max-height: 720px;
     display: flex;
     flex-direction: column;
-    background: var(--deep-bg);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    background: #f8fafc;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
     position: relative;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
+    border: 4px solid #1e293b;
 }
 
-/* 🏛️ ヘッダー */
+/* 🏛️ ヘッダー (ネオポップアーケード) */
 .game-header {
-    background: #18181b;
+    background: #0f172a;
     color: #fff;
     padding: 8px 16px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    border-bottom: 3px solid var(--primary-red);
+    gap: 6px;
+    border-bottom: 4px solid var(--accent-gold);
 }
 
 .header-main-info {
@@ -61,16 +65,27 @@ body {
     align-items: center;
 }
 
+.logo-badge {
+    background: var(--pop-pink);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 6px;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
 .logo-main {
     font-family: 'Shippori Mincho', serif;
     font-weight: 900;
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     color: #f8fafc;
 }
 
 .logo-main .highlight {
     color: var(--accent-gold);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
 }
 
 .header-badges {
@@ -80,15 +95,15 @@ body {
 }
 
 .badge {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 4px 10px;
+    padding: 4px 12px;
     border-radius: 20px;
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 900;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
 }
 
 .badge-timer {
-    background: #2563eb;
+    background: var(--pop-blue);
     color: #fff;
     font-family: monospace;
     font-size: 0.95rem;
@@ -103,11 +118,12 @@ body {
     background: #334155;
     color: #fff;
     border: none;
-    padding: 4px 10px;
-    border-radius: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: 700;
+    font-weight: 900;
     font-size: 0.8rem;
+    box-shadow: 0 3px 0 #0f172a;
 }
 
 /* 幕内番付インジケーター */
@@ -115,9 +131,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2px 20px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
+    padding: 4px 20px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.1);
 }
 
 .rank-step {
@@ -127,6 +144,7 @@ body {
     display: flex;
     align-items: center;
     gap: 4px;
+    transition: transform 0.2s ease;
 }
 
 .rank-step small {
@@ -137,7 +155,7 @@ body {
     opacity: 1.0;
     color: var(--accent-gold);
     font-weight: 900;
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 .rank-step.reached {
@@ -147,19 +165,20 @@ body {
 
 .rank-line {
     flex: 1;
-    height: 2px;
+    height: 3px;
     background: #475569;
     margin: 0 8px;
+    border-radius: 2px;
 }
 
-/* 🎮 メインビューポート */
+/* 🎮 POPメインビューポート */
 .game-viewport {
     flex: 1;
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #e2e8f0;
+    background: #cbd5e1;
     overflow: hidden;
 }
 
@@ -170,11 +189,12 @@ body {
     background: #fbf9f5;
 }
 
-/* 特大演出カットイン (hiddenのときは絶対非表示) */
+/* 🔴 画面非表示の優先競合解決（.hidden でも .active が付けば表示可能にする！） */
 .hidden {
-    display: none !important;
+    display: none;
 }
 
+/* 演出カットイン */
 .flash-overlay {
     position: absolute;
     inset: 0;
@@ -189,7 +209,7 @@ body {
 .parry-dim-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(15, 23, 42, 0.75);
+    background: rgba(15, 23, 42, 0.78);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.15s ease;
@@ -203,17 +223,18 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(194, 65, 12, 0.88);
+    background: rgba(234, 88, 12, 0.92);
     z-index: 30;
     animation: popCutin 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+.burst-cutin.hidden { display: none !important; }
 
 .cutin-text {
     font-family: 'Shippori Mincho', serif;
     font-size: 3.8rem;
     font-weight: 900;
     color: var(--accent-gold);
-    text-shadow: 0 0 20px #000;
+    text-shadow: 0 0 25px #000;
 }
 
 @keyframes popCutin {
@@ -230,7 +251,7 @@ body {
     border-radius: 30px;
     font-size: 1rem;
     font-weight: 900;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 0 #78350f;
     z-index: 25;
 }
 
@@ -243,14 +264,14 @@ body {
 }
 
 .combo-count {
-    font-size: 2.2rem;
+    font-size: 2.4rem;
     font-weight: 900;
     color: var(--primary-red);
-    text-shadow: 2px 2px 0 #fff;
+    text-shadow: 3px 3px 0 #fff;
 }
 
 .combo-title {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 900;
     color: #1e1b4b;
 }
@@ -259,91 +280,100 @@ body {
 .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(15, 23, 42, 0.7);
-    backdrop-filter: blur(6px);
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 40;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.2s ease;
 }
 .overlay.active {
-    opacity: 1;
-    pointer-events: auto;
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
 
+/* 🔴 画面表示の絶対保障 (.screen-panel.active は確実に表示！) */
 .screen-panel {
     display: none;
     width: 90%;
-    max-width: 620px;
+    max-width: 640px;
     background: var(--card-bg);
-    border-radius: 16px;
-    padding: 24px;
+    border-radius: 20px;
+    padding: 26px;
     text-align: center;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
     border: 4px solid var(--navy-ink);
 }
-.screen-panel.active { display: block; }
+.screen-panel.active {
+    display: block !important;
+}
 
 .title-banner .pop-sticker {
-    background: #fde047;
-    color: #1e1b4b;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
+    background: var(--accent-gold);
+    color: var(--navy-ink);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
     font-weight: 900;
+    box-shadow: 0 3px 0 #d97706;
 }
 
 .title-huge {
     font-family: 'Shippori Mincho', serif;
-    font-size: 2.6rem;
+    font-size: 2.8rem;
     font-weight: 900;
     color: var(--navy-ink);
-    margin-top: 6px;
+    margin-top: 8px;
 }
 
 .subtitle {
     color: var(--primary-red);
     font-weight: 900;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     margin-bottom: 20px;
 }
 
 .quick-start-box {
-    margin: 16px 0;
+    margin: 18px 0;
 }
 
 .btn-arcade {
-    background: linear-gradient(135deg, #c2410c, #ea580c);
+    background: linear-gradient(135deg, #ea580c, #f97316);
     color: #fff;
-    border: none;
-    padding: 16px 36px;
+    border: 4px solid #1e293b;
+    padding: 16px 40px;
     border-radius: 50px;
-    font-size: 1.3rem;
+    font-size: 1.35rem;
     font-weight: 900;
     cursor: pointer;
-    box-shadow: 0 8px 25px rgba(194, 65, 12, 0.4);
+    box-shadow: 0 8px 0 #0f172a;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .btn-arcade:hover {
-    transform: scale(1.04);
-    box-shadow: 0 12px 30px rgba(194, 65, 12, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 0 #0f172a;
+}
+
+.btn-arcade:active {
+    transform: translateY(4px);
+    box-shadow: 0 4px 0 #0f172a;
 }
 
 .super-simple-rules {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    font-size: 0.85rem;
-    font-weight: 700;
+    gap: 14px;
+    font-size: 0.9rem;
+    font-weight: 900;
     color: #475569;
-    margin-top: 12px;
+    margin-top: 14px;
 }
 
 /* スキルカード選択 */
@@ -356,50 +386,69 @@ body {
 .skill-card {
     flex: 1;
     background: #fff;
-    border: 3px solid #cbd5e1;
-    border-radius: 12px;
-    padding: 16px;
+    border: 4px solid #cbd5e1;
+    border-radius: 16px;
+    padding: 18px;
     cursor: pointer;
+    box-shadow: 0 6px 0 #94a3b8;
     transition: all 0.15s ease;
 }
 
 .skill-card:hover, .skill-card.selected-keyboard-card {
     border-color: var(--primary-red);
     transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(194, 65, 12, 0.2);
+    box-shadow: 0 10px 0 var(--navy-ink);
 }
 
-.card-icon { font-size: 2.2rem; }
-.card-title { font-weight: 900; color: var(--navy-ink); margin: 6px 0; }
-.card-desc { font-size: 0.78rem; color: #64748b; }
+.card-icon { font-size: 2.5rem; }
+.card-title { font-weight: 900; color: var(--navy-ink); margin: 8px 0 4px 0; font-size: 1.1rem; }
+.card-desc { font-size: 0.8rem; color: #64748b; font-weight: 700; }
 
-/* タイムアタック＆スコア表示カード */
+/* タイムアタック＆スコア表示POPカード */
+.result-pop-header {
+    background: var(--pop-blue);
+    color: #fff;
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-weight: 900;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.result-title-pop {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 2.0rem;
+    font-weight: 900;
+    color: var(--navy-ink);
+}
+
 .score-card-box {
     background: #f1f5f9;
-    border-radius: 10px;
-    padding: 12px 20px;
+    border-radius: 14px;
+    padding: 12px 24px;
     margin: 12px 0;
-    border: 2px dashed #cbd5e1;
+    border: 3px dashed #94a3b8;
 }
 
 .score-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: 1.05rem;
+    font-weight: 900;
     margin: 4px 0;
 }
 
 .score-value {
     font-family: monospace;
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     color: #0f172a;
 }
 
 .highlight-score {
     color: var(--primary-red);
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     font-weight: 900;
 }
 
@@ -407,41 +456,43 @@ body {
 .yokozuna-title-card {
     background: #0f172a;
     color: var(--accent-gold);
-    border-radius: 10px;
-    padding: 14px;
+    border-radius: 12px;
+    padding: 16px;
     margin: 10px 0;
-    border: 2px solid var(--accent-gold);
+    border: 3px solid var(--accent-gold);
+    box-shadow: 0 6px 0 #78350f;
 }
 
 .arcade-quote-title {
     font-family: 'Shippori Mincho', serif;
     font-weight: 900;
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     letter-spacing: 2px;
     color: #fde047;
 }
 
 .arcade-quote-desc {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: #cbd5e1;
     margin-top: 6px;
+    font-weight: 700;
 }
 
 /* 🤝 Yahoo!募金 応援バナー */
 .yahoo-donation-card {
     background: linear-gradient(135deg, #fef2f2, #ffe4e6);
-    border: 2px solid #fda4af;
-    border-radius: 10px;
-    padding: 10px 16px;
+    border: 3px solid #fda4af;
+    border-radius: 14px;
+    padding: 12px 18px;
     margin: 12px 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .donation-header {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 900;
     color: #9f1239;
 }
@@ -451,29 +502,31 @@ body {
     color: #fff;
     text-decoration: none;
     font-weight: 900;
-    font-size: 0.9rem;
-    padding: 6px 16px;
-    border-radius: 20px;
-    transition: background 0.15s ease;
+    font-size: 0.95rem;
+    padding: 8px 20px;
+    border-radius: 30px;
+    box-shadow: 0 4px 0 #881337;
+    transition: transform 0.1s ease;
 }
 
 .donation-link-btn:hover {
-    background: #be123c;
+    transform: translateY(-2px);
 }
 
 .result-actions-simplified {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 10px;
+    margin-top: 14px;
 }
 
 .btn-sub-link {
     background: none;
     border: none;
     color: #64748b;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    font-weight: 700;
     cursor: pointer;
     text-decoration: underline;
 }
@@ -481,9 +534,9 @@ body {
 /* 🎮 タッチコントロール */
 .touch-controls-action {
     position: absolute;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
+    bottom: 14px;
+    left: 14px;
+    right: 14px;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -507,14 +560,15 @@ body {
 }
 
 .dpad-btn {
-    width: 44px;
-    height: 44px;
-    background: rgba(30, 27, 75, 0.7);
+    width: 46px;
+    height: 46px;
+    background: rgba(15, 23, 42, 0.85);
     color: #fff;
-    border: 2px solid #fff;
-    border-radius: 8px;
-    font-size: 1.1rem;
+    border: 3px solid #fff;
+    border-radius: 10px;
+    font-size: 1.2rem;
     cursor: pointer;
+    box-shadow: 0 4px 0 #0f172a;
 }
 
 .dpad-center {
@@ -524,12 +578,12 @@ body {
 
 .control-group {
     display: flex;
-    gap: 8px;
+    gap: 10px;
 }
 
 .action-btn {
-    padding: 10px 16px;
-    border-radius: 12px;
+    padding: 10px 18px;
+    border-radius: 14px;
     border: 3px solid #fff;
     color: #fff;
     font-weight: 900;
@@ -537,10 +591,10 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 0 rgba(0,0,0,0.4);
 }
 
-.push-btn { background: #c2410c; }
+.push-btn { background: #ea580c; }
 .dodge-btn { background: #0284c7; }
 .burst-btn { background: #b45309; }
 
@@ -550,14 +604,14 @@ body {
 }
 
 .nowrap-label {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     white-space: nowrap;
 }
 
 /* 📱 フッター */
 .game-footer {
     background: #0f172a;
-    padding: 4px 16px;
+    padding: 6px 16px;
     display: flex;
     justify-content: flex-end;
 }
@@ -567,5 +621,6 @@ body {
     border: none;
     color: #94a3b8;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 700;
 }

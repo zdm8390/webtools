@@ -1,8 +1,7 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * 1. 鮮やかな元カラー・アバター画像グラフィックへの完全復元
- * 2. yokozunaTitleCard の非マスター勝利時誤表示バグの修正
- * 3. burstCutinEl（超ドスコイ表示）の常駐バグの修正
+ * 1. 勝敗結果画面（画面切り替え）表示確実化バグ修正
+ * 2. モダン＆ネオポップグラフィック＆演出リデザイン
  */
 
 (function() {
@@ -300,7 +299,7 @@
     }
 
     function spawnVictoryConfetti() {
-        const colors = ['#c2410c', '#b45309', '#1e1b4b', '#ffffff', '#fde047'];
+        const colors = ['#ea580c', '#fbbf24', '#1e1b4b', '#ffffff', '#ec4899', '#10b981'];
         for (let i = 0; i < 100; i++) {
             const p = particlePool.get();
             if (!p) break;
@@ -780,6 +779,24 @@
         btn.addEventListener('pointerleave', () => { dpadPressed[dir] = false; });
     }
 
+    // 🔴 画面非表示確実化関数 (すべてのパネルから hidden を正しく解除/付与)
+    function hideAllScreens() {
+        [screenTitle, screenSkillSelect, screenResult].forEach(screen => {
+            if (screen) {
+                screen.classList.remove('active');
+                screen.classList.add('hidden');
+            }
+        });
+    }
+
+    function showScreenPanel(targetPanel) {
+        hideAllScreens();
+        if (targetPanel) {
+            targetPanel.classList.remove('hidden');
+            targetPanel.classList.add('active');
+        }
+    }
+
     function showTitle() {
         gameState = STATE.TITLE;
         currentRankIdx = 0;
@@ -797,17 +814,10 @@
         if (parryDimOverlayEl) parryDimOverlayEl.classList.remove('active');
         if (yokozunaTitleCard) yokozunaTitleCard.classList.add('hidden');
 
-        hideAllScreens();
-        screenTitle.classList.add('active');
+        showScreenPanel(screenTitle);
         uiOverlay.classList.add('active');
         updateHeaderUI();
         updateTimerDisplay();
-    }
-
-    function hideAllScreens() {
-        screenTitle.classList.remove('active');
-        screenSkillSelect.classList.remove('active');
-        screenResult.classList.remove('active');
     }
 
     function formatTime(sec) {
@@ -890,8 +900,7 @@
         gameState = STATE.SKILL_SELECT;
         saltBulletPool.clearAll();
         selectedCardIndex = 0;
-        hideAllScreens();
-        screenSkillSelect.classList.add('active');
+        showScreenPanel(screenSkillSelect);
         uiOverlay.classList.add('active');
 
         const shuffled = [...ALL_SKILL_CARDS].sort(() => 0.5 - Math.random());
@@ -943,7 +952,7 @@
         spawnSparks(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, '#fde047', 30, 'ハプニング！！');
     }
 
-    // 🔴 バグ修正：yokozunaTitleCard を冒頭で毎回隠蔽リセット！全5ステージ完全勝利時のみ開示！
+    // 🔴 勝利・敗北結果画面を100%確実に表示！ (showScreenPanel を使用)
     function finishMatch(isP1Win) {
         if (isMatchFinished) return;
         isMatchFinished = true;
@@ -958,10 +967,10 @@
 
         speedLinesEl.classList.remove('active');
         eventBanner.classList.add('hidden');
-        burstCutinEl.classList.add('hidden'); // カットイン消去
+        burstCutinEl.classList.add('hidden');
         saltBulletPool.clearAll();
         if (parryDimOverlayEl) parryDimOverlayEl.classList.remove('active');
-        if (yokozunaTitleCard) yokozunaTitleCard.classList.add('hidden'); // 🔴 必ず初期隠蔽！
+        if (yokozunaTitleCard) yokozunaTitleCard.classList.add('hidden');
 
         audio.playFanfare(isP1Win);
 
@@ -974,7 +983,6 @@
             resultTitleEl.textContent = '💥 豪快決まり手：寄り切り！！ 💥';
             winnerNameEl.textContent = `東 ${p1.name} の天下無双！`;
 
-            // 🔴 最終マスター階級（index 4）を撃破した時のみ「マスター到達クリアカード」を開示！
             if (currentRankIdx === RANKS.length - 1) {
                 isTimerRunning = false;
                 if (yokozunaTitleCard) yokozunaTitleCard.classList.remove('hidden');
@@ -994,9 +1002,8 @@
 
         setTimeout(() => {
             try {
-                hideAllScreens();
+                showScreenPanel(screenResult);
                 uiOverlay.classList.add('active');
-                screenResult.classList.add('active');
             } catch (e) {}
         }, 1000);
     }
@@ -1400,7 +1407,7 @@
 
         const bgGrad = ctx.createRadialGradient(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, 40, GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, 520);
         bgGrad.addColorStop(0, '#fbf9f5');
-        bgGrad.addColorStop(1, '#f5f0e6');
+        bgGrad.addColorStop(1, '#f1f5f9');
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.CANVAS_HEIGHT);
 
@@ -1416,12 +1423,12 @@
         }
 
         const dohyoGrad = ctx.createRadialGradient(cx, cy, 30, cx, cy, rad);
-        dohyoGrad.addColorStop(0, '#fffdfa');
-        dohyoGrad.addColorStop(1, '#ebdcc9');
+        dohyoGrad.addColorStop(0, '#ffffff');
+        dohyoGrad.addColorStop(1, '#fed7aa');
         ctx.fillStyle = dohyoGrad;
         ctx.fill();
         ctx.lineWidth = 6;
-        ctx.strokeStyle = '#1e1b4b';
+        ctx.strokeStyle = '#1e293b';
         ctx.stroke();
 
         ctx.beginPath();
@@ -1430,7 +1437,7 @@
         } else {
             ctx.arc(cx, cy, rad - 10, 0, Math.PI * 2);
         }
-        ctx.strokeStyle = '#c2410c';
+        ctx.strokeStyle = '#ea580c';
         ctx.lineWidth = 3.5;
         ctx.setLineDash([14, 10]);
         ctx.stroke();
@@ -1439,7 +1446,6 @@
         ctx.restore();
     }
 
-    // 🔴 1. 鮮やかな配色・アバター画像の元グラフィックへ完全復元！
     function drawRikishi(rikishi) {
         if (rikishi.isEliminated) return;
 
@@ -1460,7 +1466,7 @@
                 ctx.globalAlpha = img.life * 2.5;
                 ctx.beginPath();
                 ctx.arc(img.x, img.y, r, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(194, 65, 12, 0.4)';
+                ctx.fillStyle = 'rgba(234, 88, 12, 0.4)';
                 ctx.fill();
                 ctx.restore();
             }
@@ -1469,14 +1475,14 @@
         if (rikishi.isDodging) {
             ctx.beginPath();
             ctx.arc(x, y, r + 16, 0, Math.PI * 2);
-            ctx.fillStyle = parryGlowTimer > 0 ? 'rgba(253, 224, 71, 0.8)' : 'rgba(194, 65, 12, 0.4)';
+            ctx.fillStyle = parryGlowTimer > 0 ? 'rgba(253, 224, 71, 0.8)' : 'rgba(2, 132, 199, 0.5)';
             ctx.fill();
         }
 
         // 影
         ctx.beginPath();
         ctx.ellipse(x, y + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
         ctx.fill();
 
         if (rikishi.imageObj && rikishi.imageObj.complete && rikishi.imageObj.naturalWidth > 0) {

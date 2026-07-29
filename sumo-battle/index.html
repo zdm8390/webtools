@@ -12,10 +12,11 @@
 </head>
 <body>
     <div id="app-container">
-        <!-- 🏛️ アーケード・極上ヘッダー -->
+        <!-- 🏛️ POP＆モダン アーケードヘッダー -->
         <header class="game-header">
             <div class="header-main-info">
                 <h1 class="logo">
+                    <span class="logo-badge">SUPER POP</span>
                     <span class="logo-main">超音速スモウバトル <span class="highlight">～ちゃんこ食わんかい～</span></span>
                 </h1>
                 <div class="header-badges">
@@ -25,7 +26,7 @@
                 </div>
             </div>
 
-            <!-- 幕内番付インジケーター (シルバー/ゴールド/ダイヤ/プラチナ/マスター) -->
+            <!-- 超ポップ・幕内番付インジケーター (シルバー/ゴールド/ダイヤ/プラチナ/マスター) -->
             <div class="rank-map-container" aria-label="幕内番付">
                 <div class="rank-step active" id="rmap-0">🥈<small>シルバー</small></div>
                 <div class="rank-line"></div>
@@ -39,7 +40,7 @@
             </div>
         </header>
 
-        <!-- 🎮 ゲームビューポート & 特大カットインコンテナ -->
+        <!-- 🎮 POPゲームビューポート & カットインコンテナ -->
         <main class="game-viewport">
             <div id="flash-overlay" class="flash-overlay" aria-hidden="true"></div>
             <!-- ✨ ジャストパリィ専用薄暗暗転ディム -->
@@ -65,7 +66,7 @@
             <!-- 🎯 UIオーバーレイ -->
             <div id="ui-overlay" class="overlay active">
                 
-                <!-- 1. 爆速スタートタイトル画面 -->
+                <!-- 1. POPスタートタイトル画面 -->
                 <section id="screen-title" class="screen-panel active">
                     <div class="title-banner">
                         <span class="pop-sticker">💥 タイムアタック！目指せ最速全階級制覇 💥</span>
@@ -96,10 +97,11 @@
                     <div id="cards-container" class="cards-container"></div>
                 </section>
 
-                <!-- 3. 熱狂勝利 / 敗北 リザルト & Yahoo!募金 -->
+                <!-- 3. POP勝負リザルト (勝利・敗北表示確実化) -->
                 <section id="screen-result" class="screen-panel hidden">
                     <div class="result-box">
-                        <h2 id="result-title">💥 豪快決まり手：寄り切り！！ 💥</h2>
+                        <div class="result-pop-header" id="result-header-badge">✨ RESULT ✨</div>
+                        <h2 id="result-title" class="result-title-pop">💥 豪快決まり手：寄り切り！！ 💥</h2>
                         <div class="winner-announcement" id="winner-name">東 エドモーンド の天下無双！</div>
                         
                         <!-- タイムアタック＆最終スコアカード -->
@@ -114,7 +116,7 @@
                             </div>
                         </div>
 
-                        <!-- 🔴 マスター制覇時のみ解禁されるアーケード名言クリアカード（通常は非表示） -->
+                        <!-- マスター制覇時のみ開示されるアーケード名言クリアカード -->
                         <div id="yokozuna-title-card" class="yokozuna-title-card hidden">
                             <div class="arcade-quote-title">「なにぃ　ゆうしょうしゃが　いない？」</div>
                             <div class="arcade-quote-desc">マスター到達おめでとう　新たなる強者と拳をまじえよ</div>
