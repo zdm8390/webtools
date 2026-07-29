@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>音速スモウバトル どすこいの国～ちゃんこ食わんかい～</title>
-    <meta name="description" content="全方向自由移動＆アクション相撲！マスターランクのラスボス『双子力士 2体同時襲来』を撃破せよ！">
+    <title>超音速スモウバトル～ちゃんこ食わんかい～</title>
+    <meta name="description" content="360°全方向自由移動＆本格相撲アクション！敵の卑怯な塩弾飛び道具をかわして撃破せよ！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app-container">
-        <!-- ヘッダー / タイトルバー (レベル＆ランクマップ表示) -->
+        <!-- ヘッダー / タイトルバー -->
         <header class="game-header">
             <div class="header-main-info">
                 <h1 class="logo">
-                    <span class="logo-sub">⚡ 360°自由移動×本格スモウアクション ⚡</span>
-                    <span class="logo-main">音速スモウバトル <span class="highlight">どすこいの国</span></span>
+                    <span class="logo-sub">360°自由移動×本格アクション</span>
+                    <span class="logo-main">超音速スモウバトル <span class="highlight">～ちゃんこ食わんかい～</span></span>
                 </h1>
                 <button id="btn-top-nav" class="btn-icon-top" type="button" aria-label="タイトル画面に戻る">🏠 TOP</button>
             </div>
@@ -34,7 +34,7 @@
                 <div class="rank-line"></div>
                 <div class="rank-step" id="rmap-4"><span class="r-icon">👑</span><small>ダイヤ</small></div>
                 <div class="rank-line"></div>
-                <div class="rank-step" id="rmap-5"><span class="r-icon">🐲</span><small>マスター (ラスボス2体)</small></div>
+                <div class="rank-step" id="rmap-5"><span class="r-icon">🐲</span><small>マスター (双子2体)</small></div>
             </div>
 
             <div class="header-badges">
@@ -48,13 +48,13 @@
             <!-- 集中線背景エフェクト -->
             <div id="speed-lines" class="speed-lines" aria-hidden="true"></div>
 
-            <!-- 必殺技超カットイン演出オーバーレイ -->
+            <!-- 必殺技カットイン演出 -->
             <div id="burst-cutin" class="burst-cutin hidden">
                 <div class="cutin-text">🔥 超・必・殺 🔥</div>
-                <div class="cutin-sub">極大どすこいバーストーーッ！！</div>
+                <div class="cutin-sub">どすこいバースト！！</div>
             </div>
 
-            <!-- ランダムハプニング告知バナー -->
+            <!-- ハプニング告知バナー -->
             <div id="event-banner" class="event-banner hidden">
                 <span id="event-title">🎲 ハプニング発生！</span>
             </div>
@@ -67,53 +67,53 @@
                 <!-- 1. タイトル画面 -->
                 <section id="screen-title" class="screen-panel active" aria-label="タイトル画面">
                     <div class="title-banner">
-                        <span class="pop-sticker">🍲 ～ちゃんこ食わんかい～ ⚡</span>
-                        <h2 class="title-huge">音速スモウバトル</h2>
-                        <p class="subtitle">WASD / 移動キーで駆け巡れ！ラスボスは敵2体タッグ！</p>
+                        <span class="pop-sticker">🍲 本格和風スモウアクション ⚡</span>
+                        <h2 class="title-huge">超音速スモウバトル</h2>
+                        <p class="subtitle">～ちゃんこ食わんかい～</p>
                     </div>
 
-                    <!-- 超わかりやすいビジュアルルール案内 -->
+                    <!-- ルール案内 -->
                     <div class="visual-rules-box">
                         <div class="v-rule-item">
                             <span class="v-step">STEP 1</span>
                             <span class="v-icon">🕹️</span>
                             <strong>WASDで自由移動！</strong>
-                            <small>土俵上を自由に動いて間合いを調整！</small>
+                            <small>間合いを取って弾き飛ばせ！</small>
                         </div>
                         <div class="v-rule-item">
                             <span class="v-step">STEP 2</span>
-                            <span class="v-icon">💥</span>
-                            <strong>接近して押し込み！</strong>
-                            <small>間合いを詰めて連打＆はたき！</small>
+                            <span class="v-icon">🧂</span>
+                            <strong>塩飛び道具を回避！</strong>
+                            <small>敵の卑怯な目くらまし弾に注意！</small>
                         </div>
                         <div class="v-rule-item">
                             <span class="v-step">STEP 3</span>
                             <span class="v-icon">🐲</span>
-                            <strong>ラスボス2体を撃破！</strong>
-                            <small>最終マスターランクは双子力士2体同時に挑め！</small>
+                            <strong>双子ラスボス撃破！</strong>
+                            <small>全6ランクを制覇してマスターへ！</small>
                         </div>
                     </div>
 
                     <div class="mode-select" role="group" aria-label="ゲームモード選択">
-                        <button id="btn-mode-arcade" class="btn btn-arcade btn-pop-glow btn-main-action" type="button">
+                        <button id="btn-mode-arcade" class="btn btn-arcade btn-main-action" type="button">
                             <span class="btn-emoji" aria-hidden="true">🏆</span>
                             <span class="btn-content">
-                                <span class="btn-title">ランク昇格チャレンジ (マスターでラスボス2体)</span>
-                                <span class="btn-desc">WASD自由移動＆全6ランク制覇へ対戦スタート！</span>
+                                <span class="btn-title">ランク昇格チャレンジ</span>
+                                <span class="btn-desc">全6ランク突破を目指して対戦スタート！</span>
                             </span>
                         </button>
-                        <button id="btn-mode-endless" class="btn btn-endless btn-pop-glow" type="button">
+                        <button id="btn-mode-endless" class="btn btn-endless" type="button">
                             <span class="btn-emoji" aria-hidden="true">🍲</span>
                             <span class="btn-content">
                                 <span class="btn-title">無限ちゃんこサバイバル</span>
                                 <span class="btn-desc">どこまで連勝できるか限界挑戦！</span>
                             </span>
                         </button>
-                        <button id="btn-mode-pvp" class="btn btn-pvp btn-pop-glow" type="button">
+                        <button id="btn-mode-pvp" class="btn btn-pvp" type="button">
                             <span class="btn-emoji" aria-hidden="true">⚔️</span>
                             <span class="btn-content">
                                 <span class="btn-title">ふたり対戦 (1P vs 2P)</span>
-                                <span class="btn-desc">スマホ1台・PCで白熱アクション！</span>
+                                <span class="btn-desc">スマホ1台・PCで白熱バトル！</span>
                             </span>
                         </button>
                     </div>
@@ -152,7 +152,7 @@
                         九月場所 一回戦
                     </div>
                     <div class="matchup-actions">
-                        <button id="btn-start-fight" class="btn btn-arcade btn-large btn-pop-glow" type="button">
+                        <button id="btn-start-fight" class="btn btn-arcade btn-large" type="button">
                             見合って！立合いスタート！ 🍲
                         </button>
                         <button id="btn-matchup-to-top" class="btn btn-secondary" type="button">TOPへ</button>
@@ -172,14 +172,14 @@
                     </div>
                 </section>
 
-                <!-- 4. ランク昇格豪華祝賀ダイアログ -->
+                <!-- 4. ランク昇格ダイアログ -->
                 <section id="screen-rank-up" class="screen-panel hidden" aria-label="ランク昇格画面">
                     <div class="rankup-box">
                         <span class="pop-badge-huge">🎉 RANK UP!! 🎉</span>
                         <h2 id="rankup-title">ブロンズ ➔ シルバー昇格！</h2>
                         <div class="rankup-icon" id="rankup-icon">🥈</div>
                         <p id="rankup-desc">新しい強敵が待っている！能力全開放ボーナス！</p>
-                        <button id="btn-rankup-continue" class="btn btn-arcade btn-pop-glow btn-huge" type="button">
+                        <button id="btn-rankup-continue" class="btn btn-arcade btn-huge" type="button">
                             次のランクへ進む ➔
                         </button>
                     </div>
@@ -218,7 +218,7 @@
                         </div>
 
                         <div class="result-actions-simplified">
-                            <button id="btn-next-match" class="btn btn-arcade btn-pop-glow btn-main-next" type="button">
+                            <button id="btn-next-match" class="btn btn-arcade btn-main-next" type="button">
                                 ✨ 次の取組へ（ちゃんこ獲得） ➔
                             </button>
                             <button id="btn-retry-match" class="btn btn-endless hidden" type="button">もう一度挑戦 🔄</button>

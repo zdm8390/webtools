@@ -1,6 +1,6 @@
 /**
- * 音速スモウバトル どすこいの国～ちゃんこ食わんかい～
- * メインJavaScript (全方向自由移動 & ラスボス2体同時タッグ戦)
+ * 超音速スモウバトル～ちゃんこ食わんかい～
+ * メインJavaScript (重なり防止弾き物理・敵の卑怯な塩飛び道具)
  */
 
 (function() {
@@ -176,19 +176,19 @@
 
     const audio = new SoundEngine();
 
-    // ランク階級システム (全6段階 - マスターはラスボス双子2体同時！)
+    // ランク階級システム
     const RANKS = [
         { name: 'ブロンズ', icon: '🥉', enemyName: 'うさ丸', aiType: 'rush', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
         { name: 'シルバー', icon: '🥈', enemyName: 'くまごろう', aiType: 'heavy', strength: 3.4, weight: 130, color: '#0284c7', avatar: '🐻' },
         { name: 'ゴールド', icon: '🥇', enemyName: 'ねこノ海', aiType: 'counter', strength: 4.8, weight: 145, color: '#d97706', avatar: '🐱' },
         { name: 'プラチナ', icon: '💎', enemyName: 'ぺんぎん山', aiType: 'rush', strength: 6.2, weight: 165, color: '#0284c7', avatar: '🐧' },
         { name: 'ダイヤ', icon: '👑', enemyName: '鳳凰丸', aiType: 'counter', strength: 7.6, weight: 185, color: '#9333ea', avatar: '🦅' },
-        { name: 'マスター (ラスボス)', icon: '🐲', enemyName: '金龍丸 ＆ 銀龍丸 (双子2体)', aiType: 'boss_duo', strength: 8.8, weight: 190, color: '#eab308', avatar: '🐉' }
+        { name: 'マスター (ラスボス)', icon: '🐲', enemyName: '金龍丸 ＆ 銀龍丸 (双子2体)', aiType: 'boss_duo', strength: 8.8, weight: 190, color: '#b45309', avatar: '🐉' }
     ];
 
-    const RIVAL_NAMES = ['ぽんちゃん', 'もち丸', 'わたがし山', 'いちご龍', 'みるく丸', 'キャンディ海', 'ぷりん山', 'そら丸'];
+    const RIVAL_NAMES = ['ぽnちゃん', 'もち丸', 'わたがし山', 'いちご龍', 'みるく丸', 'キャンディ海', 'ぷりん山', 'そら丸'];
     const RIVAL_AVATARS = ['🍓', '🍡', '🐥', '🐰', '🐻', '🐱', '🦄', '🐼'];
-    const RIVAL_COLORS = ['#e05297', '#d97706', '#0284c7', '#9333ea', '#059669', '#ffb3d9'];
+    const RIVAL_COLORS = ['#7e6b8f', '#b45309', '#0284c7', '#9333ea', '#059669', '#d977a5'];
 
     const ALL_SKILL_CARDS = [
         { id: 'push_power', icon: '🍲', title: '特上ちゃんこ', desc: '押し出し攻撃力 +30% (腕力成長！)', rarity: 'common', apply: (p) => { p.powerMultiplier += 0.3; } },
@@ -241,9 +241,46 @@
     let shakeTimer = 0;
     let hitStopTimer = 0;
 
-    // キー入力状態 (自由移動用)
     const keysPressed = {};
     const dpadPressed = { up: false, down: false, left: false, right: false };
+
+    // 敵の卑怯な塩飛び道具クラス (Salt Bullet)
+    class SaltBullet {
+        constructor(x, y, targetX, targetY) {
+            this.x = x;
+            this.y = y;
+            const angle = Math.atan2(targetY - y, targetX - x);
+            const speed = 4.5;
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed;
+            this.radius = 8;
+            this.life = 2.5; // 2.5秒で消滅
+        }
+        update(dt) {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life -= dt;
+        }
+        draw(ctx) {
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 塩のキラキラ
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = '10px sans-serif';
+            ctx.fillText('🧂', this.x - 5, this.y + 4);
+            ctx.restore();
+        }
+    }
+
+    let saltBullets = [];
+    let enemySaltTimer = 0;
 
     class Rikishi {
         constructor(isPlayer, name, color, avatar, power = 5.5, weight = 130, aiType = 'rush', startX = 340, startY = 260) {
@@ -276,7 +313,7 @@
             this.y = this.startY;
             this.vx = 0;
             this.vy = 0;
-            this.radius = Math.min(52, 34 + (this.weight * 0.06));
+            this.radius = Math.min(48, 32 + (this.weight * 0.05));
             this.burstGauge = 0;
             this.isDodging = false;
             this.dodgeTimer = 0;
@@ -361,7 +398,7 @@
             ctx.globalAlpha = alpha;
 
             if (this.text) {
-                ctx.font = '900 22px "Mochiy Pop One", sans-serif';
+                ctx.font = '700 20px "Zen Maru Gothic", sans-serif';
                 ctx.fillStyle = this.color;
                 ctx.shadowColor = '#fff';
                 ctx.shadowBlur = 6;
@@ -417,7 +454,6 @@
     const btnP2Dodge = document.getElementById('btn-p2-dodge');
     const btnP2Burst = document.getElementById('btn-p2-burst');
 
-    // D-Pad ボタン
     const dpadUp = document.getElementById('dpad-up');
     const dpadDown = document.getElementById('dpad-down');
     const dpadLeft = document.getElementById('dpad-left');
@@ -451,8 +487,8 @@
     const resExpEl = document.getElementById('res-exp');
     const resLevelEl = document.getElementById('res-level');
 
-    let p1 = new Rikishi(true, '雷電丸', '#e05297', '⚡', 5.5, 130, 'player', 340, 260);
-    let enemies = []; // 敵アレイ (ラスボス戦で2体 simultaneously!)
+    let p1 = new Rikishi(true, '雷電丸', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260);
+    let enemies = [];
 
     let particles = [];
     let announceText = '';
@@ -501,7 +537,6 @@
             btnToggleAudio.textContent = isEnabled ? '🔊 Sound ON' : '🔇 Sound OFF';
         });
 
-        // D-Pad バーチャルボタンのイベント
         setupDpadEvents(dpadUp, 'up');
         setupDpadEvents(dpadDown, 'down');
         setupDpadEvents(dpadLeft, 'left');
@@ -526,7 +561,6 @@
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p1); });
         btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p1); });
 
-        // キーボード入力（自由移動 WASD / 矢印キー & アクション）
         window.addEventListener('keydown', (e) => {
             audio.init();
             keysPressed[e.code] = true;
@@ -591,7 +625,7 @@
         playerLevel = 1;
         playerExp = 0;
         streakCount = 0;
-        p1 = new Rikishi(true, '雷電丸', '#e05297', '⚡', 5.5, 130, 'player', 340, 260);
+        p1 = new Rikishi(true, '雷電丸', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260);
         
         setupEnemy(mode);
         showMatchupScreen();
@@ -638,9 +672,8 @@
         if (mode === 'arcade') {
             const enemyData = RANKS[currentRankIdx];
             if (enemyData.aiType === 'boss_duo') {
-                // ラスボス：双子力士 2体同時襲来！
-                const boss1 = new Rikishi(false, '金龍丸 (兄)', '#eab308', '🐲', 8.8, 190, 'rush', 580, 210);
-                const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#94a3b8', '🐉', 8.2, 180, 'counter', 580, 310);
+                const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 8.8, 190, 'rush', 580, 210);
+                const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#4a5568', '🐉', 8.2, 180, 'counter', 580, 310);
                 enemies.push(boss1, boss2);
             } else {
                 const singleEnemy = new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260);
@@ -660,7 +693,7 @@
 
         if (enemyTypeBadge) {
             if (enemies.length > 1) {
-                enemyTypeBadge.textContent = `西 (🔥 ラスボス双子2体タッグ襲来！)`;
+                enemyTypeBadge.textContent = `西 (🧂 卑怯塩弾・双子タッグ！)`;
             } else {
                 const aiLabelMap = { 'rush': '⚡ 超突進', 'counter': '🌀 見切り巧者', 'heavy': '⛰️ 超重戦車' };
                 enemyTypeBadge.textContent = `西 (${aiLabelMap[enemies[0].aiType] || 'ライバル'})`;
@@ -794,6 +827,8 @@
         comboTimerP1 = 0;
         currentEvent = null;
         eventTimer = 0;
+        saltBullets = [];
+        enemySaltTimer = 0;
         eventBanner.classList.add('hidden');
         burstCutinEl.classList.add('hidden');
 
@@ -919,7 +954,6 @@
         shakeTimer = sec;
     }
 
-    // --- 自由移動物理入力処理 ---
     function updatePlayerMovement(dt) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
@@ -939,6 +973,44 @@
             const speed = 2.2 * p1.moveSpeed;
             p1.vx += dx * speed;
             p1.vy += dy * speed;
+        }
+    }
+
+    // 物理：衝突判定＆アイコン重なり防止・相互弾き
+    function resolveRikishiCollisions() {
+        const allRikishi = [p1, ...enemies.filter(e => !e.isEliminated)];
+
+        for (let i = 0; i < allRikishi.length; i++) {
+            for (let j = i + 1; j < allRikishi.length; j++) {
+                const r1 = allRikishi[i];
+                const r2 = allRikishi[j];
+
+                const dx = r2.x - r1.x;
+                const dy = r2.y - r1.y;
+                const dist = Math.hypot(dx, dy);
+                const minDist = r1.radius + r2.radius;
+
+                // 重なり検出！
+                if (dist < minDist && dist > 0) {
+                    const overlap = minDist - dist;
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+
+                    // 1. 位置の完全分離（アイコン重なりを即解消！）
+                    const separateFactor = 0.5;
+                    r1.x -= nx * overlap * separateFactor;
+                    r1.y -= ny * overlap * separateFactor;
+                    r2.x += nx * overlap * separateFactor;
+                    r2.y += ny * overlap * separateFactor;
+
+                    // 2. ポーン！と少しはじき返す物理反動
+                    const bounceForce = 1.8;
+                    r1.vx -= nx * bounceForce;
+                    r1.vy -= ny * bounceForce;
+                    r2.vx += nx * bounceForce;
+                    r2.vy += ny * bounceForce;
+                }
+            }
         }
     }
 
@@ -979,7 +1051,7 @@
             if (comboP1 > maxComboP1) maxComboP1 = comboP1;
 
             if (comboP1 % 4 === 0) {
-                spawnSparks(p1.x, p1.y - 30, '#ff85c0', 6, `${comboP1} COMBO!`);
+                spawnSparks(p1.x, p1.y - 30, '#7e6b8f', 6, `${comboP1} COMBO!`);
             }
         }
 
@@ -1049,18 +1121,28 @@
         }
     }
 
+    // 敵AI & 卑怯な塩飛び道具発射ロジック
     function updateAI(dt) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
         aiPushTimer += dt;
+        enemySaltTimer += dt;
+
         enemies.forEach(enemy => {
             if (enemy.isEliminated) return;
 
-            // AI追従＆自由移動（プレイヤーへ接近！）
+            // 敵の追従・アプローチ
             const angle = Math.atan2(p1.y - enemy.y, p1.x - enemy.x);
             const speed = 1.2 * enemy.moveSpeed;
             enemy.vx += Math.cos(angle) * speed * 0.5;
             enemy.vy += Math.sin(angle) * speed * 0.5;
+
+            // 敵の卑怯な塩飛び道具攻撃 (2.5秒ごとに塩弾発射！)
+            if (enemySaltTimer >= 2.5) {
+                saltBullets.push(new SaltBullet(enemy.x, enemy.y, p1.x, p1.y));
+                enemy.setStateText('卑怯な塩投げ！🧂');
+                audio.playHit();
+            }
 
             const pushInterval = Math.max(0.08, 0.32 - (enemy.currentPower * 0.02));
             if (aiPushTimer >= pushInterval) {
@@ -1069,7 +1151,6 @@
                     if (p1.vx > 6 && Math.random() < 0.2) {
                         enemy.triggerDodge();
                     } else {
-                        // 敵押し攻撃
                         p1.vx -= Math.cos(angle) * (2.8 + enemy.currentPower * 0.3);
                         p1.vy -= Math.sin(angle) * (2.8 + enemy.currentPower * 0.3);
                         audio.playHit();
@@ -1078,7 +1159,29 @@
             }
         });
 
+        if (enemySaltTimer >= 2.5) enemySaltTimer = 0;
         if (aiPushTimer >= 0.3) aiPushTimer = 0;
+    }
+
+    // 塩飛び道具更新 & 当たり判定
+    function updateSaltBullets(dt) {
+        saltBullets.forEach(b => b.update(dt));
+
+        // プレイヤーへの当たり判定
+        saltBullets.forEach(b => {
+            const dist = Math.hypot(p1.x - b.x, p1.y - b.y);
+            if (dist < p1.radius + b.radius) {
+                b.life = -1; // 命数切れ
+                p1.vx -= b.vx * 1.5;
+                p1.vy -= b.vy * 1.5;
+                p1.setStateText('目くらまし塩！🧂😵');
+                triggerShake(0.2);
+                audio.playHit();
+                spawnSparks(p1.x, p1.y, '#ffffff', 12, '塩！');
+            }
+        });
+
+        saltBullets = saltBullets.filter(b => b.life > 0);
     }
 
     function checkRingOut() {
@@ -1089,7 +1192,7 @@
         enemies.forEach(enemy => {
             if (!enemy.isEliminated && isOutOfDohyo(enemy.x, enemy.y)) {
                 enemy.isEliminated = true;
-                spawnSparks(enemy.x, enemy.y, '#e05297', 25, 'リングアウト！');
+                spawnSparks(enemy.x, enemy.y, '#7e6b8f', 25, 'リングアウト！');
             }
         });
 
@@ -1130,7 +1233,7 @@
     }
 
     function spawnVictoryConfetti() {
-        const colors = ['#e05297', '#d97706', '#0284c7', '#ffffff', '#9333ea'];
+        const colors = ['#7e6b8f', '#b45309', '#0284c7', '#ffffff', '#9333ea'];
         for (let i = 0; i < 80; i++) {
             particles.push(new Particle(
                 DOHYO.cx + (Math.random() * 450 - 225),
@@ -1153,7 +1256,7 @@
     function drawDohyo() {
         ctx.save();
 
-        let bg1 = '#fff5fa', bg2 = '#f3e8f8';
+        let bg1 = '#faf7fc', bg2 = '#efe8f5';
         if (currentEvent && currentEvent.type === 'ice') {
             bg1 = '#e0f2fe'; bg2 = '#bae6fd';
         } else if (currentEvent && currentEvent.type === 'fever') {
@@ -1177,13 +1280,13 @@
             dohyoGrad.addColorStop(1, '#7dd3fc');
         } else {
             dohyoGrad.addColorStop(0, '#fffdfa');
-            dohyoGrad.addColorStop(0.85, '#fde6d2');
-            dohyoGrad.addColorStop(1, '#fbcfe8');
+            dohyoGrad.addColorStop(0.85, '#f7eeea');
+            dohyoGrad.addColorStop(1, '#efe8f5');
         }
         ctx.fillStyle = dohyoGrad;
         ctx.fill();
-        ctx.lineWidth = 8;
-        ctx.strokeStyle = '#e05297';
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#7e6b8f';
         ctx.stroke();
 
         // 俵
@@ -1192,27 +1295,27 @@
         const p1Danger = isOutOfDohyo(p1.x, p1.y, 0.85);
 
         if (p1Danger) {
-            ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 5;
         } else {
-            ctx.strokeStyle = '#9333ea';
-            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#7e6b8f';
+            ctx.lineWidth = 3;
         }
         ctx.setLineDash([14, 10]);
         ctx.stroke();
         ctx.setLineDash([]);
 
         if (p1Danger) {
-            ctx.font = '900 24px "Mochiy Pop One", sans-serif';
-            ctx.fillStyle = '#ef4444';
+            ctx.font = '700 22px "Zen Maru Gothic", sans-serif';
+            ctx.fillStyle = '#dc2626';
             ctx.textAlign = 'center';
             ctx.fillText('⚠️ DANGER!', DOHYO.cx, DOHYO.cy - 120);
         }
 
         // 仕切り線
-        ctx.fillStyle = '#e05297';
-        ctx.fillRect(DOHYO.cx - 50, DOHYO.cy - 24, 10, 48);
-        ctx.fillRect(DOHYO.cx + 40, DOHYO.cy - 24, 10, 48);
+        ctx.fillStyle = '#7e6b8f';
+        ctx.fillRect(DOHYO.cx - 50, DOHYO.cy - 24, 8, 48);
+        ctx.fillRect(DOHYO.cx + 42, DOHYO.cy - 24, 8, 48);
 
         ctx.restore();
     }
@@ -1228,7 +1331,7 @@
         if (rikishi.isDodging) {
             ctx.beginPath();
             ctx.arc(x, y, r + 14, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(2, 132, 199, 0.4)';
+            ctx.fillStyle = 'rgba(2, 132, 199, 0.3)';
             ctx.fill();
         }
 
@@ -1241,7 +1344,7 @@
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = '#fff4e6';
         ctx.fill();
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 3.5;
         ctx.strokeStyle = rikishi.color;
         ctx.stroke();
 
@@ -1255,16 +1358,16 @@
         ctx.textBaseline = 'middle';
         ctx.fillText(rikishi.avatar, x, y - 2);
 
-        ctx.font = '900 15px "Mochiy Pop One", sans-serif';
-        ctx.fillStyle = '#2b1f33';
+        ctx.font = '700 14px "Zen Maru Gothic", sans-serif';
+        ctx.fillStyle = '#2d2633';
         ctx.shadowColor = '#fff';
         ctx.shadowBlur = 4;
         ctx.fillText(rikishi.name, x, y - r - 14);
 
         if (rikishi.stateTextTimer > 0) {
-            ctx.font = '900 18px "Mochiy Pop One", sans-serif';
-            ctx.fillStyle = '#c026d3';
-            ctx.fillText(rikishi.stateText, x, y - r - 36);
+            ctx.font = '700 16px "Zen Maru Gothic", sans-serif';
+            ctx.fillStyle = '#7e6b8f';
+            ctx.fillText(rikishi.stateText, x, y - r - 34);
         }
 
         ctx.restore();
@@ -1276,11 +1379,11 @@
         ctx.translate(DOHYO.cx, DOHYO.cy - 60);
         ctx.scale(announceScale, announceScale);
 
-        ctx.font = '900 52px "Mochiy Pop One", sans-serif';
+        ctx.font = '900 48px "Zen Maru Gothic", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        ctx.fillStyle = '#e05297';
+        ctx.fillStyle = '#7e6b8f';
         ctx.shadowColor = '#fff';
         ctx.shadowBlur = 10;
         ctx.fillText(announceText, 0, 0);
@@ -1309,6 +1412,10 @@
 
             p1.update(dt);
             enemies.forEach(e => e.update(dt));
+            updateSaltBullets(dt);
+
+            // 重なり防止＆弾き判定！
+            resolveRikishiCollisions();
 
             updateAI(dt);
             checkRingOut();
@@ -1352,6 +1459,7 @@
         drawDohyo();
         drawRikishi(p1);
         enemies.forEach(e => drawRikishi(e));
+        saltBullets.forEach(b => b.draw(ctx));
         particles.forEach(p => p.draw(ctx));
         drawAnnounce();
 
