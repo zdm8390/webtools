@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>音速スモウバトル どすこいの国～ちゃんこ食わんかい～</title>
-    <meta name="description" content="1回15秒の音速バトル！超爽快連打＆はたき込みで相手を吹き飛ばせ！ちゃんこを食べて強くなれ！">
+    <meta name="description" content="1回15秒の音速バトル！ランダムハプニング＆ちゃんこカードで超白熱！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
         <header class="game-header">
             <div class="header-main-info">
                 <h1 class="logo">
-                    <span class="logo-sub">⚡ 超速連打×どすこいアクション ⚡</span>
+                    <span class="logo-sub">⚡ 超速連打×ハプニングバトル ⚡</span>
                     <span class="logo-main">音速スモウバトル <span class="highlight">どすこいの国</span></span>
                 </h1>
                 <button id="btn-top-nav" class="btn-icon-top" type="button" aria-label="タイトル画面に戻る">🏠 TOP</button>
@@ -32,6 +32,11 @@
             <!-- 集中線背景エフェクト -->
             <div id="speed-lines" class="speed-lines" aria-hidden="true"></div>
 
+            <!-- ランダムハプニング告知バナー -->
+            <div id="event-banner" class="event-banner hidden">
+                <span id="event-title">🎲 ハプニング発生！</span>
+            </div>
+
             <canvas id="sumo-canvas" width="900" height="520" aria-label="相撲ゲーム画面"></canvas>
 
             <!-- ゲームオーバーレイ (各種状態 UI) -->
@@ -42,7 +47,7 @@
                     <div class="title-banner">
                         <span class="pop-sticker">🍲 ～ちゃんこ食わんかい～ ⚡</span>
                         <h2 class="title-huge">音速スモウバトル</h2>
-                        <p class="subtitle">どすこいの国へようこそ！</p>
+                        <p class="subtitle">ハプニング続出！白熱バトルへようこそ！</p>
                     </div>
 
                     <!-- 超わかりやすいビジュアルルール案内 -->
@@ -55,9 +60,9 @@
                         </div>
                         <div class="v-rule-item">
                             <span class="v-step">STEP 2</span>
-                            <span class="v-icon">🌀</span>
-                            <strong>相手の押しを「はたき」！</strong>
-                            <small>カウンターで一発逆転！</small>
+                            <span class="v-icon">🎲</span>
+                            <strong>ハプニングに対応！</strong>
+                            <small>氷土俵や突風で戦況が一変！</small>
                         </div>
                         <div class="v-rule-item">
                             <span class="v-step">STEP 3</span>
@@ -106,7 +111,7 @@
                             <span class="vs-text">VS</span>
                         </div>
                         <div class="rikishi-card enemy-card">
-                            <span class="card-role">西 (ライバル)</span>
+                            <span class="card-role" id="enemy-type-badge">西 (ライバル)</span>
                             <h3 id="enemy-name">富士ノ山</h3>
                             <div class="rikishi-avatar" id="enemy-avatar-preview" aria-hidden="true">♨️</div>
                             <div class="stat-bar"><span class="stat-label">腕力</span><div class="bar"><div class="fill" id="e-str-bar"></div></div></div>
@@ -164,8 +169,8 @@
                                 <strong id="res-cps">8.5回</strong>
                             </div>
                             <div class="r-stat">
-                                <span>連勝</span>
-                                <strong id="res-streak">3連勝</strong>
+                                <span>最高コンボ</span>
+                                <strong id="res-combo">12回</strong>
                             </div>
                         </div>
 
@@ -187,7 +192,7 @@
                 </section>
             </div>
 
-            <!-- アクション操作ボタン (超直感的＆高レスポンス設計) -->
+            <!-- アクション操作ボタン -->
             <div id="touch-controls" class="touch-controls" aria-label="タッチ操作パネル">
                 <!-- 1P Controls -->
                 <div class="control-group p1-controls">
