@@ -1,11 +1,9 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * 5大要望改善完全対応版
- * 1. 開始前動作完全ブロック
- * 2. キャラクター物理接触・重なり防止判定
- * 3. 敵AI自滅リングアウト防止ステアリング
- * 4. 階級（シルバー/ゴールド/ダイヤ/プラチナ/マスター）
- * 5. 高難易度インテリジェントAI
+ * 🌟 ジャストパリィ極上演出対応版
+ * 1. 画面薄暗暗転 (Parry Dim)
+ * 2. キャラクター達がネオン黄金オーラで光輝く
+ * 3. 超スローモーション Matrix 時間停止効果
  */
 
 (function() {
@@ -21,6 +19,7 @@
         INPUT_BUFFER_FRAMES: 6,
         HIT_STOP_DURATION: 0.09,
         SLOW_MOTION_DURATION: 0.22,
+        PARRY_SLOW_DURATION: 0.45,
         PUSH_KNOCKBACK_FORCE: 13.0,
         POOL_MAX_PARTICLES: 300,
         POOL_MAX_BULLETS: 60,
@@ -137,8 +136,8 @@
             if (!this.enabled) return;
             this.init();
             if (!this.ctx) return;
-            this.playTaiko(550, 0.1, 1.0);
-            setTimeout(() => this.playTaiko(1100, 0.25, 1.0), 40);
+            this.playTaiko(650, 0.12, 1.0);
+            setTimeout(() => this.playTaiko(1300, 0.3, 1.0), 40);
         }
 
         playMegaBurst() {
@@ -215,10 +214,10 @@
             ctx.globalAlpha = alpha;
 
             if (this.text) {
-                ctx.font = '900 26px "Shippori Mincho", serif';
+                ctx.font = '900 28px "Shippori Mincho", serif';
                 ctx.fillStyle = this.color;
                 ctx.shadowColor = '#fff';
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = 12;
                 ctx.fillText(this.text, this.x, this.y);
             } else {
                 ctx.fillStyle = this.color;
@@ -330,7 +329,6 @@
         return img;
     }
 
-    // 🔴 4. 要求ごとの階級名（シルバー、ゴールド、ダイヤ、プラチナ、マスター）＆高難易度化！
     const RANKS = [
         { name: 'シルバー', icon: '🥈', imgUrl: 'assets/rabbit.jpg', enemyName: '音速うさ丸', aiType: 'speed_rush', strength: 2.8, weight: 80, color: '#059669', avatar: '🐰' },
         { name: 'ゴールド', icon: '🥇', imgUrl: null, enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 6.8, weight: 280, color: '#0284c7', avatar: '🐻' },
@@ -414,6 +412,7 @@
     let shakeTimer = 0;
     let hitStopTimer = 0;
     let slowMotionTimer = 0;
+    let parryGlowTimer = 0; // 🌟 ジャストパリィ専用キャラ黄金発光タイマー
     let selectedCardIndex = 0;
 
     let GAME_STATE_TIME = 0;
@@ -457,8 +456,16 @@
         draw(ctx) {
             if (!this.active) return;
             ctx.save();
-            ctx.shadowColor = this.isReflected ? 'rgba(253, 224, 71, 1.0)' : 'rgba(0,0,0,0.4)';
-            ctx.shadowBlur = this.isReflected ? 14 : 5;
+
+            // 🌟 ジャストパリィ時の強烈黄金光輝
+            if (parryGlowTimer > 0 && this.isReflected) {
+                ctx.shadowColor = '#fde047';
+                ctx.shadowBlur = 30;
+            } else {
+                ctx.shadowColor = this.isReflected ? 'rgba(253, 224, 71, 1.0)' : 'rgba(0,0,0,0.4)';
+                ctx.shadowBlur = this.isReflected ? 14 : 5;
+            }
+
             ctx.fillStyle = this.isReflected ? '#fde047' : '#ffffff';
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -602,6 +609,7 @@
     const levelBadge = document.getElementById('level-badge');
     const speedLinesEl = document.getElementById('speed-lines');
     const flashOverlayEl = document.getElementById('flash-overlay');
+    const parryDimOverlayEl = document.getElementById('parry-dim-overlay'); // 🌟 暗転ディム
     const burstCutinEl = document.getElementById('burst-cutin');
     const eventBanner = document.getElementById('event-banner');
     const eventTitleEl = document.getElementById('event-title');
@@ -716,7 +724,6 @@
         window.addEventListener('keyup', (e) => { keysPressed[e.code] = false; });
     }
 
-    // 🔴 1. 開始前（カウントダウン・アナウンス表示中）の動作完全ブロック関数！
     function canPlayerControl() {
         return (gameState === STATE.PLAYING && announceTimer <= 0 && !isMatchFinished);
     }
@@ -746,6 +753,7 @@
         burstCutinEl.classList.add('hidden');
         eventBanner.classList.add('hidden');
         comboDisplayEl.classList.add('hidden');
+        if (parryDimOverlayEl) parryDimOverlayEl.classList.remove('active');
 
         hideAllScreens();
         screenTitle.classList.add('active');
@@ -779,6 +787,7 @@
         enemies.forEach(e => e.reset());
         comboCount = 0;
         comboDisplayEl.classList.add('hidden');
+        if (parryDimOverlayEl) parryDimOverlayEl.classList.remove('active');
 
         triggerAnnouncement('はっけよい！のこった！💥', 0.8);
         audio.playTaiko(260, 0.3, 1.0);
@@ -872,6 +881,7 @@
         speedLinesEl.classList.remove('active');
         eventBanner.classList.add('hidden');
         saltBulletPool.clearAll();
+        if (parryDimOverlayEl) parryDimOverlayEl.classList.remove('active');
         audio.playFanfare(isP1Win);
 
         if (isP1Win) {
@@ -908,6 +918,16 @@
         setTimeout(() => flashOverlayEl.classList.remove('active'), 250);
     }
 
+    // 🌟 画面薄暗暗転ディム ＋ スローモーション ＋ キャラクターネオン黄金発光演出の発火！
+    function triggerParrySpecialEffect() {
+        if (parryDimOverlayEl) {
+            parryDimOverlayEl.classList.add('active');
+        }
+        slowMotionTimer = GAME_CONFIG.PARRY_SLOW_DURATION; // 0.45秒間の極上スローモーション！
+        parryGlowTimer = 0.45; // 0.45秒間のネオン黄金オーラ発光！
+        triggerShake(0.4);
+    }
+
     function updateHeaderUI() {
         if (levelBadge) levelBadge.textContent = `破竹の ${winsCount} 連勝中！ 🔥`;
 
@@ -938,7 +958,6 @@
     }
 
     function updatePlayerMovement(dt) {
-        // 🔴 1. アナウンス中・未開始時は移動完全停止！
         if (!canPlayerControl() || hitStopTimer > 0) return;
 
         let dx = 0, dy = 0;
@@ -1002,7 +1021,6 @@
 
             const dist = Math.hypot(opponent.x - actor.x, opponent.y - actor.y);
             if (dist < actor.radius + opponent.radius + 50) {
-                // 🔴 5. 高難易度化：敵のカウンター見切り・パリィ反撃！
                 if (opponent.isDodging || (Math.random() < (currentRankIdx * 0.12))) {
                     opponent.triggerDodge();
                     actor.vx -= (opponent.x - actor.x) * 1.2;
@@ -1023,30 +1041,36 @@
         });
     }
 
+    // 🌟 ジャストパリィ成功時の極上演出トリガー！
     function handleDodge(actor) {
         if (!canPlayerControl() || hitStopTimer > 0) return;
         
         const success = actor.triggerDodge();
         if (success && actor === p1) {
+            let parryTriggered = false;
+
             saltBulletPool.pool.forEach(b => {
-                if (b.active && !b.isReflected && Math.hypot(p1.x - b.x, p1.y - b.y) < p1.radius + 70) {
+                if (b.active && !b.isReflected && Math.hypot(p1.x - b.x, p1.y - b.y) < p1.radius + 80) {
                     b.isReflected = true;
                     const activeEnemies = enemies.filter(e => !e.isEliminated);
                     const target = activeEnemies[0] || p1;
                     const angle = Math.atan2(target.y - b.y, target.x - b.x);
-                    b.vx = Math.cos(angle) * 12;
-                    b.vy = Math.sin(angle) * 12;
+                    b.vx = Math.cos(angle) * 13;
+                    b.vy = Math.sin(angle) * 13;
 
-                    p1.setStateText('ジャストパリィ！✨');
-                    audio.playParry();
-                    triggerShake(0.4);
-                    spawnSparks(b.x, b.y, '#fde047', 25, 'パリィ！！');
+                    parryTriggered = true;
                 }
             });
+
+            if (parryTriggered) {
+                p1.setStateText('🌟 ジャストパリィ成立！✨');
+                audio.playParry();
+                triggerParrySpecialEffect(); // 🌟 暗転ディム ＋ ネオン黄金光彩 ＋ 超スローモーション発火！
+                spawnSparks(p1.x, p1.y, '#fde047', 40, '✨ ジャストパリィ！');
+            }
         }
     }
 
-    // 🔴 2. キャラクター物理接触・重なり補正処理 (重なり完全防止)
     function checkCharacterCollisions() {
         const allRikishi = [p1, ...enemies].filter(r => r && !r.isEliminated);
         
@@ -1065,14 +1089,12 @@
                     const nx = dx / dist;
                     const ny = dy / dist;
 
-                    // 互いに押し戻す（位置補正）
                     const pushFactor = 0.5;
                     r1.x -= nx * overlap * pushFactor;
                     r1.y -= ny * overlap * pushFactor;
                     r2.x += nx * overlap * pushFactor;
                     r2.y += ny * overlap * pushFactor;
 
-                    // 速度の反発（はじき）
                     r1.vx -= nx * 1.5;
                     r1.vy -= ny * 1.5;
                     r2.vx += nx * 1.5;
@@ -1082,7 +1104,6 @@
         }
     }
 
-    // 🔴 3 & 5. 敵AI：自滅リングアウト防止ステアリング ＆ インテリジェント高難易度行動！
     function updateAI(dt) {
         if (gameState !== STATE.PLAYING || announceTimer > 0 || hitStopTimer > 0) return;
 
@@ -1095,17 +1116,14 @@
             const dy = p1.y - enemy.y;
             const dist = Math.hypot(dx, dy);
 
-            // 土俵縁（80%の範囲）への接近検出
-            const distFromCenter = Math.hypot(enemy.x - GAME_CONFIG.DOHYO_CX, enemy.y - GAME_CONFIG.DOHYO_CY);
             const isNearEdge = isOutOfDohyo(enemy.x, enemy.y, 0.75);
 
             let moveX = 0;
             let moveY = 0;
 
-            // 🔴 3. 敵の自滅リングアウト完全防止ベクトル！
             if (isNearEdge) {
                 const centerAngle = Math.atan2(GAME_CONFIG.DOHYO_CY - enemy.y, GAME_CONFIG.DOHYO_CX - enemy.x);
-                moveX += Math.cos(centerAngle) * 4.0; // 中央へ戻る強力なステアリング！
+                moveX += Math.cos(centerAngle) * 4.0;
                 moveY += Math.sin(centerAngle) * 4.0;
                 enemy.aiState = 'panic';
             } else if (winsCount >= 2) {
@@ -1114,7 +1132,6 @@
                 enemy.aiState = 'normal';
             }
 
-            // 🔴 5. 高難易度攻撃・動きパターン
             if (enemy.aiType === 'speed_rush') {
                 const angle = Math.atan2(dy, dx) + Math.sin(GAME_STATE_TIME * 4.0) * 1.2;
                 moveX += Math.cos(angle) * 3.6;
@@ -1141,7 +1158,6 @@
             enemy.vx += moveX;
             enemy.vy += moveY;
 
-            // 高難易度・塩乱射
             const interval = enemy.aiType === 'salt_master' ? 0.7 : 1.8;
             if (enemy.saltTimer >= interval) {
                 enemy.saltTimer = 0;
@@ -1176,6 +1192,7 @@
                     b.vy = -b.vy * 1.8;
                     p1.setStateText('自動パリィ！✨');
                     audio.playParry();
+                    triggerParrySpecialEffect();
                     return;
                 }
 
@@ -1256,6 +1273,7 @@
         ctx.restore();
     }
 
+    // 🌟 キャラクター描画（ジャストパリィ時にまばゆくネオン黄金発光！）
     function drawRikishi(rikishi) {
         if (rikishi.isEliminated) return;
 
@@ -1263,6 +1281,12 @@
         const x = rikishi.x;
         const y = rikishi.y;
         const r = rikishi.radius;
+
+        // 🌟 パリィ成功時のキャラ黄金ネオンオーラ発光！
+        if (parryGlowTimer > 0) {
+            ctx.shadowColor = '#fde047';
+            ctx.shadowBlur = 35;
+        }
 
         for (let i = 0; i < rikishi.afterImages.length; i++) {
             const img = rikishi.afterImages[i];
@@ -1280,7 +1304,7 @@
         if (rikishi.isDodging) {
             ctx.beginPath();
             ctx.arc(x, y, r + 16, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(194, 65, 12, 0.4)';
+            ctx.fillStyle = parryGlowTimer > 0 ? 'rgba(253, 224, 71, 0.8)' : 'rgba(194, 65, 12, 0.4)';
             ctx.fill();
         }
 
@@ -1296,7 +1320,9 @@
             ctx.arc(x, y, r, 0, Math.PI * 2);
             ctx.clip();
 
-            if (rikishi.flashTimer > 0) {
+            if (parryGlowTimer > 0) {
+                ctx.filter = 'brightness(2.2) drop-shadow(0 0 15px #fde047)';
+            } else if (rikishi.flashTimer > 0) {
                 ctx.filter = 'brightness(2.5)';
             }
             ctx.drawImage(rikishi.imageObj, x - r, y - r, r * 2, r * 2);
@@ -1304,7 +1330,7 @@
         } else {
             ctx.beginPath();
             ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fillStyle = rikishi.flashTimer > 0 ? '#ffffff' : rikishi.color;
+            ctx.fillStyle = parryGlowTimer > 0 ? '#fde047' : (rikishi.flashTimer > 0 ? '#ffffff' : rikishi.color);
             ctx.fill();
 
             ctx.font = `${Math.floor(r * 0.85)}px sans-serif`;
@@ -1321,7 +1347,7 @@
 
         if (rikishi.stateTextTimer > 0) {
             ctx.font = '900 17px "Shippori Mincho", serif';
-            ctx.fillStyle = '#c2410c';
+            ctx.fillStyle = parryGlowTimer > 0 ? '#fde047' : '#c2410c';
             ctx.fillText(rikishi.stateText, x, y - r - 32);
         }
 
@@ -1368,9 +1394,17 @@
             }
         }
 
+        // 🌟 パリィタイマー更新 ＆ 暗転解除
+        if (parryGlowTimer > 0) {
+            parryGlowTimer -= dt;
+            if (parryGlowTimer <= 0 && parryDimOverlayEl) {
+                parryDimOverlayEl.classList.remove('active');
+            }
+        }
+
         if (slowMotionTimer > 0) {
             slowMotionTimer -= dt;
-            dt *= 0.25;
+            dt *= 0.18; // 超ディープスロー効果！
         }
 
         if (hitStopTimer > 0) {
@@ -1385,7 +1419,6 @@
             p1.update(dt);
             enemies.forEach(e => e.update(dt));
             
-            // 🔴 2. キャラクター同士の円形物理衝突・重なり即時補正判定！
             checkCharacterCollisions();
 
             updateSaltBullets(dt);
