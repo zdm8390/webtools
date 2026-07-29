@@ -1,7 +1,6 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * 1. インパクト (Space / Z / J) & パリィ (X / K / Shift) キーボード完全割り当て
- * 2. 相手との接触時「互いに少し後ろへ下がる（はじき反発インパルス）」物理強化
+ * 土俵形状の正円（Circle）化変更版
  */
 
 (function() {
@@ -12,8 +11,7 @@
         CANVAS_HEIGHT: 520,
         DOHYO_CX: 450,
         DOHYO_CY: 260,
-        DOHYO_RX: 340,
-        DOHYO_RY: 160,
+        DOHYO_RADIUS: 230, // 🔴 楕円から完全な正円（半径230）へ変更！
         INPUT_BUFFER_FRAMES: 6,
         HIT_STOP_DURATION: 0.09,
         SLOW_MOTION_DURATION: 0.22,
@@ -683,7 +681,6 @@
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleDodge(p1); });
         btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleBurst(p1); });
 
-        // 🔴 1. 要望対応：キーボード割り当ての完全拡張
         window.addEventListener('keydown', (e) => {
             audio.init();
             keysPressed[e.code] = true;
@@ -714,15 +711,12 @@
             } else if (gameState === STATE.PLAYING && canPlayerControl()) {
                 if (e.repeat) return;
                 
-                // 💥 インパクト（押す）: Space ＋ Z ＋ J
                 if (e.code === 'Space' || e.code === 'KeyZ' || e.code === 'KeyJ') {
                     queuePushInput();
                 } 
-                // ✨ パリィ（はたき）: X ＋ K ＋ Shift
                 else if (e.code === 'KeyX' || e.code === 'KeyK' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
                     handleDodge(p1);
                 } 
-                // 🔥 どすこいバースト: C ＋ L
                 else if (e.code === 'KeyC' || e.code === 'KeyL') {
                     handleBurst(p1);
                 }
@@ -1077,7 +1071,6 @@
         }
     }
 
-    // 🔴 2. 要望対応：接触時にお互いに少し後ろへ下がる（はじかれ反発インパルス）物理強化！
     function checkCharacterCollisions() {
         const allRikishi = [p1, ...enemies].filter(r => r && !r.isEliminated);
         
@@ -1096,14 +1089,12 @@
                     const nx = dx / dist;
                     const ny = dy / dist;
 
-                    // 重なり位置補正
                     const pushFactor = 0.5;
                     r1.x -= nx * overlap * pushFactor;
                     r1.y -= ny * overlap * pushFactor;
                     r2.x += nx * overlap * pushFactor;
                     r2.y += ny * overlap * pushFactor;
 
-                    // 💥 接触時の「互いに少し後ろへ下がる」はじき反発インパルス！
                     const bounceImpulse = 4.2;
                     r1.vx -= nx * bounceImpulse;
                     r1.vy -= ny * bounceImpulse;
@@ -1126,6 +1117,7 @@
             const dy = p1.y - enemy.y;
             const dist = Math.hypot(dx, dy);
 
+            // 🔴 正円土俵（半径 DOHYO_RADIUS * 0.75）の接近検出
             const isNearEdge = isOutOfDohyo(enemy.x, enemy.y, 0.75);
 
             let moveX = 0;
@@ -1238,10 +1230,10 @@
         }
     }
 
+    // 🔴 正円（Circle）土俵外判定！
     function isOutOfDohyo(x, y, scale = 1.0) {
-        const dx = (x - GAME_CONFIG.DOHYO_CX) / (GAME_CONFIG.DOHYO_RX * scale);
-        const dy = (y - GAME_CONFIG.DOHYO_CY) / (GAME_CONFIG.DOHYO_RY * scale);
-        return (dx * dx + dy * dy) > 1.0;
+        const dist = Math.hypot(x - GAME_CONFIG.DOHYO_CX, y - GAME_CONFIG.DOHYO_CY);
+        return dist > (GAME_CONFIG.DOHYO_RADIUS * scale);
     }
 
     function triggerAnnouncement(text, duration = 0.8) {
@@ -1250,6 +1242,7 @@
         announceTimer = duration;
     }
 
+    // 🔴 正円（Circle）土俵の美しさあふれる描画！
     function drawDohyo() {
         ctx.save();
 
@@ -1259,10 +1252,10 @@
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.CANVAS_HEIGHT);
 
-        // 土俵
+        // 正円土俵
         ctx.beginPath();
-        ctx.ellipse(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, GAME_CONFIG.DOHYO_RX, GAME_CONFIG.DOHYO_RY, 0, 0, Math.PI * 2);
-        const dohyoGrad = ctx.createRadialGradient(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, 30, GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, GAME_CONFIG.DOHYO_RX);
+        ctx.arc(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, GAME_CONFIG.DOHYO_RADIUS, 0, Math.PI * 2);
+        const dohyoGrad = ctx.createRadialGradient(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, 30, GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, GAME_CONFIG.DOHYO_RADIUS);
         dohyoGrad.addColorStop(0, '#fffdfa');
         dohyoGrad.addColorStop(1, '#ebdcc9');
         ctx.fillStyle = dohyoGrad;
@@ -1271,9 +1264,9 @@
         ctx.strokeStyle = '#1e1b4b';
         ctx.stroke();
 
-        // 俵
+        // 正円俵
         ctx.beginPath();
-        ctx.ellipse(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, GAME_CONFIG.DOHYO_RX - 10, GAME_CONFIG.DOHYO_RY - 5, 0, 0, Math.PI * 2);
+        ctx.arc(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, GAME_CONFIG.DOHYO_RADIUS - 10, 0, Math.PI * 2);
         ctx.strokeStyle = '#c2410c';
         ctx.lineWidth = 3.5;
         ctx.setLineDash([14, 10]);
