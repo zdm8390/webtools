@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>はっけよい！超速相撲バトル | Hakkeyoi Sumo Battle</title>
+    <meta name="description" content="1回15秒でアツい勝負！連打とタイミングで土俵際の大逆転を狙う爽快相撲アクションゲーム。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Kiwi+Maru:wght@500;700&family=Yuji+Syuku&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- ヘッダー / タイトルバー -->
+        <header class="game-header">
+            <h1 class="logo">
+                <span class="logo-sub">超速相撲アクション</span>
+                <span class="logo-main">はっけよい！<span class="highlight">大相撲</span></span>
+            </h1>
+            <div class="header-badges">
+                <div class="badge" id="rank-badge">番付: 序ノ口</div>
+                <div class="badge" id="wins-badge">通算: 0勝 0敗</div>
+            </div>
+        </header>
+
+        <!-- メインゲームエリア -->
+        <main class="game-viewport">
+            <canvas id="sumo-canvas" width="900" height="520"></canvas>
+
+            <!-- ゲームオーバーレイ (各種状態 UI) -->
+            <div id="ui-overlay" class="overlay active">
+                <!-- タイトル画面 -->
+                <div id="screen-title" class="screen-panel active">
+                    <div class="title-banner">
+                        <h2>どすこい！横綱への道</h2>
+                        <p class="subtitle">タップ＆キー連打で相手を土俵外へ弾き出せ！</p>
+                    </div>
+                    <div class="mode-select">
+                        <button id="btn-mode-arcade" class="btn btn-primary btn-glow">
+                            <span class="btn-icon">🏆</span>
+                            <span class="btn-text">
+                                <strong>横綱昇進モード</strong>
+                                <small>番付を駆け上がり横綱を目指せ！</small>
+                            </span>
+                        </button>
+                        <button id="btn-mode-endless" class="btn btn-secondary">
+                            <span class="btn-icon">🔥</span>
+                            <span class="btn-text">
+                                <strong>連勝チャレンジ</strong>
+                                <small>どこまで連勝を伸ばせるか！</small>
+                            </span>
+                        </button>
+                        <button id="btn-mode-pvp" class="btn btn-tertiary">
+                            <span class="btn-icon">⚔️</span>
+                            <span class="btn-text">
+                                <strong>二人対戦 (1P vs 2P)</strong>
+                                <small>1台のスマホ・PCで熱血対戦！</small>
+                            </span>
+                        </button>
+                    </div>
+                    <div class="how-to-play">
+                        <h3>【操作方法】</h3>
+                        <div class="controls-guide">
+                            <div class="guide-item">
+                                <span class="key">Space</span> または <span class="touch-icon">👈</span>
+                                <span>押し出し (連打!)</span>
+                            </div>
+                            <div class="guide-item">
+                                <span class="key">J</span> キー
+                                <span>はたき込み (タイミング回避)</span>
+                            </div>
+                            <div class="guide-item">
+                                <span class="key">K</span> キー
+                                <span>どすこいバースト (ゲージ消費)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 対戦待ち・立合い画面 -->
+                <div id="screen-matchup" class="screen-panel hidden">
+                    <div class="matchup-container">
+                        <div class="rikishi-card player-card">
+                            <span class="card-role">東 (あなた)</span>
+                            <h3 id="player-name">雷電山</h3>
+                            <div class="rikishi-avatar" id="player-avatar-preview"></div>
+                            <div class="stat-bar"><span class="stat-label">腕力</span><div class="bar"><div class="fill" id="p-str-bar"></div></div></div>
+                        </div>
+                        <div class="vs-divider">
+                            <span>VS</span>
+                        </div>
+                        <div class="rikishi-card enemy-card">
+                            <span class="card-role">西 (お相手)</span>
+                            <h3 id="enemy-name">白虎丸</h3>
+                            <div class="rikishi-avatar" id="enemy-avatar-preview"></div>
+                            <div class="stat-bar"><span class="stat-label">腕力</span><div class="bar"><div class="fill" id="e-str-bar"></div></div></div>
+                        </div>
+                    </div>
+                    <div class="matchup-announcement" id="matchup-rank">
+                        九月場所 一回戦
+                    </div>
+                    <button id="btn-start-fight" class="btn btn-primary btn-large btn-glow">
+                        見合って！立合い開始！
+                    </button>
+                </div>
+
+                <!-- 決着・結果画面 -->
+                <div id="screen-result" class="screen-panel hidden">
+                    <div class="result-box">
+                        <h2 id="result-title">勝負あり！</h2>
+                        <div class="winner-announcement" id="winner-name">東 勝利！</div>
+                        <div class="kimarite-badge" id="result-kimarite">決まり手：寄り切り</div>
+                        
+                        <div class="result-stats">
+                            <div class="r-stat">
+                                <span>所要時間</span>
+                                <strong id="res-time">4.2秒</strong>
+                            </div>
+                            <div class="r-stat">
+                                <span>連打スピード</span>
+                                <strong id="res-cps">8.5回/秒</strong>
+                            </div>
+                            <div class="r-stat">
+                                <span>連勝数</span>
+                                <strong id="res-streak">3連勝</strong>
+                            </div>
+                        </div>
+
+                        <div class="donation-card-inline">
+                            <div class="donation-badge">🤝 被災地支援のお願い</div>
+                            <p>昨日の地震による被害への緊急支援募金を受け付けています。</p>
+                            <a href="https://donation.yahoo.co.jp/detail/1630072" target="_blank" rel="noopener noreferrer" class="btn-donation">
+                                <span>❤️ Yahoo!基金 緊急支援募金へ協力する</span>
+                            </a>
+                        </div>
+
+                        <div class="result-actions">
+                            <button id="btn-next-match" class="btn btn-primary btn-glow">次の取組へ</button>
+                            <button id="btn-retry-match" class="btn btn-secondary hidden">再挑戦</button>
+                            <button id="btn-to-title" class="btn btn-tertiary">タイトルへ戻る</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- アクション操作ボタン (スマホ・タッチ対応) -->
+            <div id="touch-controls" class="touch-controls">
+                <!-- 1P Controls -->
+                <div class="control-group p1-controls">
+                    <button id="btn-p1-push" class="action-btn push-btn">
+                        <span class="action-label">押す！</span>
+                        <span class="action-sub">(連打)</span>
+                    </button>
+                    <button id="btn-p1-dodge" class="action-btn dodge-btn">
+                        <span class="action-label">はたき</span>
+                        <span class="action-sub">J</span>
+                    </button>
+                    <button id="btn-p1-burst" class="action-btn burst-btn disabled" id="p1-burst-btn">
+                        <span class="action-label">どすこい!</span>
+                        <span class="action-sub">K</span>
+                    </button>
+                </div>
+
+                <!-- 2P Controls (PVP Mode Only) -->
+                <div class="control-group p2-controls hidden" id="p2-controls-group">
+                    <button id="btn-p2-push" class="action-btn push-btn p2-theme">
+                        <span class="action-label">押す！</span>
+                        <span class="action-sub">(2P: Enter)</span>
+                    </button>
+                    <button id="btn-p2-dodge" class="action-btn dodge-btn p2-theme">
+                        <span class="action-label">はたき</span>
+                        <span class="action-sub">Numpad1</span>
+                    </button>
+                    <button id="btn-p2-burst" class="action-btn burst-btn p2-theme disabled">
+                        <span class="action-label">どすこい!</span>
+                        <span class="action-sub">Numpad2</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- フッター -->
+        <footer class="game-footer">
+            <div class="footer-row">
+                <p>※音声をONにしてお楽しみください 🔊 | 音量設定: <button id="btn-toggle-audio" class="audio-btn">🔊 ON</button></p>
+            </div>
+            <div class="donation-footer-banner">
+                <span>🌸 地震被災地を応援：</span>
+                <a href="https://donation.yahoo.co.jp/detail/1630072" target="_blank" rel="noopener noreferrer" class="donation-link">
+                    Yahoo!基金 地震被害緊急支援募金はこちら ➔
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
