@@ -1,6 +1,6 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * メインJavaScript (20個の修正・物理正規化・境界ガード・アクセシビリティ強化版)
+ * メインJavaScript (フリーズ完全根絶・塩弾パリィ反射・プロゲーマーバランス)
  */
 
 (function() {
@@ -130,6 +130,14 @@
             } catch (e) {}
         }
 
+        playParry() {
+            if (!this.enabled) return;
+            this.init();
+            if (!this.ctx) return;
+            this.playTaiko(600, 0.1, 1.0);
+            setTimeout(() => this.playTaiko(1200, 0.2, 1.0), 50);
+        }
+
         playMegaBurst() {
             if (!this.enabled) return;
             this.init();
@@ -244,17 +252,17 @@
     const keysPressed = {};
     const dpadPressed = { up: false, down: false, left: false, right: false };
 
-    // 敵の卑怯な塩飛び道具クラス (視認性視覚ガード付き)
     class SaltBullet {
-        constructor(x, y, targetX, targetY) {
+        constructor(x, y, targetX, targetY, isReflected = false) {
             this.x = x;
             this.y = y;
             const angle = Math.atan2(targetY - y, targetX - x);
-            const speed = 4.2;
+            const speed = isReflected ? 8.0 : 4.2;
             this.vx = Math.cos(angle) * speed;
             this.vy = Math.sin(angle) * speed;
             this.radius = 9;
             this.life = 2.5;
+            this.isReflected = isReflected;
         }
         update(dt) {
             this.x += this.vx;
@@ -263,12 +271,11 @@
         }
         draw(ctx) {
             ctx.save();
-            // 塩弾ダークシャドウ視認性向上
-            ctx.shadowColor = 'rgba(45, 38, 51, 0.4)';
-            ctx.shadowBlur = 4;
-            ctx.fillStyle = '#ffffff';
-            ctx.strokeStyle = '#475569';
-            ctx.lineWidth = 2;
+            ctx.shadowColor = this.isReflected ? 'rgba(253, 224, 71, 0.8)' : 'rgba(45, 38, 51, 0.4)';
+            ctx.shadowBlur = this.isReflected ? 10 : 4;
+            ctx.fillStyle = this.isReflected ? '#fde047' : '#ffffff';
+            ctx.strokeStyle = this.isReflected ? '#b45309' : '#475569';
+            ctx.lineWidth = 2.5;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
@@ -277,7 +284,7 @@
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#475569';
             ctx.font = '10px sans-serif';
-            ctx.fillText('🧂', this.x - 5, this.y + 4);
+            ctx.fillText(this.isReflected ? '✨' : '🧂', this.x - 5, this.y + 4);
             ctx.restore();
         }
     }
@@ -336,7 +343,6 @@
             this.x += this.vx;
             this.y += this.vy;
 
-            // [指摘2修正] 画面外（キャンバス 0~900, 0~520）への暴走脱出クランプ防護
             this.x = Math.max(this.radius, Math.min(900 - this.radius, this.x));
             this.y = Math.max(this.radius, Math.min(520 - this.radius, this.y));
 
@@ -568,7 +574,6 @@
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p1); });
         btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p1); });
 
-        // [指摘7 & 13 & 17修正] キーボードショートカット (Mキー消音 / 矢印キー移動スクロール防止 / Tab無効)
         window.addEventListener('keydown', (e) => {
             audio.init();
             keysPressed[e.code] = true;
@@ -662,7 +667,6 @@
         const mainEnemy = enemies[0] || new Rikishi(false, 'うさ丸', '#059669', '🐰', 2.0, 110);
         if (enemyNameEl) enemyNameEl.textContent = (enemies.length > 1) ? `${mainEnemy.name} (2体タッグ)` : mainEnemy.name;
 
-        // [指摘14修正] 描画クランプガード
         const pStrVal = Math.floor(p1.currentPower * 10);
         if (pStrBar) pStrBar.style.width = `${Math.min(100, Math.max(0, pStrVal))}%`;
         if (pStrNum) pStrNum.textContent = pStrVal;
@@ -849,7 +853,6 @@
         currentEvent = null;
         eventTimer = 0;
 
-        // [指摘4修正] 塩飛び道具クリーンアップ
         saltBullets = [];
         enemySaltTimer = 0;
         eventBanner.classList.add('hidden');
@@ -895,15 +898,19 @@
         spawnSparks(DOHYO.cx, DOHYO.cy, '#fde047', 20, 'ハプニング！');
     }
 
+    // 🚨 [勝敗決着時フリーズ根絶・確実な画面遷移ガード]
     function finishMatch(isP1Win, kimarite) {
-        // [指摘12修正] 勝敗判定重複ガード最先頭配置
         if (isMatchFinished) return;
         isMatchFinished = true;
 
         gameState = STATE.RESULT;
+        
+        p1.vx = 0; p1.vy = 0;
+        enemies.forEach(e => { e.vx = 0; e.vy = 0; });
+
         speedLinesEl.classList.remove('active');
         eventBanner.classList.add('hidden');
-        saltBullets = []; // [指摘4修正]
+        saltBullets = [];
         triggerShake(0.6);
         
         const durationSec = ((performance.now() - startTime) / 1000).toFixed(1);
@@ -948,9 +955,11 @@
         updateHeaderUI();
 
         setTimeout(() => {
-            hideAllScreens();
-            uiOverlay.classList.add('active');
-            screenResult.classList.add('active');
+            try {
+                hideAllScreens();
+                uiOverlay.classList.add('active');
+                screenResult.classList.add('active');
+            } catch (err) {}
         }, 1200);
     }
 
@@ -979,7 +988,6 @@
         shakeTimer = sec;
     }
 
-    // [指摘1修正] 斜め移動ベクトルの規格化 (Normalized 2D Vector)
     function updatePlayerMovement(dt) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
@@ -1002,10 +1010,9 @@
         }
     }
 
-    // [指摘6修正] デルタタイム dt 規格化分離インパルス
     function resolveRikishiCollisions(dt) {
         const allRikishi = [p1, ...enemies.filter(e => !e.isEliminated)];
-        const frameScale = dt * 60; // 60fps 基準比
+        const frameScale = dt * 60;
 
         for (let i = 0; i < allRikishi.length; i++) {
             for (let j = i + 1; j < allRikishi.length; j++) {
@@ -1130,9 +1137,33 @@
         });
     }
 
+    // 🎮 [プロゲーマー機能] 塩飛び道具をジャストパリィ（はたき）で跳ね返し！
     function handleDodge(actor) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
-        actor.triggerDodge();
+        
+        const successDodge = actor.triggerDodge();
+
+        if (successDodge && actor === p1) {
+            saltBullets.forEach(b => {
+                if (!b.isReflected) {
+                    const dist = Math.hypot(p1.x - b.x, p1.y - b.y);
+                    if (dist < p1.radius + 60) {
+                        b.isReflected = true;
+                        
+                        const activeEnemies = enemies.filter(e => !e.isEliminated);
+                        const target = activeEnemies[0] || p1;
+                        const angle = Math.atan2(target.y - b.y, target.x - b.x);
+                        b.vx = Math.cos(angle) * 8.5;
+                        b.vy = Math.sin(angle) * 8.5;
+
+                        p1.setStateText('ジャストパリィ！✨');
+                        audio.playParry();
+                        triggerShake(0.3);
+                        spawnSparks(b.x, b.y, '#fde047', 15, 'パリィ！！');
+                    }
+                }
+            });
+        }
     }
 
     function updateBurstUI() {
@@ -1145,7 +1176,6 @@
         }
     }
 
-    // [指摘3修正] 撃破・リングアウト済みの敵からの飛び道具発射ガード
     function updateAI(dt) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
@@ -1160,7 +1190,8 @@
             enemy.vx += Math.cos(angle) * speed * 0.5;
             enemy.vy += Math.sin(angle) * speed * 0.5;
 
-            if (enemySaltTimer >= 2.5) {
+            const saltInterval = (currentRankIdx >= 4) ? 2.0 : 3.0;
+            if (enemySaltTimer >= saltInterval) {
                 saltBullets.push(new SaltBullet(enemy.x, enemy.y, p1.x, p1.y));
                 enemy.setStateText('卑怯な塩投げ！🧂');
                 audio.playHit();
@@ -1181,7 +1212,7 @@
             }
         });
 
-        if (enemySaltTimer >= 2.5) enemySaltTimer = 0;
+        if (enemySaltTimer >= 3.0) enemySaltTimer = 0;
         if (aiPushTimer >= 0.3) aiPushTimer = 0;
     }
 
@@ -1189,15 +1220,32 @@
         saltBullets.forEach(b => b.update(dt));
 
         saltBullets.forEach(b => {
-            const dist = Math.hypot(p1.x - b.x, p1.y - b.y);
-            if (dist < p1.radius + b.radius) {
-                b.life = -1;
-                p1.vx -= b.vx * 1.5;
-                p1.vy -= b.vy * 1.5;
-                p1.setStateText('目くらまし塩！🧂😵');
-                triggerShake(0.2);
-                audio.playHit();
-                spawnSparks(p1.x, p1.y, '#ffffff', 12, '塩！');
+            if (b.isReflected) {
+                enemies.forEach(enemy => {
+                    if (!enemy.isEliminated) {
+                        const dist = Math.hypot(enemy.x - b.x, enemy.y - b.y);
+                        if (dist < enemy.radius + b.radius) {
+                            b.life = -1;
+                            enemy.vx += b.vx * 2.0;
+                            enemy.vy += b.vy * 2.0;
+                            enemy.setStateText('自爆ノックバック！💥');
+                            triggerShake(0.3);
+                            audio.playHit();
+                            spawnSparks(enemy.x, enemy.y, '#fde047', 16, '反射ヒット！');
+                        }
+                    }
+                });
+            } else {
+                const dist = Math.hypot(p1.x - b.x, p1.y - b.y);
+                if (dist < p1.radius + b.radius) {
+                    b.life = -1;
+                    p1.vx -= b.vx * 1.5;
+                    p1.vy -= b.vy * 1.5;
+                    p1.setStateText('目くらまし塩！🧂😵');
+                    triggerShake(0.2);
+                    audio.playHit();
+                    spawnSparks(p1.x, p1.y, '#ffffff', 12, '塩！');
+                }
             }
         });
 
@@ -1220,7 +1268,7 @@
 
         if (p1Out) {
             finishMatch(false, '押し出し');
-        } else if (activeEnemies.length === 0) {
+        } else if (enemies.length > 0 && activeEnemies.length === 0) {
             const kimarite = (enemies.length > 1) ? '双子連撃寄り切り' : '寄り切り';
             finishMatch(true, kimarite);
         }
@@ -1232,7 +1280,6 @@
         return (dx * dx + dy * dy) > 1.0;
     }
 
-    // [指摘10修正] パーティクル最大数120厳守
     function spawnSparks(x, y, color, count = 8, popText = null) {
         if (particles.length > 120) return;
 
@@ -1437,7 +1484,6 @@
             enemies.forEach(e => e.update(dt));
             updateSaltBullets(dt);
 
-            // [指摘6修正] dt乗算物理離脱
             resolveRikishiCollisions(dt);
 
             updateAI(dt);
