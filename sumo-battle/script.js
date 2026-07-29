@@ -1,8 +1,8 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * 1. 接触時「ドカンッ！」と豪快大弾かれ物理 (Dynamic Bounce Impulse)
- * 2. 単調右押し（光速ステップハメ）対策「見切りサイドステップ＆カウンター受け流し」
- * 3. 第1ステージマイルド化 ＆ 段階的プログレッシブCPUアルゴリズム
+ * 1. インパクトショートカット [Z] 専用化
+ * 2. ラスボス鬼畜飛び道具弾幕乱射仕様 (当たり判定あり)
+ * 3. ちゃんこカード性能の大幅弱体化
  */
 
 (function() {
@@ -18,9 +18,9 @@
         HIT_STOP_DURATION: 0.09,
         SLOW_MOTION_DURATION: 0.22,
         PARRY_SLOW_DURATION: 0.45,
-        PUSH_KNOCKBACK_FORCE: 13.0,
+        PUSH_KNOCKBACK_FORCE: 12.0,
         POOL_MAX_PARTICLES: 300,
-        POOL_MAX_BULLETS: 60,
+        POOL_MAX_BULLETS: 100, // 弾幕増量プール
         POOL_MAX_AFTER_IMAGES: 20
     });
 
@@ -327,7 +327,6 @@
         return img;
     }
 
-    // 🔴 3. 第1ステージマイルド化 ＆ 美しい難易度プログレッシブ曲線！
     const RANKS = [
         { name: 'シルバー', icon: '🥈', imgUrl: 'assets/rabbit.jpg', enemyName: '初心者うさ丸', aiType: 'rookie_rabbit', strength: 1.8, weight: 70, color: '#059669', avatar: '🐰' },
         { name: 'ゴールド', icon: '🥇', imgUrl: null, enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 4.8, weight: 260, color: '#0284c7', avatar: '🐻' },
@@ -336,11 +335,12 @@
         { name: 'マスター', icon: '🏆', imgUrl: 'assets/boss_gold.jpg', enemyName: '覇王金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 12.0, weight: 210, color: '#b45309', avatar: '🐉' }
     ];
 
+    // 🔴 3. ちゃんこカードの大幅弱体化！
     const ALL_SKILL_CARDS = [
-        { id: 'giant', icon: '🍚', title: '超メガ巨大化！', desc: '体が2倍巨大化＆推力3倍！(※狭い土俵際では自分も落ちやすいリスクあり)', apply: (p) => { p.radiusScale *= 1.8; p.powerMultiplier += 3.0; } },
-        { id: 'speed', icon: '⚡', title: '光速ステップ', desc: '移動速度3倍＆残像発生！(※勢いあまって自爆リングアウトに注意)', apply: (p) => { p.moveSpeed *= 3.0; p.hasAfterImage = true; } },
-        { id: 'shockwave', icon: '💥', title: '爆破ギガ衝撃波', desc: '押すたびに画面全域に衝撃波！(※敵に囲まれるほど威力を発揮)', apply: (p) => { p.hasShockwave = true; } },
-        { id: 'auto_parry', icon: '✨', title: '黄金自動パリィ', desc: '相手の塩弾・打撃を100%反撃！(※自分から押せない代わりに強力カウンター)', apply: (p) => { p.hasAutoParry = true; } }
+        { id: 'giant', icon: '🍚', title: 'ちゃんこ微増', desc: '体格1.25倍＆推力微増(+0.8)', apply: (p) => { p.radiusScale *= 1.25; p.powerMultiplier += 0.8; } },
+        { id: 'speed', icon: '⚡', title: 'ちょっと快速', desc: '移動速度1.25倍＆残像微発生', apply: (p) => { p.moveSpeed *= 1.25; p.hasAfterImage = true; } },
+        { id: 'shockwave', icon: '💥', title: 'プチ衝撃波', desc: '押した時に小さな衝撃波が発生', apply: (p) => { p.hasShockwave = true; } },
+        { id: 'auto_parry', icon: '✨', title: 'たまにオートパリィ', desc: '至近距離の塩弾を低確率で判定オートカウンター', apply: (p) => { p.hasAutoParry = true; } }
     ];
 
     const EVENTS = [
@@ -369,9 +369,9 @@
                     if (r.active && !r.isEliminated) {
                         const distToCenter = Math.hypot(r.x - GAME_CONFIG.DOHYO_CX, r.y - GAME_CONFIG.DOHYO_CY);
                         if (distToCenter < 50 && r.radiusScale < 1.5) {
-                            r.radiusScale = 1.6;
-                            r.radius = Math.min(80, r.radius * 1.4);
-                            r.setStateText('ちゃんこ横取り巨大化！🍲');
+                            r.radiusScale = 1.4;
+                            r.radius = Math.min(80, r.radius * 1.25);
+                            r.setStateText('ちゃんこ横取り！🍲');
                             audio.playMegaBurst();
                         }
                     }
@@ -384,7 +384,7 @@
             apply: (dt, rikishiList) => {
                 rikishiList.forEach(r => {
                     if (r.active && !r.isEliminated) {
-                        r.powerMultiplier = Math.max(r.powerMultiplier, 5.0);
+                        r.powerMultiplier = Math.max(r.powerMultiplier, 4.0);
                     }
                 });
             } 
@@ -422,7 +422,7 @@
     const dpadPressed = { up: false, down: false, left: false, right: false };
 
     class SaltBullet {
-        constructor(x, y, targetX, targetY, isReflected = false) {
+        constructor(x, y, targetX, targetY, isReflected = false, speed = 8.5) {
             this.active = false;
             this.x = x; this.y = y;
             this.vx = 0; this.vy = 0;
@@ -430,13 +430,14 @@
             this.life = 2.5;
             this.isReflected = isReflected;
             this.poolIndex = -1;
+            this.speed = speed;
         }
 
-        spawn(x, y, targetX, targetY, isReflected = false) {
+        spawn(x, y, targetX, targetY, isReflected = false, customSpeed = null) {
             this.active = true;
             this.x = x; this.y = y;
             const angle = Math.atan2(targetY - y, targetX - x);
-            const speed = isReflected ? 12.5 : 7.5;
+            const speed = customSpeed ? customSpeed : (isReflected ? 13.5 : 8.5);
             this.vx = Math.cos(angle) * speed;
             this.vy = Math.sin(angle) * speed;
             this.radius = 11;
@@ -460,19 +461,19 @@
                 ctx.shadowColor = '#fde047';
                 ctx.shadowBlur = 30;
             } else {
-                ctx.shadowColor = this.isReflected ? 'rgba(253, 224, 71, 1.0)' : 'rgba(0,0,0,0.4)';
-                ctx.shadowBlur = this.isReflected ? 14 : 5;
+                ctx.shadowColor = this.isReflected ? 'rgba(253, 224, 71, 1.0)' : 'rgba(239, 68, 68, 0.6)';
+                ctx.shadowBlur = this.isReflected ? 14 : 6;
             }
 
-            ctx.fillStyle = this.isReflected ? '#fde047' : '#ffffff';
+            ctx.fillStyle = this.isReflected ? '#fde047' : '#ef4444'; // 鬼畜飛び道具は赤く発光！
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
 
             ctx.shadowBlur = 0;
-            ctx.fillStyle = '#475569';
+            ctx.fillStyle = '#ffffff';
             ctx.font = '12px sans-serif';
-            ctx.fillText(this.isReflected ? '✨' : '🧂', this.x - 6, this.y + 4);
+            ctx.fillText(this.isReflected ? '✨' : '🔥', this.x - 6, this.y + 4);
             ctx.restore();
         }
     }
@@ -684,6 +685,7 @@
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleDodge(p1); });
         btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleBurst(p1); });
 
+        // 🔴 1. 要望対応：インパクトのキーボードは Z のみとする！
         window.addEventListener('keydown', (e) => {
             audio.init();
             keysPressed[e.code] = true;
@@ -714,12 +716,15 @@
             } else if (gameState === STATE.PLAYING && canPlayerControl()) {
                 if (e.repeat) return;
                 
-                if (e.code === 'Space' || e.code === 'KeyZ' || e.code === 'KeyJ') {
+                // 💥 インパクト（押す）: Z キー専用！
+                if (e.code === 'KeyZ') {
                     queuePushInput();
                 } 
+                // ✨ パリィ（はたき）: X ＋ K ＋ Shift
                 else if (e.code === 'KeyX' || e.code === 'KeyK' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
                     handleDodge(p1);
                 } 
+                // 🔥 どすこいバースト: C ＋ L
                 else if (e.code === 'KeyC' || e.code === 'KeyL') {
                     handleBurst(p1);
                 }
@@ -806,8 +811,8 @@
         enemies = [];
         const enemyData = RANKS[currentRankIdx];
         if (enemyData.aiType === 'boss_duo') {
-            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.0, 210, 'super_heavy', 580, 210, 'assets/boss_gold.jpg');
-            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 10.5, 190, 'ninja_dodge', 580, 310, 'assets/boss_silver.jpg');
+            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.0, 210, 'boss_duo', 580, 210, 'assets/boss_gold.jpg');
+            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 10.5, 190, 'boss_duo', 580, 310, 'assets/boss_silver.jpg');
             enemies.push(boss1, boss2);
         } else {
             enemies.push(new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260, enemyData.imgUrl));
@@ -1014,10 +1019,10 @@
         if (actor.hasShockwave) {
             enemies.forEach(e => {
                 const angle = Math.atan2(e.y - actor.y, e.x - actor.x);
-                e.vx += Math.cos(angle) * 28;
-                e.vy += Math.sin(angle) * 28;
+                e.vx += Math.cos(angle) * 10; // 弱体化衝撃波
+                e.vy += Math.sin(angle) * 10;
             });
-            spawnSparks(actor.x, actor.y, '#c2410c', 25, '💥 ギガ衝撃波！');
+            spawnSparks(actor.x, actor.y, '#c2410c', 15, '💥 衝撃波');
         }
 
         enemies.forEach(opponent => {
@@ -1025,10 +1030,8 @@
 
             const dist = Math.hypot(opponent.x - actor.x, opponent.y - actor.y);
             if (dist < actor.radius + opponent.radius + 55) {
-                // 🔴 2. 単調右押し（ハメ）対策：高階級CPUのサイドステップ＆受け流し！
                 if (opponent.isDodging || (currentRankIdx >= 2 && Math.random() < 0.35)) {
                     opponent.triggerDodge();
-                    // プレイヤーの直線勢いを利用して横にかわす！
                     actor.vx += (Math.random() > 0.5 ? 12 : -12);
                     actor.vy += (Math.random() > 0.5 ? 12 : -12);
                     opponent.setStateText('見切り受け流し！✨');
@@ -1060,8 +1063,8 @@
                     const activeEnemies = enemies.filter(e => !e.isEliminated);
                     const target = activeEnemies[0] || p1;
                     const angle = Math.atan2(target.y - b.y, target.x - b.x);
-                    b.vx = Math.cos(angle) * 13;
-                    b.vy = Math.sin(angle) * 13;
+                    b.vx = Math.cos(angle) * 14;
+                    b.vy = Math.sin(angle) * 14;
 
                     parryTriggered = true;
                 }
@@ -1076,7 +1079,6 @@
         }
     }
 
-    // 🔴 1. 接触時「ドカンッ！」と豪快大弾かれ物理 (bounceImpulse = 14.0) ＆ スパーク！
     function checkCharacterCollisions() {
         const allRikishi = [p1, ...enemies].filter(r => r && !r.isEliminated);
         
@@ -1101,7 +1103,6 @@
                     r2.x += nx * overlap * pushFactor;
                     r2.y += ny * overlap * pushFactor;
 
-                    // 💥 豪快大弾かれ物理（インパルス 14.0）
                     const bounceImpulse = 14.0;
                     r1.vx -= nx * bounceImpulse;
                     r1.vy -= ny * bounceImpulse;
@@ -1116,7 +1117,7 @@
         }
     }
 
-    // 🔴 2 & 3. CPUアルゴリズム再考（右押しハメ防止 ＆ 第1ステージマイルド化）
+    // 🔴 2. ラスボス（boss_duo）の鬼畜飛び道具乱射アルゴリズム！
     function updateAI(dt) {
         if (gameState !== STATE.PLAYING || announceTimer > 0 || hitStopTimer > 0) return;
 
@@ -1145,21 +1146,17 @@
                 enemy.aiState = 'normal';
             }
 
-            // 🔴 3. 第1ステージ (初心者うさ丸) は素直＆マイルドに！
             if (enemy.aiType === 'rookie_rabbit') {
                 const angle = Math.atan2(dy, dx);
                 moveX += Math.cos(angle) * 1.5;
                 moveY += Math.sin(angle) * 1.5;
             } 
-            // 2. ゴールド (不動くまごろう): ドッシリ直線押し
             else if (enemy.aiType === 'super_heavy') {
                 const angle = Math.atan2(dy, dx);
                 moveX += Math.cos(angle) * 1.6;
                 moveY += Math.sin(angle) * 1.6;
             } 
-            // 3. ダイヤ (閃光ねこノ海): 右押し突進を軸ズレ・ワープで回避！
             else if (enemy.aiType === 'ninja_dodge') {
-                // プレイヤーの直線右押しを検知して上下に軸ずらし！
                 if (Math.abs(p1.vx) > 5 && dist < 220) {
                     moveY += (p1.y > enemy.y ? -3.5 : 3.5);
                 }
@@ -1172,24 +1169,49 @@
                 moveX += Math.cos(angle) * 2.5;
                 moveY += Math.sin(angle) * 2.5;
             } 
-            // 4. プラチナ (暴風鳳凰丸): 距離を取って弾幕＋突進受け流し
             else if (enemy.aiType === 'salt_master') {
                 if (dist < 160) {
-                    moveY += (p1.y > enemy.y ? -4.0 : 4.0); // 上下に身をかわす！
+                    moveY += (p1.y > enemy.y ? -4.0 : 4.0);
                 }
                 const angle = Math.atan2(-dy, -dx);
                 moveX += Math.cos(angle) * 2.0;
                 moveY += Math.sin(angle) * 2.0;
             }
+            // 🔴 ラスボス鬼畜仕様
+            else if (enemy.aiType === 'boss_duo') {
+                const angle = Math.atan2(dy, dx) + Math.sin(GAME_STATE_TIME * 5.0) * 1.5;
+                moveX += Math.cos(angle) * 2.8;
+                moveY += Math.sin(angle) * 2.8;
+            }
 
             enemy.vx += moveX;
             enemy.vy += moveY;
 
-            const interval = enemy.aiType === 'salt_master' ? 0.7 : (enemy.aiType === 'rookie_rabbit' ? 3.0 : 1.8);
+            // 🔴 ラスボス：0.22秒間隔の超爆速・鬼畜弾幕乱射！
+            let interval = 1.8;
+            if (enemy.aiType === 'salt_master') interval = 0.7;
+            else if (enemy.aiType === 'rookie_rabbit') interval = 3.0;
+            else if (enemy.aiType === 'boss_duo') interval = 0.22; // 鬼畜超連射！
+
             if (enemy.saltTimer >= interval) {
                 enemy.saltTimer = 0;
-                const b = saltBulletPool.get();
-                if (b) b.spawn(enemy.x, enemy.y, p1.x, p1.y);
+                
+                if (enemy.aiType === 'boss_duo') {
+                    // 3方向～5方向扇状拡散弾幕を連射！
+                    const baseAngle = Math.atan2(p1.y - enemy.y, p1.x - enemy.x);
+                    const spreadAngles = [-0.35, 0, 0.35];
+                    spreadAngles.forEach(offset => {
+                        const b = saltBulletPool.get();
+                        if (b) {
+                            const targetX = enemy.x + Math.cos(baseAngle + offset) * 200;
+                            const targetY = enemy.y + Math.sin(baseAngle + offset) * 200;
+                            b.spawn(enemy.x, enemy.y, targetX, targetY, false, 9.5); // 高速当たり判定あり弾幕！
+                        }
+                    });
+                } else {
+                    const b = saltBulletPool.get();
+                    if (b) b.spawn(enemy.x, enemy.y, p1.x, p1.y);
+                }
             }
         });
     }
@@ -1213,10 +1235,11 @@
                     }
                 });
             } else {
-                if (p1.hasAutoParry && Math.hypot(p1.x - b.x, p1.y - b.y) < p1.radius + 60) {
+                // 弱体化自動パリィ：至近距離（40px以下）のみ低確率で発火
+                if (p1.hasAutoParry && Math.hypot(p1.x - b.x, p1.y - b.y) < p1.radius + 20 && Math.random() < 0.4) {
                     b.isReflected = true;
-                    b.vx = -b.vx * 1.8;
-                    b.vy = -b.vy * 1.8;
+                    b.vx = -b.vx * 1.5;
+                    b.vy = -b.vy * 1.5;
                     p1.setStateText('自動パリィ！✨');
                     audio.playParry();
                     triggerParrySpecialEffect();
@@ -1225,8 +1248,8 @@
 
                 if (Math.hypot(p1.x - b.x, p1.y - b.y) < p1.radius + b.radius) {
                     b.active = false;
-                    p1.vx -= b.vx * 1.6;
-                    p1.vy -= b.vy * 1.6;
+                    p1.vx -= b.vx * 1.8;
+                    p1.vy -= b.vy * 1.8;
                     triggerShake(0.2);
                     audio.playHit();
                 }
