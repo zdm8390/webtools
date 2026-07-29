@@ -1,6 +1,8 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * 土俵形状の正円（Circle）化変更版
+ * 1. 接触時「ドカンッ！」と豪快大弾かれ物理 (Dynamic Bounce Impulse)
+ * 2. 単調右押し（光速ステップハメ）対策「見切りサイドステップ＆カウンター受け流し」
+ * 3. 第1ステージマイルド化 ＆ 段階的プログレッシブCPUアルゴリズム
  */
 
 (function() {
@@ -11,7 +13,7 @@
         CANVAS_HEIGHT: 520,
         DOHYO_CX: 450,
         DOHYO_CY: 260,
-        DOHYO_RADIUS: 230, // 🔴 楕円から完全な正円（半径230）へ変更！
+        DOHYO_RADIUS: 230,
         INPUT_BUFFER_FRAMES: 6,
         HIT_STOP_DURATION: 0.09,
         SLOW_MOTION_DURATION: 0.22,
@@ -325,12 +327,13 @@
         return img;
     }
 
+    // 🔴 3. 第1ステージマイルド化 ＆ 美しい難易度プログレッシブ曲線！
     const RANKS = [
-        { name: 'シルバー', icon: '🥈', imgUrl: 'assets/rabbit.jpg', enemyName: '音速うさ丸', aiType: 'speed_rush', strength: 2.8, weight: 80, color: '#059669', avatar: '🐰' },
-        { name: 'ゴールド', icon: '🥇', imgUrl: null, enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 6.8, weight: 280, color: '#0284c7', avatar: '🐻' },
-        { name: 'ダイヤ', icon: '💎', imgUrl: null, enemyName: '閃光ねこノ海', aiType: 'ninja_dodge', strength: 8.2, weight: 140, color: '#d97706', avatar: '🐱' },
-        { name: 'プラチナ', icon: '👑', imgUrl: null, enemyName: '暴風鳳凰丸', aiType: 'salt_master', strength: 9.6, weight: 170, color: '#9333ea', avatar: '🦅' },
-        { name: 'マスター', icon: '🏆', imgUrl: 'assets/boss_gold.jpg', enemyName: '覇王金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 12.5, weight: 210, color: '#b45309', avatar: '🐉' }
+        { name: 'シルバー', icon: '🥈', imgUrl: 'assets/rabbit.jpg', enemyName: '初心者うさ丸', aiType: 'rookie_rabbit', strength: 1.8, weight: 70, color: '#059669', avatar: '🐰' },
+        { name: 'ゴールド', icon: '🥇', imgUrl: null, enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 4.8, weight: 260, color: '#0284c7', avatar: '🐻' },
+        { name: 'ダイヤ', icon: '💎', imgUrl: null, enemyName: '閃光ねこノ海', aiType: 'ninja_dodge', strength: 7.2, weight: 140, color: '#d97706', avatar: '🐱' },
+        { name: 'プラチナ', icon: '👑', imgUrl: null, enemyName: '暴風鳳凰丸', aiType: 'salt_master', strength: 9.2, weight: 170, color: '#9333ea', avatar: '🦅' },
+        { name: 'マスター', icon: '🏆', imgUrl: 'assets/boss_gold.jpg', enemyName: '覇王金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 12.0, weight: 210, color: '#b45309', avatar: '🐉' }
     ];
 
     const ALL_SKILL_CARDS = [
@@ -803,8 +806,8 @@
         enemies = [];
         const enemyData = RANKS[currentRankIdx];
         if (enemyData.aiType === 'boss_duo') {
-            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.5, 210, 'super_heavy', 580, 210, 'assets/boss_gold.jpg');
-            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 11.0, 190, 'ninja_dodge', 580, 310, 'assets/boss_silver.jpg');
+            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.0, 210, 'super_heavy', 580, 210, 'assets/boss_gold.jpg');
+            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 10.5, 190, 'ninja_dodge', 580, 310, 'assets/boss_silver.jpg');
             enemies.push(boss1, boss2);
         } else {
             enemies.push(new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260, enemyData.imgUrl));
@@ -1021,12 +1024,14 @@
             if (opponent.isEliminated) return;
 
             const dist = Math.hypot(opponent.x - actor.x, opponent.y - actor.y);
-            if (dist < actor.radius + opponent.radius + 50) {
-                if (opponent.isDodging || (Math.random() < (currentRankIdx * 0.12))) {
+            if (dist < actor.radius + opponent.radius + 55) {
+                // 🔴 2. 単調右押し（ハメ）対策：高階級CPUのサイドステップ＆受け流し！
+                if (opponent.isDodging || (currentRankIdx >= 2 && Math.random() < 0.35)) {
                     opponent.triggerDodge();
-                    actor.vx -= (opponent.x - actor.x) * 1.2;
-                    actor.vy -= (opponent.y - actor.y) * 1.2;
-                    opponent.setStateText('カウンター見切り！✨');
+                    // プレイヤーの直線勢いを利用して横にかわす！
+                    actor.vx += (Math.random() > 0.5 ? 12 : -12);
+                    actor.vy += (Math.random() > 0.5 ? 12 : -12);
+                    opponent.setStateText('見切り受け流し！✨');
                     return;
                 }
 
@@ -1071,6 +1076,7 @@
         }
     }
 
+    // 🔴 1. 接触時「ドカンッ！」と豪快大弾かれ物理 (bounceImpulse = 14.0) ＆ スパーク！
     function checkCharacterCollisions() {
         const allRikishi = [p1, ...enemies].filter(r => r && !r.isEliminated);
         
@@ -1089,22 +1095,28 @@
                     const nx = dx / dist;
                     const ny = dy / dist;
 
-                    const pushFactor = 0.5;
+                    const pushFactor = 0.55;
                     r1.x -= nx * overlap * pushFactor;
                     r1.y -= ny * overlap * pushFactor;
                     r2.x += nx * overlap * pushFactor;
                     r2.y += ny * overlap * pushFactor;
 
-                    const bounceImpulse = 4.2;
+                    // 💥 豪快大弾かれ物理（インパルス 14.0）
+                    const bounceImpulse = 14.0;
                     r1.vx -= nx * bounceImpulse;
                     r1.vy -= ny * bounceImpulse;
                     r2.vx += nx * bounceImpulse;
                     r2.vy += ny * bounceImpulse;
+
+                    triggerShake(0.12);
+                    audio.playHit();
+                    spawnSparks((r1.x + r2.x) / 2, (r1.y + r2.y) / 2, '#c2410c', 8, '💥 ドンッ！');
                 }
             }
         }
     }
 
+    // 🔴 2 & 3. CPUアルゴリズム再考（右押しハメ防止 ＆ 第1ステージマイルド化）
     function updateAI(dt) {
         if (gameState !== STATE.PLAYING || announceTimer > 0 || hitStopTimer > 0) return;
 
@@ -1117,7 +1129,6 @@
             const dy = p1.y - enemy.y;
             const dist = Math.hypot(dx, dy);
 
-            // 🔴 正円土俵（半径 DOHYO_RADIUS * 0.75）の接近検出
             const isNearEdge = isOutOfDohyo(enemy.x, enemy.y, 0.75);
 
             let moveX = 0;
@@ -1125,8 +1136,8 @@
 
             if (isNearEdge) {
                 const centerAngle = Math.atan2(GAME_CONFIG.DOHYO_CY - enemy.y, GAME_CONFIG.DOHYO_CX - enemy.x);
-                moveX += Math.cos(centerAngle) * 4.0;
-                moveY += Math.sin(centerAngle) * 4.0;
+                moveX += Math.cos(centerAngle) * 4.5;
+                moveY += Math.sin(centerAngle) * 4.5;
                 enemy.aiState = 'panic';
             } else if (winsCount >= 2) {
                 enemy.aiState = 'angry';
@@ -1134,33 +1145,47 @@
                 enemy.aiState = 'normal';
             }
 
-            if (enemy.aiType === 'speed_rush') {
-                const angle = Math.atan2(dy, dx) + Math.sin(GAME_STATE_TIME * 4.0) * 1.2;
-                moveX += Math.cos(angle) * 3.6;
-                moveY += Math.sin(angle) * 3.6;
-            } else if (enemy.aiType === 'super_heavy') {
+            // 🔴 3. 第1ステージ (初心者うさ丸) は素直＆マイルドに！
+            if (enemy.aiType === 'rookie_rabbit') {
                 const angle = Math.atan2(dy, dx);
-                moveX += Math.cos(angle) * 1.4;
-                moveY += Math.sin(angle) * 1.4;
-            } else if (enemy.aiType === 'ninja_dodge') {
-                if (dist < 180 && Math.random() < 0.18) {
+                moveX += Math.cos(angle) * 1.5;
+                moveY += Math.sin(angle) * 1.5;
+            } 
+            // 2. ゴールド (不動くまごろう): ドッシリ直線押し
+            else if (enemy.aiType === 'super_heavy') {
+                const angle = Math.atan2(dy, dx);
+                moveX += Math.cos(angle) * 1.6;
+                moveY += Math.sin(angle) * 1.6;
+            } 
+            // 3. ダイヤ (閃光ねこノ海): 右押し突進を軸ズレ・ワープで回避！
+            else if (enemy.aiType === 'ninja_dodge') {
+                // プレイヤーの直線右押しを検知して上下に軸ずらし！
+                if (Math.abs(p1.vx) > 5 && dist < 220) {
+                    moveY += (p1.y > enemy.y ? -3.5 : 3.5);
+                }
+                if (dist < 180 && Math.random() < 0.20) {
                     enemy.triggerDodge();
                     enemy.x = p1.x - Math.cos(Math.atan2(dy, dx)) * 140;
                     enemy.y = p1.y - Math.sin(Math.atan2(dy, dx)) * 140;
                 }
                 const angle = Math.atan2(dy, dx);
-                moveX += Math.cos(angle) * 2.2;
-                moveY += Math.sin(angle) * 2.2;
-            } else if (enemy.aiType === 'salt_master') {
+                moveX += Math.cos(angle) * 2.5;
+                moveY += Math.sin(angle) * 2.5;
+            } 
+            // 4. プラチナ (暴風鳳凰丸): 距離を取って弾幕＋突進受け流し
+            else if (enemy.aiType === 'salt_master') {
+                if (dist < 160) {
+                    moveY += (p1.y > enemy.y ? -4.0 : 4.0); // 上下に身をかわす！
+                }
                 const angle = Math.atan2(-dy, -dx);
-                moveX += Math.cos(angle) * 1.8;
-                moveY += Math.sin(angle) * 1.8;
+                moveX += Math.cos(angle) * 2.0;
+                moveY += Math.sin(angle) * 2.0;
             }
 
             enemy.vx += moveX;
             enemy.vy += moveY;
 
-            const interval = enemy.aiType === 'salt_master' ? 0.7 : 1.8;
+            const interval = enemy.aiType === 'salt_master' ? 0.7 : (enemy.aiType === 'rookie_rabbit' ? 3.0 : 1.8);
             if (enemy.saltTimer >= interval) {
                 enemy.saltTimer = 0;
                 const b = saltBulletPool.get();
@@ -1230,7 +1255,6 @@
         }
     }
 
-    // 🔴 正円（Circle）土俵外判定！
     function isOutOfDohyo(x, y, scale = 1.0) {
         const dist = Math.hypot(x - GAME_CONFIG.DOHYO_CX, y - GAME_CONFIG.DOHYO_CY);
         return dist > (GAME_CONFIG.DOHYO_RADIUS * scale);
@@ -1242,7 +1266,6 @@
         announceTimer = duration;
     }
 
-    // 🔴 正円（Circle）土俵の美しさあふれる描画！
     function drawDohyo() {
         ctx.save();
 
