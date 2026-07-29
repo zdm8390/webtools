@@ -1,6 +1,6 @@
 /* ==========================================
    超音速スモウバトル～ちゃんこ食わんかい～
-   スタイルシート (上品な和モダンパステル)
+   スタイルシート (和モダンパステル & 完全レスポンス)
    ========================================== */
 
 :root {
@@ -165,8 +165,8 @@ body {
 
 /* マッチアップ */
 .matchup-container { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 12px; gap: 8px; }
-.rikishi-card { flex: 1; background: #fff; border: 2px solid var(--washi-purple); border-radius: 16px; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-.card-role { font-size: 0.75rem; color: var(--washi-purple); }
+.rikishi-card { flex: 1; background: #fff; border: 2px solid var(--washi-purple); border-radius: 16px; padding: 10px; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+.card-role { font-size: 0.75rem; color: var(--washi-purple); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 100%; }
 .rikishi-card h3 { font-size: 1.1rem; margin: 2px 0 6px 0; color: var(--text-dark); }
 .rikishi-avatar { width: 54px; height: 54px; border-radius: 50%; background: var(--washi-purple-light); margin-bottom: 8px; border: 1.5px solid var(--washi-purple); display: flex; justify-content: center; align-items: center; font-size: 1.8rem; }
 
@@ -284,4 +284,11 @@ body {
     .matchup-container { gap: 4px; }
     .rikishi-avatar { width: 44px; height: 44px; font-size: 1.4rem; margin-bottom: 4px; }
     .rikishi-card h3 { font-size: 0.95rem; }
+}
+
+/* スマホ横持ちレスポンス */
+@media (max-height: 480px) {
+    .touch-controls-action { padding: 4px; gap: 6px; }
+    .dpad-btn { width: 32px; height: 32px; min-height: 32px; font-size: 0.85rem; }
+    .action-btn { min-height: 44px; padding: 4px; }
 }

@@ -233,14 +233,14 @@
             <!-- アクション＆バーチャル移動操作ボタン -->
             <div id="touch-controls" class="touch-controls-action" aria-label="アクション操作パネル">
                 <!-- 左側：バーチャル方向コントローラー (D-PAD) -->
-                <div class="dpad-container">
-                    <button id="dpad-up" class="dpad-btn dpad-u" type="button" aria-label="上移動">⬆️</button>
+                <div class="dpad-container" role="group" aria-label="方向キーコントローラー">
+                    <button id="dpad-up" class="dpad-btn dpad-u" type="button" aria-label="上方向へ移動">⬆️</button>
                     <div class="dpad-row">
-                        <button id="dpad-left" class="dpad-btn dpad-l" type="button" aria-label="左移動">⬅️</button>
-                        <span class="dpad-center">🕹️</span>
-                        <button id="dpad-right" class="dpad-btn dpad-r" type="button" aria-label="右移動">➡️</button>
+                        <button id="dpad-left" class="dpad-btn dpad-l" type="button" aria-label="左方向へ移動">⬅️</button>
+                        <span class="dpad-center" aria-hidden="true">🕹️</span>
+                        <button id="dpad-right" class="dpad-btn dpad-r" type="button" aria-label="右方向へ移動">➡️</button>
                     </div>
-                    <button id="dpad-down" class="dpad-btn dpad-d" type="button" aria-label="下移動">⬇️</button>
+                    <button id="dpad-down" class="dpad-btn dpad-d" type="button" aria-label="下方向へ移動">⬇️</button>
                 </div>
 
                 <!-- 右側：攻撃アクションボタン -->
@@ -286,7 +286,7 @@
         <!-- フッター -->
         <footer class="game-footer">
             <div class="footer-row">
-                <button id="btn-toggle-audio" class="audio-btn" type="button" aria-label="効果音のON/OFF切り替え">🔊 Sound ON</button>
+                <button id="btn-toggle-audio" class="audio-btn" type="button" aria-label="効果音のON/OFF切り替え (キーボードMキー)">🔊 Sound ON</button>
             </div>
             <div class="donation-footer-banner">
                 <span>🌸 被災地を応援：</span>
