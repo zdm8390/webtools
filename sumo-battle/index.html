@@ -7,10 +7,18 @@
     <meta name="description" content="Nintendo, SEGA, CAPCOMスピリッツが宿る！ボタンを押した瞬間に快感最高潮の極上アーケードスモウアクション！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@900&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=M+PLUS+Rounded+1c:wght@700;800;900&family=Shippori+Mincho:wght@900&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="cute-bg-decorations" aria-hidden="true">
+        <span class="floating-item item-1">🌸</span>
+        <span class="floating-item item-2">✨</span>
+        <span class="floating-item item-3">💖</span>
+        <span class="floating-item item-4">🍬</span>
+        <span class="floating-item item-5">⭐</span>
+        <span class="floating-item item-6">🍡</span>
+    </div>
     <div id="app-container">
         <!-- 🏛️ POP＆モダン アーケードヘッダー -->
         <header class="game-header">
@@ -48,7 +56,7 @@
             <div id="speed-lines" class="speed-lines" aria-hidden="true"></div>
 
             <div id="burst-cutin" class="burst-cutin hidden">
-                <div class="cutin-text" id="cutin-text-content">🔥 超 ど す こ い 🔥</div>
+                <div class="cutin-text" id="cutin-text-content">🔥 踏 み と ど ま り ！ 🔥</div>
             </div>
 
             <div id="event-banner" class="event-banner hidden">
@@ -85,6 +93,7 @@
                         <span>🕹️ 移動: WASD / 矢印</span>
                         <span>💥 インパクト: [Z]</span>
                         <span>✨ パリィ: [X / K]</span>
+                        <span>🦶 踏みとどまる: [C / L]</span>
                     </div>
                 </section>
 
@@ -97,12 +106,12 @@
                     <div id="cards-container" class="cards-container"></div>
                 </section>
 
-                <!-- 3. POP勝負リザルト (決まり手非表示＆シンプル化) -->
+                <!-- 3. POP勝負リザルト -->
                 <section id="screen-result" class="screen-panel hidden">
                     <div class="result-box">
                         <div class="winner-announcement" id="winner-name">東 エドモーンド の勝利！</div>
                         
-                        <!-- 🔴 詳細アクション統計 ＆ 最終スコア表示カード -->
+                        <!-- 詳細アクション統計 ＆ 最終スコア表示カード -->
                         <div class="score-card-box">
                             <div class="score-row">
                                 <span class="score-label">⏱️ トータルクリア時間:</span>
@@ -165,9 +174,10 @@
                         <span class="action-emoji">✨</span>
                         <span class="action-label nowrap-label">パリィ [X/K]</span>
                     </button>
-                    <button id="btn-p1-burst" class="action-btn burst-btn disabled" type="button" disabled>
-                        <span class="action-emoji">🔥</span>
-                        <span class="action-label nowrap-label">どすこい! [C]</span>
+                    <!-- 🔴 Cボタンを「踏みとどまる [C] (CT:3s)」へ更新！ -->
+                    <button id="btn-p1-latch" class="action-btn latch-btn" type="button">
+                        <span class="action-emoji">🦶</span>
+                        <span class="action-label nowrap-label" id="latch-btn-label">踏みとどまる [C]</span>
                     </button>
                 </div>
             </div>

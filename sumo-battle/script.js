@@ -1,8 +1,7 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * 1. 決まり手表示の削除
- * 2. インパクト威力弱体化 (PUSH_KNOCKBACK_FORCE 8.5 ➔ 4.0)
- * 3. 滑り止めフリクション強化 ＆ 土俵際自動踏み止まりストッパー
+ * 1. Cボタン／[C/L]キーを「踏みとどまる（粘り足ストッパー）」に変更！
+ * 2. 踏みとどまる発動後は3秒間のクールダウンタイマーを管理！
  */
 
 (function() {
@@ -17,7 +16,8 @@
         HIT_STOP_DURATION: 0.09,
         SLOW_MOTION_DURATION: 0.22,
         PARRY_SLOW_DURATION: 0.45,
-        PUSH_KNOCKBACK_FORCE: 4.0, // 🔴 インパクト弱体化 (8.5 ➔ 4.0)
+        PUSH_KNOCKBACK_FORCE: 4.0,
+        LATCH_COOLDOWN_MAX: 3.0, // 🔴 踏みとどまるクールダウン 3.0秒
         POOL_MAX_PARTICLES: 300,
         POOL_MAX_BULLETS: 100,
         POOL_MAX_AFTER_IMAGES: 20
@@ -46,7 +46,7 @@
             return this.enabled;
         }
 
-        playTaiko(freq = 100, duration = 0.4, vol = 1.0) {
+        playTaiko(freq = 240, duration = 0.3, vol = 0.8) {
             if (!this.enabled) return;
             this.init();
             if (!this.ctx) return;
@@ -57,7 +57,7 @@
 
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + duration);
+                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + duration);
 
                 gain.gain.setValueAtTime(vol, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
@@ -76,27 +76,22 @@
             if (!this.ctx) return;
 
             try {
-                const bufferSize = Math.floor(this.ctx.sampleRate * 0.12);
-                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
-                const noise = this.ctx.createBufferSource();
-                noise.buffer = buffer;
-                const filter = this.ctx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(900, this.ctx.currentTime);
-
+                // ポップでピコッとする可愛いヒット音
+                const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.1);
 
-                noise.connect(filter);
-                filter.connect(gain);
+                gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+
+                osc.connect(gain);
                 gain.connect(this.ctx.destination);
-
-                noise.start();
-                this.playTaiko(190, 0.15, 1.0);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+                
+                this.playTaiko(300, 0.12, 0.8);
             } catch (e) {}
         }
 
@@ -108,16 +103,16 @@
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(520, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1040, this.ctx.currentTime + 0.15);
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.18);
 
                 gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
 
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
                 osc.start();
-                osc.stop(this.ctx.currentTime + 0.15);
+                osc.stop(this.ctx.currentTime + 0.18);
             } catch (e) {}
         }
 
@@ -125,38 +120,38 @@
             if (!this.enabled) return;
             this.init();
             if (!this.ctx) return;
-            this.playTaiko(400, 0.1, 0.5);
-            setTimeout(() => this.playTaiko(800, 0.2, 0.7), 80);
+            this.playTaiko(520, 0.08, 0.5);
+            setTimeout(() => this.playTaiko(1040, 0.15, 0.7), 70);
         }
 
         playParry() {
             if (!this.enabled) return;
             this.init();
             if (!this.ctx) return;
-            this.playTaiko(650, 0.12, 1.0);
-            setTimeout(() => this.playTaiko(1300, 0.3, 1.0), 40);
+            this.playTaiko(800, 0.1, 1.0);
+            setTimeout(() => this.playTaiko(1600, 0.25, 1.0), 30);
         }
 
         playMegaBurst() {
             if (!this.enabled) return;
             this.init();
             if (!this.ctx) return;
-            this.playTaiko(350, 0.6, 1.0);
-            setTimeout(() => this.playTaiko(150, 0.5, 1.0), 100);
+            this.playTaiko(500, 0.4, 0.9);
+            setTimeout(() => this.playTaiko(250, 0.4, 0.9), 90);
         }
 
         playFanfare(isWin) {
             if (!this.enabled) return;
             this.init();
             if (!this.ctx) return;
-            const notes = isWin ? [440, 554.37, 659.25, 880] : [260, 200, 150];
+            const notes = isWin ? [523.25, 659.25, 783.99, 1046.50] : [349.23, 311.13, 261.63];
             notes.forEach((freq, idx) => {
                 setTimeout(() => {
                     if (!this.ctx) return;
                     try {
                         const osc = this.ctx.createOscillator();
                         const gain = this.ctx.createGain();
-                        osc.type = isWin ? 'triangle' : 'sawtooth';
+                        osc.type = isWin ? 'triangle' : 'sine';
                         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
                         gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
                         gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
@@ -165,7 +160,7 @@
                         osc.start();
                         osc.stop(this.ctx.currentTime + 0.35);
                     } catch (e) {}
-                }, idx * 80);
+                }, idx * 90);
             });
         }
     }
@@ -199,7 +194,7 @@
             if (!this.active) return;
             this.x += this.vx;
             this.y += this.vy;
-            this.vy += this.text ? -1.0 : 0.25;
+            this.vy += this.text ? -0.8 : 0.2;
             this.life -= dt;
             if (this.life <= 0) this.active = false;
         }
@@ -211,10 +206,10 @@
             ctx.globalAlpha = alpha;
 
             if (this.text) {
-                ctx.font = '900 28px "Shippori Mincho", serif';
+                ctx.font = '900 26px "M PLUS Rounded 1c", sans-serif';
                 ctx.fillStyle = this.color;
                 ctx.shadowColor = '#fff';
-                ctx.shadowBlur = 12;
+                ctx.shadowBlur = 10;
                 ctx.fillText(this.text, this.x, this.y);
             } else {
                 ctx.fillStyle = this.color;
@@ -280,38 +275,49 @@
     function spawnSparks(x, y, color, count = 10, popText = null) {
         if (popText) {
             const p = particlePool.get();
-            if (p) p.spawn(x, y - 20, 0, -1.2, color, 0, 0.8, popText);
+            if (p) p.spawn(x, y - 24, 0, -1.5, '#ff3377', 0, 0.85, popText);
         }
+
+        const cuteColors = ['#ff6b9d', '#ffb3c6', '#ffe66d', '#70d6ff', '#6ee7b7', '#c77dff'];
+        const cuteIcons = ['⭐', '✨', '💖', '🌸', '🍬'];
 
         for (let i = 0; i < count; i++) {
             const p = particlePool.get();
             if (!p) break;
             const angle = Math.random() * Math.PI * 2;
-            const speed = 3 + Math.random() * 10;
+            const speed = 2.5 + Math.random() * 8.5;
+            const pickColor = cuteColors[Math.floor(Math.random() * cuteColors.length)];
+            const iconText = Math.random() < 0.25 ? cuteIcons[Math.floor(Math.random() * cuteIcons.length)] : null;
+            
             p.spawn(
                 x, y,
                 Math.cos(angle) * speed,
                 Math.sin(angle) * speed,
-                color,
-                4 + Math.random() * 6,
-                0.3 + Math.random() * 0.4
+                pickColor,
+                iconText ? 0 : (5 + Math.random() * 6),
+                0.35 + Math.random() * 0.45,
+                iconText
             );
         }
     }
 
     function spawnVictoryConfetti() {
-        const colors = ['#ea580c', '#fbbf24', '#1e1b4b', '#ffffff', '#ec4899', '#10b981'];
-        for (let i = 0; i < 100; i++) {
+        const colors = ['#ff6b9d', '#ffb3c6', '#ffe66d', '#70d6ff', '#6ee7b7', '#c77dff', '#ffffff'];
+        const icons = ['💖', '⭐', '🍬', '✨', '🎉', '🌸', '🍡'];
+        
+        for (let i = 0; i < 110; i++) {
             const p = particlePool.get();
             if (!p) break;
+            const iconText = Math.random() < 0.35 ? icons[Math.floor(Math.random() * icons.length)] : null;
             p.spawn(
-                GAME_CONFIG.DOHYO_CX + (Math.random() * 450 - 225),
-                60,
-                Math.random() * 6 - 3,
+                GAME_CONFIG.DOHYO_CX + (Math.random() * 500 - 250),
+                50,
+                Math.random() * 7 - 3.5,
                 Math.random() * 6 + 3,
                 colors[Math.floor(Math.random() * colors.length)],
-                6 + Math.random() * 6,
-                2.8
+                iconText ? 0 : (6 + Math.random() * 6),
+                3.0,
+                iconText
             );
         }
     }
@@ -404,6 +410,9 @@
     let timeAttackTimer = 0;
     let isTimerRunning = false;
 
+    // 🔴 踏みとどまるクールダウンタイマー
+    let latchCooldownTimer = 0;
+
     let statsCollisionCount = 0;
     let statsPushCount = 0;
     let statsParryCount = 0;
@@ -435,7 +444,7 @@
             this.active = false;
             this.x = x; this.y = y;
             this.vx = 0; this.vy = 0;
-            this.radius = 11;
+            this.radius = 12;
             this.life = 2.5;
             this.isReflected = isReflected;
             this.poolIndex = -1;
@@ -449,7 +458,7 @@
             const speed = customSpeed ? customSpeed : (isReflected ? 13.5 : 8.5);
             this.vx = Math.cos(angle) * speed;
             this.vy = Math.sin(angle) * speed;
-            this.radius = 11;
+            this.radius = 12;
             this.life = 2.5;
             this.isReflected = isReflected;
         }
@@ -467,22 +476,24 @@
             ctx.save();
 
             if (parryGlowTimer > 0 && this.isReflected) {
-                ctx.shadowColor = '#fde047';
+                ctx.shadowColor = '#ffe66d';
                 ctx.shadowBlur = 30;
             } else {
-                ctx.shadowColor = this.isReflected ? 'rgba(253, 224, 71, 1.0)' : 'rgba(239, 68, 68, 0.6)';
-                ctx.shadowBlur = this.isReflected ? 14 : 6;
+                ctx.shadowColor = this.isReflected ? 'rgba(255, 230, 109, 0.9)' : 'rgba(255, 107, 157, 0.8)';
+                ctx.shadowBlur = this.isReflected ? 16 : 8;
             }
 
-            ctx.fillStyle = this.isReflected ? '#fde047' : '#ef4444';
+            ctx.fillStyle = this.isReflected ? '#ffe66d' : '#ff6b9d';
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
 
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#ffffff';
-            ctx.font = '12px sans-serif';
-            ctx.fillText(this.isReflected ? '✨' : '🔥', this.x - 6, this.y + 4);
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.isReflected ? '⭐' : '🍬', this.x, this.y + 1);
             ctx.restore();
         }
     }
@@ -530,7 +541,6 @@
             this.vx = 0;
             this.vy = 0;
             this.radius = Math.min(75, (36 + (this.weight * 0.04)) * this.radiusScale);
-            this.burstGauge = 0;
             this.pushStock = 3;
             this.isDodging = false;
             this.dodgeTimer = 0;
@@ -562,7 +572,6 @@
             this.afterImageHead = (this.afterImageHead + 1) % GAME_CONFIG.POOL_MAX_AFTER_IMAGES;
         }
 
-        // 🔴 滑り防止 (摩擦 0.80 ➔ 0.70 に高めてブレーキを強化)
         update(dt) {
             if (this.isEliminated) return;
 
@@ -586,7 +595,7 @@
             this.x = Math.max(this.radius, Math.min(GAME_CONFIG.CANVAS_WIDTH - this.radius, this.x));
             this.y = Math.max(this.radius, Math.min(GAME_CONFIG.CANVAS_HEIGHT - this.radius, this.y));
 
-            const friction = 0.70; // ブレーキを効かせてピタッと止まりやすく！
+            const friction = 0.70;
             this.vx *= friction;
             this.vy *= friction;
 
@@ -661,7 +670,10 @@
     const btnP1Push = document.getElementById('btn-p1-push');
     const pushBtnLabel = document.getElementById('push-btn-label');
     const btnP1Dodge = document.getElementById('btn-p1-dodge');
-    const btnP1Burst = document.getElementById('btn-p1-burst');
+    
+    // 🔴 Cボタン（踏みとどまる）の要素参照
+    const btnP1Latch = document.getElementById('btn-p1-latch');
+    const latchBtnLabel = document.getElementById('latch-btn-label');
 
     const dpadUp = document.getElementById('dpad-up');
     const dpadDown = document.getElementById('dpad-down');
@@ -728,7 +740,9 @@
 
         btnP1Push.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) queuePushInput(); });
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleDodge(p1); });
-        btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleBurst(p1); });
+        if (btnP1Latch) {
+            btnP1Latch.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); if (canPlayerControl()) handleManualLatch(); });
+        }
 
         window.addEventListener('keydown', (e) => {
             audio.init();
@@ -767,7 +781,7 @@
                     handleDodge(p1);
                 } 
                 else if (e.code === 'KeyC' || e.code === 'KeyL') {
-                    handleBurst(p1);
+                    handleManualLatch();
                 }
             }
         });
@@ -816,6 +830,7 @@
         isMatchFinished = false;
         isTimerRunning = false;
         timeAttackTimer = 0;
+        latchCooldownTimer = 0;
 
         statsCollisionCount = 0;
         statsPushCount = 0;
@@ -836,6 +851,7 @@
         uiOverlay.classList.add('active');
         updateHeaderUI();
         updateTimerDisplay();
+        updateLatchBtnUI();
     }
 
     function formatTime(sec) {
@@ -857,6 +873,20 @@
         }
     }
 
+    // 🔴 踏みとどまるボタンのリアルタイムUI＆クールダウン秒数更新
+    function updateLatchBtnUI() {
+        if (!latchBtnLabel || !btnP1Latch) return;
+        if (latchCooldownTimer > 0) {
+            latchBtnLabel.textContent = `踏みとどまる (CD:${latchCooldownTimer.toFixed(1)}s)`;
+            btnP1Latch.classList.add('disabled');
+            btnP1Latch.disabled = true;
+        } else {
+            latchBtnLabel.textContent = `踏みとどまる [C]`;
+            btnP1Latch.classList.remove('disabled');
+            btnP1Latch.disabled = false;
+        }
+    }
+
     function randomizeDohyo() {
         currentDohyoShape = Math.random() < 0.25 ? 'square' : 'circle';
         currentDohyoRadius = 200 + Math.floor(Math.random() * 50);
@@ -867,6 +897,7 @@
             currentRankIdx = 0;
             winsCount = 0;
             timeAttackTimer = 0;
+            latchCooldownTimer = 0;
             statsCollisionCount = 0;
             statsPushCount = 0;
             statsParryCount = 0;
@@ -883,6 +914,7 @@
         gameState = STATE.PLAYING;
         isMatchFinished = false;
         isTimerRunning = true;
+        latchCooldownTimer = 0;
         saltBulletPool.clearAll();
         particlePool.clearAll();
 
@@ -895,6 +927,7 @@
         if (yokozunaTitleCard) yokozunaTitleCard.classList.add('hidden');
 
         updatePushStockUI();
+        updateLatchBtnUI();
 
         let announcement = 'はっけよい！のこった！💥';
         if (currentDohyoShape === 'square') announcement = '🔳 変形四角土俵！のこった！💥';
@@ -974,7 +1007,6 @@
         spawnSparks(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, '#fde047', 30, 'ハプニング！！');
     }
 
-    // 🔴 決まり手非表示 ＆ 統計・スコア表示
     function finishMatch(isP1Win) {
         if (isMatchFinished) return;
         isMatchFinished = true;
@@ -1088,7 +1120,6 @@
         comboDisplayEl.classList.remove('hidden');
     }
 
-    // 🔴 3. 土俵際での自動引っ掛かり足（自動ストッパー）判定の強化！
     function updatePlayerMovement(dt) {
         if (!canPlayerControl() || hitStopTimer > 0) return;
 
@@ -1104,38 +1135,25 @@
             p1.vy += (dy / len) * 3.4 * p1.moveSpeed;
         }
 
-        // 🔴 土俵の最外縁（ライン）に接触した際、自動で1回強力引っ掛かりストッパーを発動！
         const isNearEdge = isOutOfDohyo(p1.x, p1.y, 0.94);
         if (isNearEdge && p1.edgeLatchTimer <= 0) {
-            p1.edgeLatchTimer = 0.22; // 0.22秒の強力足粘りストッパー！
+            p1.edgeLatchTimer = 0.22;
             p1.setStateText('土俵際自動踏み止まり！🦶');
             spawnSparks(p1.x, p1.y, '#fde047', 10);
         }
     }
 
-    function handleBurst(actor) {
-        if (!canPlayerControl() || actor.burstGauge < 100) return;
+    // 🔴 新機能：Cキー／ボタン「踏みとどまる（粘り足ストッパー）」＆ 3秒間クールダウン
+    function handleManualLatch() {
+        if (!canPlayerControl() || latchCooldownTimer > 0) return;
 
-        actor.burstGauge = 0;
-        actor.pushStock = Math.min(5, actor.pushStock + 2);
-        updatePushStockUI();
-
-        hitStopTimer = 0.20;
-        triggerShake(1.0);
-        triggerFlash();
-        audio.playMegaBurst();
-
-        if (cutinTextContent) cutinTextContent.textContent = '🔥 超 ど す こ い 🔥';
-        burstCutinEl.classList.remove('hidden');
-        setTimeout(() => burstCutinEl.classList.add('hidden'), 800);
-
-        enemies.forEach(opponent => {
-            if (opponent.isEliminated) return;
-            const angle = Math.atan2(opponent.y - actor.y, opponent.x - actor.x);
-            opponent.vx += Math.cos(angle) * 90;
-            opponent.vy += Math.sin(angle) * 90;
-            spawnSparks(opponent.x, opponent.y, '#fde047', 60, '超爆破！！');
-        });
+        p1.edgeLatchTimer = 0.60; // 0.60秒の強力踏みとどまり足粘り！
+        p1.setStateText('🦶 踏みとどまり発動！');
+        latchCooldownTimer = GAME_CONFIG.LATCH_COOLDOWN_MAX; // 3秒間クールダウンセット！
+        
+        audio.playHit();
+        spawnSparks(p1.x, p1.y, '#10b981', 25, '踏みとどまり！');
+        updateLatchBtnUI();
     }
 
     function handlePush(actor) {
@@ -1157,8 +1175,6 @@
         audio.playHit();
 
         spawnSparks(actor.x, actor.y, '#c2410c', 12, '💨 ドスッ！');
-
-        actor.burstGauge = Math.min(100, actor.burstGauge + 15);
 
         if (actor.hasShockwave) {
             enemies.forEach(e => {
@@ -1446,16 +1462,35 @@
     function drawDohyo() {
         ctx.save();
 
+        // 🌸 ポップ＆キュートなキャンディ背景
         const bgGrad = ctx.createRadialGradient(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, 40, GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, 520);
-        bgGrad.addColorStop(0, '#fbf9f5');
-        bgGrad.addColorStop(1, '#f1f5f9');
+        bgGrad.addColorStop(0, '#fffdf9');
+        bgGrad.addColorStop(0.6, '#fff0f5');
+        bgGrad.addColorStop(1, '#ffe4e6');
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.CANVAS_HEIGHT);
+
+        // 浮遊背景アイコン（星やハート）
+        const decors = [
+            { icon: '🌸', x: 80, y: 70 },
+            { icon: '⭐', x: 820, y: 80 },
+            { icon: '💖', x: 70, y: 440 },
+            { icon: '🍬', x: 830, y: 450 },
+            { icon: '✨', x: 450, y: 40 }
+        ];
+        ctx.font = '22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        decors.forEach((d, idx) => {
+            const offsetY = Math.sin(GAME_STATE_TIME * 2 + idx) * 8;
+            ctx.fillText(d.icon, d.x, d.y + offsetY);
+        });
 
         const cx = GAME_CONFIG.DOHYO_CX;
         const cy = GAME_CONFIG.DOHYO_CY;
         const rad = currentDohyoRadius;
 
+        // 外枠グラデーション土俵（マカロンキャンディリング）
         ctx.beginPath();
         if (currentDohyoShape === 'square') {
             ctx.rect(cx - rad, cy - rad, rad * 2, rad * 2);
@@ -1463,24 +1498,26 @@
             ctx.arc(cx, cy, rad, 0, Math.PI * 2);
         }
 
-        const dohyoGrad = ctx.createRadialGradient(cx, cy, 30, cx, cy, rad);
+        const dohyoGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, rad);
         dohyoGrad.addColorStop(0, '#ffffff');
-        dohyoGrad.addColorStop(1, '#fed7aa');
+        dohyoGrad.addColorStop(0.7, '#fff5f8');
+        dohyoGrad.addColorStop(1, '#ffb3c6');
         ctx.fillStyle = dohyoGrad;
         ctx.fill();
-        ctx.lineWidth = 6;
-        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 7;
+        ctx.strokeStyle = '#ff6b9d';
         ctx.stroke();
 
+        // 内側パステルストライプライン
         ctx.beginPath();
         if (currentDohyoShape === 'square') {
-            ctx.rect(cx - rad + 10, cy - rad + 10, (rad - 10) * 2, (rad - 10) * 2);
+            ctx.rect(cx - rad + 12, cy - rad + 12, (rad - 12) * 2, (rad - 12) * 2);
         } else {
-            ctx.arc(cx, cy, rad - 10, 0, Math.PI * 2);
+            ctx.arc(cx, cy, rad - 12, 0, Math.PI * 2);
         }
-        ctx.strokeStyle = '#ea580c';
-        ctx.lineWidth = 3.5;
-        ctx.setLineDash([14, 10]);
+        ctx.strokeStyle = '#ff3377';
+        ctx.lineWidth = 4;
+        ctx.setLineDash([12, 10]);
         ctx.stroke();
         ctx.setLineDash([]);
 
@@ -1496,36 +1533,42 @@
         const r = rikishi.radius;
 
         if (parryGlowTimer > 0) {
-            ctx.shadowColor = '#fde047';
+            ctx.shadowColor = '#ffe66d';
             ctx.shadowBlur = 35;
         }
 
+        // 残像
         for (let i = 0; i < rikishi.afterImages.length; i++) {
             const img = rikishi.afterImages[i];
             if (img.active) {
                 ctx.save();
-                ctx.globalAlpha = img.life * 2.5;
+                ctx.globalAlpha = img.life * 2.2;
                 ctx.beginPath();
                 ctx.arc(img.x, img.y, r, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(234, 88, 12, 0.4)';
+                ctx.fillStyle = 'rgba(255, 107, 157, 0.4)';
                 ctx.fill();
                 ctx.restore();
             }
         }
 
+        // パリィ構えバリア
         if (rikishi.isDodging) {
             ctx.beginPath();
-            ctx.arc(x, y, r + 16, 0, Math.PI * 2);
-            ctx.fillStyle = parryGlowTimer > 0 ? 'rgba(253, 224, 71, 0.8)' : 'rgba(2, 132, 199, 0.5)';
+            ctx.arc(x, y, r + 18, 0, Math.PI * 2);
+            ctx.fillStyle = parryGlowTimer > 0 ? 'rgba(255, 230, 109, 0.85)' : 'rgba(112, 214, 255, 0.55)';
             ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = parryGlowTimer > 0 ? '#ff3377' : '#38bdf8';
+            ctx.stroke();
         }
 
-        // 影
+        // 影（ぷにぷにピンク影）
         ctx.beginPath();
-        ctx.ellipse(x, y + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.ellipse(x, y + r * 0.8, r * 0.85, 12, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 107, 157, 0.2)';
         ctx.fill();
 
+        // アバター画像がある場合
         if (rikishi.imageObj && rikishi.imageObj.complete && rikishi.imageObj.naturalWidth > 0) {
             ctx.save();
             ctx.beginPath();
@@ -1533,17 +1576,28 @@
             ctx.clip();
 
             if (parryGlowTimer > 0) {
-                ctx.filter = 'brightness(2.2) drop-shadow(0 0 15px #fde047)';
+                ctx.filter = 'brightness(2.0) drop-shadow(0 0 15px #ffe66d)';
             } else if (rikishi.flashTimer > 0) {
-                ctx.filter = 'brightness(2.5)';
+                ctx.filter = 'brightness(2.4)';
             }
             ctx.drawImage(rikishi.imageObj, x - r, y - r, r * 2, r * 2);
             ctx.restore();
-        } else {
+
+            // キュート枠線
             ctx.beginPath();
             ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fillStyle = parryGlowTimer > 0 ? '#fde047' : (rikishi.flashTimer > 0 ? '#ffffff' : rikishi.color);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = rikishi.isPlayer ? '#ff3377' : '#70d6ff';
+            ctx.stroke();
+        } else {
+            // アバター画像がない場合：キュート力士キャラクター
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = parryGlowTimer > 0 ? '#ffe66d' : (rikishi.flashTimer > 0 ? '#ffffff' : rikishi.color);
             ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
 
             ctx.font = `${Math.floor(r * 0.85)}px sans-serif`;
             ctx.textAlign = 'center';
@@ -1552,20 +1606,22 @@
         }
 
         if (rikishi.stunTimer > 0) {
-            ctx.font = '24px sans-serif';
-            ctx.fillText('💫', x, y - r - 25);
+            ctx.font = '26px sans-serif';
+            ctx.fillText('💫', x, y - r - 26);
         }
 
-        ctx.font = '900 15px "Shippori Mincho", serif';
-        ctx.fillStyle = '#1c1917';
-        ctx.shadowColor = '#fff';
-        ctx.shadowBlur = 5;
+        // キャラクター名
+        ctx.font = '900 16px "M PLUS Rounded 1c", sans-serif';
+        ctx.fillStyle = '#2d3748';
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 6;
         ctx.fillText(rikishi.name, x, y - r - 12);
 
+        // 状態テキスト
         if (rikishi.stateTextTimer > 0) {
-            ctx.font = '900 17px "Shippori Mincho", serif';
-            ctx.fillStyle = parryGlowTimer > 0 ? '#fde047' : '#c2410c';
-            ctx.fillText(rikishi.stateText, x, y - r - 32);
+            ctx.font = '900 17px "M PLUS Rounded 1c", sans-serif';
+            ctx.fillStyle = parryGlowTimer > 0 ? '#ff3377' : '#ff8000';
+            ctx.fillText(rikishi.stateText, x, y - r - 34);
         }
 
         ctx.restore();
@@ -1577,17 +1633,17 @@
         ctx.translate(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY - 60);
         ctx.scale(announceScale, announceScale);
 
-        ctx.font = '900 52px "Shippori Mincho", serif';
+        ctx.font = '900 50px "M PLUS Rounded 1c", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        ctx.fillStyle = '#1e1b4b';
-        ctx.shadowColor = '#fff';
-        ctx.shadowBlur = 12;
+        ctx.fillStyle = '#ff3377';
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 15;
         ctx.fillText(announceText, 0, 0);
 
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 6;
         ctx.strokeText(announceText, 0, 0);
 
         ctx.restore();
@@ -1604,6 +1660,13 @@
             if (isTimerRunning) {
                 timeAttackTimer += dt;
                 updateTimerDisplay();
+            }
+
+            // 🔴 踏みとどまるの 3秒間クールダウンタイマー減算
+            if (latchCooldownTimer > 0) {
+                latchCooldownTimer -= dt;
+                if (latchCooldownTimer < 0) latchCooldownTimer = 0;
+                updateLatchBtnUI();
             }
         }
 
