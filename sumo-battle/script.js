@@ -1,6 +1,6 @@
 /**
  * はっけよい！超速相撲バトル POP - メインJavaScript
- * ローグライクカード選択システム & パワフルポップアニメーション
+ * スマホ・タッチ操作最適化＆マルチタッチフルスクリーン連打
  */
 
 (function() {
@@ -167,12 +167,10 @@
         { name: '横綱', enemyName: '武蔵王', strength: 9.2, weight: 200, color: '#ff007f', avatar: '👑' }
     ];
 
-    // ランダム刺客名リスト（連勝モード用）
     const RIVAL_NAMES = ['怒涛龍', '金剛丸', '鬼ノ海', '雷神山', '百首王', '超嵐丸', '炎ノ海', '猛牛山', '覇王龍'];
     const RIVAL_AVATARS = ['👹', '🔥', '⚡', '🐂', '🦁', '🌪️', '💥', '⚓'];
     const RIVAL_COLORS = ['#ff007f', '#ffe600', '#00f0ff', '#9d4edd', '#ff6b00', '#00e676'];
 
-    // スキルマスターデータ (ローグライクカード)
     const ALL_SKILL_CARDS = [
         { id: 'push_power', icon: '⚡', title: 'どすこい連打術', desc: '押し出しの攻撃力が 25% アップ！', rarity: 'common', apply: (p) => { p.powerMultiplier += 0.25; } },
         { id: 'iron_wall', icon: '🛡️', title: '鉄壁の構え', desc: 'はたき込みの受付窓 +0.15秒＆カウンター力強化', rarity: 'rare', apply: (p) => { p.dodgeWindow += 0.15; p.counterPower += 0.3; } },
@@ -184,7 +182,6 @@
         { id: 'stun_slap', icon: '💥', title: '雷電ハリケーン', desc: '連打時に 15% の確率で相手をノックバック！', rarity: 'legendary', apply: (p) => { p.hasStunSlap = true; } }
     ];
 
-    // ゲーム状態定数
     const STATE = {
         TITLE: 'TITLE',
         MATCHUP: 'MATCHUP',
@@ -194,9 +191,8 @@
         RESULT: 'RESULT'
     };
 
-    // グローバル状態
     let gameState = STATE.TITLE;
-    let gameMode = 'arcade'; // 'arcade', 'endless', 'pvp'
+    let gameMode = 'arcade';
     let currentRankIdx = 0;
     let winsCount = 0;
     let lossesCount = 0;
@@ -204,7 +200,6 @@
     let startTime = 0;
     let totalClicksP1 = 0;
 
-    // 力士クラス
     class Rikishi {
         constructor(isPlayer, name, color, avatar, power = 5.0, weight = 120) {
             this.isPlayer = isPlayer;
@@ -214,7 +209,6 @@
             this.basePower = power;
             this.weight = weight;
 
-            // スキル補正プロパティ
             this.powerMultiplier = 1.0;
             this.dodgeWindow = 0.35;
             this.counterPower = 1.0;
@@ -247,7 +241,7 @@
 
         update(dt) {
             this.x += this.vx;
-            this.vx *= 0.82; // 摩擦
+            this.vx *= 0.82;
 
             if (this.dodgeTimer > 0) {
                 this.dodgeTimer -= dt;
@@ -282,7 +276,6 @@
         }
     }
 
-    // パーティクルクラス
     class Particle {
         constructor(x, y, vx, vy, color, size, life, text = null) {
             this.x = x;
@@ -298,7 +291,7 @@
         update(dt) {
             this.x += this.vx;
             this.y += this.vy;
-            this.vy += this.text ? -0.5 : 0.15; // テキストは上昇
+            this.vy += this.text ? -0.5 : 0.15;
             this.life -= dt;
         }
         draw(ctx) {
@@ -307,7 +300,7 @@
             ctx.globalAlpha = alpha;
 
             if (this.text) {
-                ctx.font = '900 22px "Dela Gothic One", sans-serif';
+                ctx.font = '900 20px "Dela Gothic One", sans-serif';
                 ctx.fillStyle = this.color;
                 ctx.shadowColor = '#000';
                 ctx.shadowBlur = 4;
@@ -380,7 +373,6 @@
     const resCpsEl = document.getElementById('res-cps');
     const resStreakEl = document.getElementById('res-streak');
 
-    // オブジェクト保持
     let p1 = new Rikishi(true, '雷電丸', '#ff007f', '⚡', 5.5, 130);
     let p2 = new Rikishi(false, '富士ノ山', '#00f0ff', '♨️', 2.2, 110);
 
@@ -390,7 +382,6 @@
     let announceTimer = 0;
     let aiPushTimer = 0;
 
-    // 土俵パラメータ
     const DOHYO = { cx: 450, cy: 260, rx: 340, ry: 160 };
 
     // --- 初期化 ---
@@ -402,20 +393,16 @@
 
     // --- イベントリスナー設定 ---
     function setupEventListeners() {
-        // モード選択
         btnModeArcade.addEventListener('click', () => resetAndStartMode('arcade'));
         btnModeEndless.addEventListener('click', () => resetAndStartMode('endless'));
         btnModePvp.addEventListener('click', () => resetAndStartMode('pvp'));
 
-        // タイトルへ戻るボタン (どこからでも確実にトップに戻る)
         btnTopNav.addEventListener('click', showTitle);
         btnMatchupToTop.addEventListener('click', showTitle);
         btnToTitle.addEventListener('click', showTitle);
 
-        // 戦闘開始
         btnStartFight.addEventListener('click', startCountdown);
 
-        // 取組進行
         btnNextMatch.addEventListener('click', () => {
             if (gameMode === 'arcade') {
                 currentRankIdx = Math.min(RANKS.length - 1, currentRankIdx + 1);
@@ -424,10 +411,23 @@
         });
         btnRetryMatch.addEventListener('click', () => startMatchup(gameMode));
 
-        // 音声トグル
         btnToggleAudio.addEventListener('click', () => {
             audio.enabled = !audio.enabled;
             btnToggleAudio.textContent = audio.enabled ? '🔊 Sound ON' : '🔇 Sound OFF';
+        });
+
+        // スマホ画面タップ連打対応 (キャンバス直接タッチでも連打可能)
+        canvas.addEventListener('touchstart', (e) => {
+            if (gameState === STATE.PLAYING) {
+                e.preventDefault();
+                handlePush(p1);
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('pointerdown', (e) => {
+            if (gameState === STATE.PLAYING && e.pointerType !== 'touch') {
+                handlePush(p1);
+            }
         });
 
         // 1P タッチ
@@ -444,7 +444,6 @@
         window.addEventListener('keydown', (e) => {
             if (gameState !== STATE.PLAYING) return;
 
-            // 1P
             if (e.code === 'Space') {
                 e.preventDefault();
                 handlePush(p1);
@@ -454,7 +453,6 @@
                 handleBurst(p1);
             }
 
-            // 2P (PVPモード)
             if (gameMode === 'pvp') {
                 if (e.code === 'Enter') {
                     e.preventDefault();
@@ -469,14 +467,12 @@
     }
 
     // --- ゲームフロー管理 ---
-
     function showTitle() {
         gameState = STATE.TITLE;
         currentRankIdx = 0;
         streakCount = 0;
         speedLinesEl.classList.remove('active');
 
-        // UI切り替え
         hideAllScreens();
         screenTitle.classList.add('active');
         uiOverlay.classList.add('active');
@@ -496,10 +492,7 @@
         gameMode = mode;
         currentRankIdx = 0;
         streakCount = 0;
-        
-        // プレイヤー力士完全リセット
         p1 = new Rikishi(true, '雷電丸', '#ff007f', '⚡', 5.5, 130);
-        
         startMatchup(mode);
     }
 
@@ -520,7 +513,6 @@
             matchupRankEl.textContent = `【横綱への道】 幕内 ${enemyData.name} 戦！`;
         } else if (mode === 'endless') {
             p2ControlsGroup.classList.add('hidden');
-            // 連勝モード：ランダムな刺客生成
             const rName = RIVAL_NAMES[streakCount % RIVAL_NAMES.length];
             const rAvatar = RIVAL_AVATARS[streakCount % RIVAL_AVATARS.length];
             const rColor = RIVAL_COLORS[streakCount % RIVAL_COLORS.length];
@@ -531,7 +523,6 @@
             matchupRankEl.textContent = `【連勝サバイバル】 ${streakCount + 1}戦目の刺客！`;
         }
 
-        // ステータス表示更新
         playerNameEl.textContent = p1.name;
         enemyNameEl.textContent = p2.name;
         playerAvatarEl.textContent = p1.avatar;
@@ -542,9 +533,7 @@
         eStrBar.style.width = `${Math.min(100, p2.currentPower * 12)}%`;
         eWgtBar.style.width = `${Math.min(100, p2.weight * 0.4)}%`;
 
-        // 習得スキルリスト表示
         renderAcquiredSkills();
-
         audio.playHyoshigi();
     }
 
@@ -569,7 +558,6 @@
         screenSkillSelect.classList.add('active');
         uiOverlay.classList.add('active');
 
-        // ランダムに3枚選出
         const shuffled = [...ALL_SKILL_CARDS].sort(() => 0.5 - Math.random());
         const choices = shuffled.slice(0, 3);
 
@@ -580,8 +568,10 @@
             cardEl.innerHTML = `
                 <span class="card-rarity">${card.rarity.toUpperCase()}</span>
                 <div class="card-icon">${card.icon}</div>
-                <div class="card-title">${card.title}</div>
-                <div class="card-desc">${card.desc}</div>
+                <div class="card-info">
+                    <div class="card-title">${card.title}</div>
+                    <div class="card-desc">${card.desc}</div>
+                </div>
             `;
 
             cardEl.addEventListener('click', () => {
@@ -589,7 +579,6 @@
                 card.apply(p1);
                 p1.acquiredSkills.push(card);
                 
-                // 次の取組のマッチアップへ
                 if (gameMode === 'arcade') {
                     currentRankIdx = Math.min(RANKS.length - 1, currentRankIdx + 1);
                 }
@@ -642,7 +631,6 @@
             resultTitleEl.textContent = '金 星 ！ 勝 負 あ り';
             winnerNameEl.textContent = `東 ${winner.name} の大勝利！`;
             
-            // スキル選択へ進むか、または最後の横綱勝利
             if (gameMode !== 'pvp') {
                 btnNextMatch.textContent = '秘伝スキル獲得 ➔';
                 btnNextMatch.onclick = () => showSkillSelect();
@@ -699,12 +687,10 @@
 
         actor.pushAnim = 1.0;
 
-        // ゲージ増加 (スキル補正あり)
         const gInc = 6 * actor.gaugeRate;
         actor.burstGauge = Math.min(100, actor.burstGauge + gInc);
         updateBurstUI();
 
-        // 相手の見切り(はたき込み)中！
         if (opponent.isDodging) {
             const shiftVal = 20 * opponent.counterPower;
             actor.vx += (actor === p1) ? -shiftVal : shiftVal;
@@ -718,26 +704,23 @@
             return;
         }
 
-        // 土俵際ピンチ補正 (Clutch Power)
         let clutchMult = 1.0;
         if (actor.hasClutchPower && isOutOfDohyo(actor.x, actor.y, 0.75)) {
             clutchMult = 2.0;
             actor.setStateText('土俵際パワー！');
         }
 
-        // 推力計算 (腕力 & 体重 & スキル)
         const dir = (actor === p1) ? 1 : -1;
         const debuff = (opponent.enemyPowerDebuff || 0);
         let pushForce = (3.5 + (actor.currentPower * 0.45)) * (1 - debuff) * clutchMult;
 
-        // 雷電ハリケーン (確率スタンのっくばっく)
         if (actor.hasStunSlap && Math.random() < 0.15) {
             pushForce *= 1.8;
             spawnSparks((actor.x + opponent.x)/2, actor.y, '#ffe600', 12, 'ハリケーン！');
         }
 
         opponent.vx += dir * pushForce;
-        actor.vx += dir * (pushForce * 0.25); // 反動
+        actor.vx += dir * (pushForce * 0.25);
 
         audio.playHit();
         spawnSparks((actor.x + opponent.x)/2, actor.y, actor.color, 6);
@@ -776,7 +759,6 @@
         else btnP2Burst.classList.add('disabled');
     }
 
-    // --- AIロジック ---
     function updateAI(dt) {
         if (gameState !== STATE.PLAYING || gameMode === 'pvp') return;
 
@@ -797,7 +779,6 @@
         }
     }
 
-    // --- 勝負判定 ---
     function checkRingOut() {
         if (gameState !== STATE.PLAYING) return;
 
@@ -834,7 +815,6 @@
         return (dx * dx + dy * dy) > 1.0;
     }
 
-    // --- エフェクト描画 ---
     function spawnSparks(x, y, color, count = 8, popText = null) {
         if (popText) {
             particles.push(new Particle(x, y - 20, 0, -1, color, 0, 0.8, popText));
@@ -874,18 +854,15 @@
         announceTimer = duration;
     }
 
-    // --- 描画エンジン ---
     function drawDohyo() {
         ctx.save();
 
-        // 観客・ネオン和風背景
         const bgGrad = ctx.createRadialGradient(DOHYO.cx, DOHYO.cy, 40, DOHYO.cx, DOHYO.cy, 520);
         bgGrad.addColorStop(0, '#23153b');
         bgGrad.addColorStop(1, '#0f0919');
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 土俵本体
         ctx.beginPath();
         ctx.ellipse(DOHYO.cx, DOHYO.cy, DOHYO.rx, DOHYO.ry, 0, 0, Math.PI * 2);
         const dohyoGrad = ctx.createRadialGradient(DOHYO.cx, DOHYO.cy, 30, DOHYO.cx, DOHYO.cy, DOHYO.rx);
@@ -898,7 +875,6 @@
         ctx.strokeStyle = '#ffe600';
         ctx.stroke();
 
-        // 俵 (Shikirisen)
         ctx.beginPath();
         ctx.ellipse(DOHYO.cx, DOHYO.cy, DOHYO.rx - 10, DOHYO.ry - 5, 0, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
@@ -907,7 +883,6 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // 仕切り線
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(DOHYO.cx - 50, DOHYO.cy - 24, 10, 48);
         ctx.fillRect(DOHYO.cx + 40, DOHYO.cy - 24, 10, 48);
@@ -922,7 +897,6 @@
         const r = rikishi.radius;
         const pushOffset = rikishi.pushAnim * (rikishi.isPlayer ? 12 : -12);
 
-        // 見切りオーラ
         if (rikishi.isDodging) {
             ctx.beginPath();
             ctx.arc(x, y, r + 14, 0, Math.PI * 2);
@@ -930,13 +904,11 @@
             ctx.fill();
         }
 
-        // 影
         ctx.beginPath();
         ctx.ellipse(x, DOHYO.cy + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.fill();
 
-        // 力士本体（肌色）
         ctx.beginPath();
         ctx.arc(x + pushOffset, y, r, 0, Math.PI * 2);
         ctx.fillStyle = '#ffe0bd';
@@ -945,26 +917,22 @@
         ctx.strokeStyle = rikishi.color;
         ctx.stroke();
 
-        // まわし
         ctx.beginPath();
         ctx.arc(x + pushOffset, y, r * 0.82, 0.3, Math.PI - 0.3);
         ctx.fillStyle = rikishi.color;
         ctx.fill();
 
-        // アバター
         ctx.font = `${Math.floor(r * 0.8)}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(rikishi.avatar, x + pushOffset, y - 2);
 
-        // 名前
         ctx.font = '900 15px "Dela Gothic One", sans-serif';
         ctx.fillStyle = '#ffffff';
         ctx.shadowColor = '#000';
         ctx.shadowBlur = 4;
         ctx.fillText(rikishi.name, x, y - r - 14);
 
-        // アクション吹き出し
         if (rikishi.stateTextTimer > 0) {
             ctx.font = '900 18px "Dela Gothic One", sans-serif';
             ctx.fillStyle = '#ffe600';
@@ -996,7 +964,6 @@
         ctx.restore();
     }
 
-    // --- ループ ---
     let lastFrameTime = performance.now();
 
     function gameLoop(now) {
