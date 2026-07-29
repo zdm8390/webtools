@@ -19,12 +19,13 @@
                     <span class="logo-main">超音速スモウバトル <span class="highlight">～ちゃんこ食わんかい～</span></span>
                 </h1>
                 <div class="header-badges">
-                    <div class="badge badge-level" id="level-badge">破竹の 0 連勝中！ 🔥</div>
+                    <div class="badge badge-timer" id="timer-badge">⏱️ TIME: 00:00.00</div>
+                    <div class="badge badge-level" id="level-badge">🔥 0 連勝中！</div>
                     <button id="btn-top-nav" class="btn-icon-top" type="button">🏠 TOP</button>
                 </div>
             </div>
 
-            <!-- 超直感・階級進行インジケーター (シルバー/ゴールド/ダイヤ/プラチナ/マスター) -->
+            <!-- 幕内番付インジケーター (シルバー/ゴールド/ダイヤ/プラチナ/マスター) -->
             <div class="rank-map-container" aria-label="幕内番付">
                 <div class="rank-step active" id="rmap-0">🥈<small>シルバー</small></div>
                 <div class="rank-line"></div>
@@ -46,7 +47,7 @@
             <div id="speed-lines" class="speed-lines" aria-hidden="true"></div>
 
             <div id="burst-cutin" class="burst-cutin hidden">
-                <div class="cutin-text">🔥 超 ど す こ い 🔥</div>
+                <div class="cutin-text" id="cutin-text-content">🔥 超 ど す こ い 🔥</div>
             </div>
 
             <div id="event-banner" class="event-banner hidden">
@@ -67,15 +68,15 @@
                 <!-- 1. 爆速スタートタイトル画面 -->
                 <section id="screen-title" class="screen-panel active">
                     <div class="title-banner">
-                        <span class="pop-sticker">💥 ボタン1個で快感絶頂！極上アーケードアクション 💥</span>
+                        <span class="pop-sticker">💥 タイムアタック！目指せ最速全階級制覇 💥</span>
                         <h2 class="title-huge">超音速スモウバトル</h2>
                         <p class="subtitle">～ちゃんこ食わんかい～</p>
                     </div>
 
                     <div class="quick-start-box">
                         <button id="btn-start-arcade" class="btn btn-arcade btn-mega-start" type="button">
-                            <span class="btn-emoji">🔥</span>
-                            <span class="btn-title">今すぐ勝負開始！ [Enter]</span>
+                            <span class="btn-emoji">⏱️</span>
+                            <span class="btn-title">タイムアタック勝負開始！ [Enter]</span>
                         </button>
                     </div>
 
@@ -86,7 +87,7 @@
                     </div>
                 </section>
 
-                <!-- 2. スキル選択 (マイルドバランス) -->
+                <!-- 2. スキル選択 -->
                 <section id="screen-skill-select" class="screen-panel hidden">
                     <div class="skill-select-header">
                         <span class="pop-badge">🍲 秘伝ちゃんこ獲得！カードを選択！ 🍲</span>
@@ -95,20 +96,41 @@
                     <div id="cards-container" class="cards-container"></div>
                 </section>
 
-                <!-- 3. 熱狂勝利リザルト -->
+                <!-- 3. 熱狂勝利 / 敗北 リザルト & Yahoo!募金 -->
                 <section id="screen-result" class="screen-panel hidden">
                     <div class="result-box">
                         <h2 id="result-title">💥 豪快決まり手：寄り切り！！ 💥</h2>
                         <div class="winner-announcement" id="winner-name">東 エドモーンド の天下無双！</div>
                         
+                        <!-- タイムアタック＆最終スコアカード -->
+                        <div class="score-card-box">
+                            <div class="score-row">
+                                <span class="score-label">⏱️ トータルクリア時間:</span>
+                                <span class="score-value" id="final-time-text">00:00.00</span>
+                            </div>
+                            <div class="score-row">
+                                <span class="score-label">🏆 ハイスコア:</span>
+                                <span class="score-value highlight-score" id="final-score-text">0 PTS</span>
+                            </div>
+                        </div>
+
+                        <!-- アーケード名言クリアカード -->
                         <div id="yokozuna-title-card" class="yokozuna-title-card hidden">
-                            <div class="y-title" id="y-title-name">🏆 マスター全撃破！鬼畜双子勝利者</div>
-                            <div class="y-desc" id="y-title-desc">弾幕地獄の鬼畜ボスを撃破して完全制覇！</div>
+                            <div class="arcade-quote-title">「なにぃ　ゆうしょうしゃが　いない？」</div>
+                            <div class="arcade-quote-desc">マスター到達おめでとう　新たなる強者と拳をまじえよ</div>
+                        </div>
+
+                        <!-- 🤝 Yahoo!募金 応援リンクバナー -->
+                        <div class="yahoo-donation-card">
+                            <div class="donation-header">🤝 災害救援・復興支援を応援しよう</div>
+                            <a href="https://donation.yahoo.co.jp/" target="_blank" rel="noopener noreferrer" class="donation-link-btn">
+                                ❤️ Yahoo!募金 公式サイトへ行く ➔
+                            </a>
                         </div>
 
                         <div class="result-actions-simplified">
                             <button id="btn-next-match" class="btn btn-arcade btn-main-next" type="button">
-                                🔥 次の階級へ進む！ [Enter] ➔
+                                🔥 次へ進む！ [Enter] ➔
                             </button>
                             <button id="btn-to-title" class="btn-sub-link" type="button">タイトルへ戻る (Esc)</button>
                         </div>
@@ -116,7 +138,7 @@
                 </section>
             </div>
 
-            <!-- アクション操作パネル (Z専用明記) -->
+            <!-- アクション操作パネル (Z専用・回数表記) -->
             <div id="touch-controls" class="touch-controls-action">
                 <div class="dpad-container">
                     <button id="dpad-up" class="dpad-btn dpad-u" type="button">⬆️</button>
@@ -131,7 +153,7 @@
                 <div class="control-group p1-controls">
                     <button id="btn-p1-push" class="action-btn push-btn" type="button">
                         <span class="action-emoji">💥</span>
-                        <span class="action-label nowrap-label">インパクト [Z]</span>
+                        <span class="action-label nowrap-label" id="push-btn-label">インパクト [Z] (3)</span>
                     </button>
                     <button id="btn-p1-dodge" class="action-btn dodge-btn" type="button">
                         <span class="action-emoji">✨</span>
