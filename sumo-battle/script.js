@@ -1,6 +1,6 @@
 /**
  * SUMO POP! 🌸 はっけよいの国 - メインJavaScript
- * パステルポップアニメーション & タイトル即時バトルスタート
+ * セキュリティ強化 (XSS対策) / エラー防止 / メモリ管理 / プロクオリティ
  */
 
 (function() {
@@ -10,7 +10,9 @@
     class SoundEngine {
         constructor() {
             this.ctx = null;
-            this.enabled = true;
+            // localStorage から音声設定を自動ロード
+            const savedState = localStorage.getItem('sumo_pop_audio_enabled');
+            this.enabled = savedState !== null ? (savedState === 'true') : true;
         }
 
         init() {
@@ -19,8 +21,14 @@
                 if (AudioCtx) this.ctx = new AudioCtx();
             }
             if (this.ctx && this.ctx.state === 'suspended') {
-                this.ctx.resume();
+                this.ctx.resume().catch(() => {});
             }
+        }
+
+        toggleAudio() {
+            this.enabled = !this.enabled;
+            localStorage.setItem('sumo_pop_audio_enabled', String(this.enabled));
+            return this.enabled;
         }
 
         playTaiko(freq = 120, duration = 0.35, vol = 0.8) {
@@ -28,21 +36,25 @@
             this.init();
             if (!this.ctx) return;
 
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
+            try {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
 
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + duration);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + duration);
 
-            gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
 
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
 
-            osc.start();
-            osc.stop(this.ctx.currentTime + duration);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            } catch (e) {
+                console.warn('Audio playback error:', e);
+            }
         }
 
         playHyoshigi() {
@@ -50,21 +62,25 @@
             this.init();
             if (!this.ctx) return;
 
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
+            try {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
 
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(2600, this.ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + 0.1);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(2600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + 0.1);
 
-            gain.gain.setValueAtTime(0.7, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.7, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
 
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
 
-            osc.start();
-            osc.stop(this.ctx.currentTime + 0.1);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            } catch (e) {
+                console.warn('Audio playback error:', e);
+            }
         }
 
         playHit() {
@@ -72,27 +88,31 @@
             this.init();
             if (!this.ctx) return;
 
-            const bufferSize = this.ctx.sampleRate * 0.1;
-            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            try {
+                const bufferSize = Math.floor(this.ctx.sampleRate * 0.1);
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
 
-            const noise = this.ctx.createBufferSource();
-            noise.buffer = buffer;
-            const filter = this.ctx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(600, this.ctx.currentTime);
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(600, this.ctx.currentTime);
 
-            const gain = this.ctx.createGain();
-            gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
 
-            noise.connect(filter);
-            filter.connect(gain);
-            gain.connect(this.ctx.destination);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
 
-            noise.start();
-            this.playTaiko(200, 0.1, 0.6);
+                noise.start();
+                this.playTaiko(200, 0.1, 0.6);
+            } catch (e) {
+                console.warn('Audio hit error:', e);
+            }
         }
 
         playDodge() {
@@ -100,19 +120,21 @@
             this.init();
             if (!this.ctx) return;
 
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(520, this.ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1040, this.ctx.currentTime + 0.15);
+            try {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1040, this.ctx.currentTime + 0.15);
 
-            gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
 
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start();
-            osc.stop(this.ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            } catch (e) {}
         }
 
         playBurst() {
@@ -141,16 +163,18 @@
             notes.forEach((freq, idx) => {
                 setTimeout(() => {
                     if (!this.ctx) return;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = isWin ? 'triangle' : 'sawtooth';
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + 0.3);
+                    try {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = isWin ? 'triangle' : 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.3);
+                    } catch (e) {}
                 }, idx * 100);
             });
         }
@@ -158,18 +182,18 @@
 
     const audio = new SoundEngine();
 
-    // パステル番付
+    // 番付データ
     const RANKS = [
-        { name: '序ノ口', enemyName: 'うさ丸', strength: 2.0, weight: 110, color: '#34d399', avatar: '🐰' },
-        { name: '十両', enemyName: 'くまごろう', strength: 3.5, weight: 130, color: '#38bdf8', avatar: '🐻' },
-        { name: '幕内', enemyName: 'ねこノ海', strength: 5.0, weight: 150, color: '#fde047', avatar: '🐱' },
-        { name: '大関', enemyName: 'ぺんぎん山', strength: 6.8, weight: 170, color: '#c084fc', avatar: '🐧' },
-        { name: '横綱', enemyName: 'ぴよ王', strength: 8.8, weight: 195, color: '#ff85c0', avatar: '🐥' }
+        { name: '序ノ口', enemyName: 'うさ丸', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
+        { name: '十両', enemyName: 'くまごろう', strength: 3.5, weight: 130, color: '#0284c7', avatar: '🐻' },
+        { name: '幕内', enemyName: 'ねこノ海', strength: 5.0, weight: 150, color: '#d97706', avatar: '🐱' },
+        { name: '大関', enemyName: 'ぺんぎん山', strength: 6.8, weight: 170, color: '#9333ea', avatar: '🐧' },
+        { name: '横綱', enemyName: 'ぴよ王', strength: 8.8, weight: 195, color: '#e05297', avatar: '🐥' }
     ];
 
     const RIVAL_NAMES = ['ぽんちゃん', 'もち丸', 'わたがし山', 'いちご龍', 'みるく丸', 'キャンディ海', 'ぷりん山', 'そら丸'];
     const RIVAL_AVATARS = ['🍓', '🍡', '🐥', '🐰', '🐻', '🐱', '🦄', '🐼'];
-    const RIVAL_COLORS = ['#ff85c0', '#fde047', '#38bdf8', '#c084fc', '#34d399', '#ffb3d9'];
+    const RIVAL_COLORS = ['#e05297', '#d97706', '#0284c7', '#9333ea', '#059669', '#ffb3d9'];
 
     const ALL_SKILL_CARDS = [
         { id: 'push_power', icon: '⚡', title: 'どすこい連打術', desc: '押し出しの攻撃力が 25% アップ！', rarity: 'common', apply: (p) => { p.powerMultiplier += 0.25; } },
@@ -199,6 +223,7 @@
     let streakCount = 0;
     let startTime = 0;
     let totalClicksP1 = 0;
+    let isMatchFinished = false; // 二重終了防止フラグ
 
     class Rikishi {
         constructor(isPlayer, name, color, avatar, power = 5.0, weight = 120) {
@@ -370,8 +395,8 @@
     const resCpsEl = document.getElementById('res-cps');
     const resStreakEl = document.getElementById('res-streak');
 
-    let p1 = new Rikishi(true, '雷電ちゃん', '#ff85c0', '⚡', 5.5, 130);
-    let p2 = new Rikishi(false, 'うさ丸', '#34d399', '🐰', 2.0, 110);
+    let p1 = new Rikishi(true, '雷電ちゃん', '#e05297', '⚡', 5.5, 130);
+    let p2 = new Rikishi(false, 'うさ丸', '#059669', '🐰', 2.0, 110);
 
     let particles = [];
     let announceText = '';
@@ -383,6 +408,9 @@
 
     // --- 初期化 ---
     function init() {
+        // 保存された音声トグルラベルを反映
+        btnToggleAudio.textContent = audio.enabled ? '🔊 Sound ON' : '🔇 Sound OFF';
+
         setupEventListeners();
         updateHeaderUI();
         requestAnimationFrame(gameLoop);
@@ -390,7 +418,6 @@
 
     // --- イベントリスナー設定 ---
     function setupEventListeners() {
-        // TOPメニューボタンを押したら、ダイレクトに即時対戦カウントダウンスタート！
         btnModeArcade.addEventListener('click', (e) => { e.preventDefault(); resetAndStartMode('arcade'); });
         btnModeEndless.addEventListener('click', (e) => { e.preventDefault(); resetAndStartMode('endless'); });
         btnModePvp.addEventListener('click', (e) => { e.preventDefault(); resetAndStartMode('pvp'); });
@@ -410,12 +437,13 @@
         btnRetryMatch.addEventListener('click', () => startCountdown());
 
         btnToggleAudio.addEventListener('click', () => {
-            audio.enabled = !audio.enabled;
-            btnToggleAudio.textContent = audio.enabled ? '🔊 Sound ON' : '🔇 Sound OFF';
+            const isEnabled = audio.toggleAudio();
+            btnToggleAudio.textContent = isEnabled ? '🔊 Sound ON' : '🔇 Sound OFF';
         });
 
-        // タッチ連打
+        // スマホ画面タッチ連打対応
         canvas.addEventListener('touchstart', (e) => {
+            audio.init();
             if (gameState === STATE.PLAYING) {
                 e.preventDefault();
                 handlePush(p1);
@@ -423,21 +451,25 @@
         }, { passive: false });
 
         canvas.addEventListener('pointerdown', (e) => {
+            audio.init();
             if (gameState === STATE.PLAYING && e.pointerType !== 'touch') {
                 handlePush(p1);
             }
         });
 
-        btnP1Push.addEventListener('pointerdown', (e) => { e.preventDefault(); handlePush(p1); });
-        btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); handleDodge(p1); });
-        btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); handleBurst(p1); });
+        btnP1Push.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handlePush(p1); });
+        btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p1); });
+        btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p1); });
 
-        btnP2Push.addEventListener('pointerdown', (e) => { e.preventDefault(); handlePush(p2); });
-        btnP2Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); handleDodge(p2); });
-        btnP2Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); handleBurst(p2); });
+        btnP2Push.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handlePush(p2); });
+        btnP2Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p2); });
+        btnP2Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p2); });
 
+        // キーボード連打・Spam防御 (e.repeat フィルター)
         window.addEventListener('keydown', (e) => {
-            if (gameState !== STATE.PLAYING) return;
+            audio.init();
+            if (gameState !== STATE.PLAYING || e.repeat) return;
+
             if (e.code === 'Space') {
                 e.preventDefault();
                 handlePush(p1);
@@ -465,6 +497,7 @@
         gameState = STATE.TITLE;
         currentRankIdx = 0;
         streakCount = 0;
+        isMatchFinished = false;
         speedLinesEl.classList.remove('active');
 
         hideAllScreens();
@@ -482,12 +515,11 @@
         screenResult.classList.remove('active');
     }
 
-    // TOPメニューボタン選択時：すぐにカウントダウンがスタートする親切設計！
     function resetAndStartMode(mode) {
         gameMode = mode;
         currentRankIdx = 0;
         streakCount = 0;
-        p1 = new Rikishi(true, '雷電ちゃん', '#ff85c0', '⚡', 5.5, 130);
+        p1 = new Rikishi(true, '雷電ちゃん', '#e05297', '⚡', 5.5, 130);
         
         setupEnemy(mode);
         startCountdown();
@@ -495,7 +527,7 @@
 
     function setupEnemy(mode) {
         if (mode === 'pvp') {
-            p2 = new Rikishi(false, '鳳凰丸 (2P)', '#c084fc', '🦅', 6.0, 140);
+            p2 = new Rikishi(false, '鳳凰丸 (2P)', '#9333ea', '🦅', 6.0, 140);
             p2ControlsGroup.classList.remove('hidden');
         } else if (mode === 'arcade') {
             p2ControlsGroup.classList.add('hidden');
@@ -513,6 +545,30 @@
         }
     }
 
+    // DOM XSS 完全サニタイズ生成方式へ移行！
+    function renderAcquiredSkills() {
+        // 子要素をクリア
+        while (acquiredSkillsList.firstChild) {
+            acquiredSkillsList.removeChild(acquiredSkillsList.firstChild);
+        }
+
+        if (p1.acquiredSkills.length === 0) {
+            const noSkill = document.createElement('span');
+            noSkill.className = 'no-skill';
+            noSkill.textContent = 'なし';
+            acquiredSkillsList.appendChild(noSkill);
+            return;
+        }
+
+        p1.acquiredSkills.forEach(card => {
+            const chip = document.createElement('span');
+            chip.className = 'skill-chip';
+            chip.textContent = `${card.icon} ${card.title}`;
+            acquiredSkillsList.appendChild(chip);
+        });
+    }
+
+    // DOM XSS 完全サニタイズ型 カード生成！
     function showSkillSelect() {
         gameState = STATE.SKILL_SELECT;
         hideAllScreens();
@@ -522,20 +578,43 @@
         const shuffled = [...ALL_SKILL_CARDS].sort(() => 0.5 - Math.random());
         const choices = shuffled.slice(0, 3);
 
-        cardsContainer.innerHTML = '';
+        while (cardsContainer.firstChild) {
+            cardsContainer.removeChild(cardsContainer.firstChild);
+        }
+
         choices.forEach(card => {
             const cardEl = document.createElement('div');
             cardEl.className = `skill-card rare-${card.rarity}`;
-            cardEl.innerHTML = `
-                <span class="card-rarity">${card.rarity.toUpperCase()}</span>
-                <div class="card-icon">${card.icon}</div>
-                <div class="card-info">
-                    <div class="card-title">${card.title}</div>
-                    <div class="card-desc">${card.desc}</div>
-                </div>
-            `;
+            cardEl.setAttribute('role', 'option');
+            cardEl.setAttribute('tabindex', '0');
 
-            cardEl.addEventListener('click', () => {
+            const rarityEl = document.createElement('span');
+            rarityEl.className = 'card-rarity';
+            rarityEl.textContent = card.rarity.toUpperCase();
+
+            const iconEl = document.createElement('div');
+            iconEl.className = 'card-icon';
+            iconEl.textContent = card.icon;
+
+            const infoEl = document.createElement('div');
+            infoEl.className = 'card-info';
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'card-title';
+            titleEl.textContent = card.title;
+
+            const descEl = document.createElement('div');
+            descEl.className = 'card-desc';
+            descEl.textContent = card.desc;
+
+            infoEl.appendChild(titleEl);
+            infoEl.appendChild(descEl);
+
+            cardEl.appendChild(rarityEl);
+            cardEl.appendChild(iconEl);
+            cardEl.appendChild(infoEl);
+
+            const selectHandler = () => {
                 audio.playCardSelect();
                 card.apply(p1);
                 p1.acquiredSkills.push(card);
@@ -545,6 +624,14 @@
                 }
                 setupEnemy(gameMode);
                 startCountdown();
+            };
+
+            cardEl.addEventListener('click', selectHandler);
+            cardEl.addEventListener('keydown', (e) => {
+                if (e.code === 'Enter' || e.code === 'Space') {
+                    e.preventDefault();
+                    selectHandler();
+                }
             });
 
             cardsContainer.appendChild(cardEl);
@@ -555,6 +642,7 @@
         uiOverlay.classList.remove('active');
         hideAllScreens();
         gameState = STATE.COUNTDOWN;
+        isMatchFinished = false;
 
         p1.reset();
         p2.reset();
@@ -578,6 +666,9 @@
     }
 
     function finishMatch(winner, kimarite) {
+        if (isMatchFinished) return; // レース条件ガード
+        isMatchFinished = true;
+
         gameState = STATE.RESULT;
         speedLinesEl.classList.remove('active');
         
@@ -662,7 +753,7 @@
             speedLinesEl.classList.add('active');
             setTimeout(() => speedLinesEl.classList.remove('active'), 400);
 
-            spawnSparks((actor.x + opponent.x)/2, actor.y, '#38bdf8', 15, '見切り！');
+            spawnSparks((actor.x + opponent.x)/2, actor.y, '#0284c7', 15, '見切り！');
             return;
         }
 
@@ -678,7 +769,7 @@
 
         if (actor.hasStunSlap && Math.random() < 0.15) {
             pushForce *= 1.8;
-            spawnSparks((actor.x + opponent.x)/2, actor.y, '#fde047', 12, 'ハリケーン！');
+            spawnSparks((actor.x + opponent.x)/2, actor.y, '#d97706', 12, 'ハリケーン！');
         }
 
         opponent.vx += dir * pushForce;
@@ -710,15 +801,25 @@
         setTimeout(() => speedLinesEl.classList.remove('active'), 800);
 
         opponent.vx += dir * 32;
-        spawnSparks((actor.x + opponent.x)/2, actor.y, '#fde047', 35, 'ドゴーン！');
+        spawnSparks((actor.x + opponent.x)/2, actor.y, '#d97706', 35, 'ドゴーン！');
     }
 
     function updateBurstUI() {
-        if (p1.burstGauge >= 100) btnP1Burst.classList.remove('disabled');
-        else btnP1Burst.classList.add('disabled');
+        if (p1.burstGauge >= 100) {
+            btnP1Burst.classList.remove('disabled');
+            btnP1Burst.disabled = false;
+        } else {
+            btnP1Burst.classList.add('disabled');
+            btnP1Burst.disabled = true;
+        }
 
-        if (p2.burstGauge >= 100) btnP2Burst.classList.remove('disabled');
-        else btnP2Burst.classList.add('disabled');
+        if (p2.burstGauge >= 100) {
+            btnP2Burst.classList.remove('disabled');
+            btnP2Burst.disabled = false;
+        } else {
+            btnP2Burst.classList.add('disabled');
+            btnP2Burst.disabled = true;
+        }
     }
 
     function updateAI(dt) {
@@ -742,7 +843,7 @@
     }
 
     function checkRingOut() {
-        if (gameState !== STATE.PLAYING) return;
+        if (gameState !== STATE.PLAYING || isMatchFinished) return;
 
         const p1Out = isOutOfDohyo(p1.x, p1.y);
         const p2Out = isOutOfDohyo(p2.x, p2.y);
@@ -777,7 +878,10 @@
         return (dx * dx + dy * dy) > 1.0;
     }
 
+    // パーティクル制限（上限120個でメモリ・描画保護）
     function spawnSparks(x, y, color, count = 8, popText = null) {
+        if (particles.length > 120) return;
+
         if (popText) {
             particles.push(new Particle(x, y - 20, 0, -1, color, 0, 0.8, popText));
         }
@@ -796,8 +900,8 @@
     }
 
     function spawnVictoryConfetti() {
-        const colors = ['#ff85c0', '#fde047', '#38bdf8', '#ffffff', '#c084fc'];
-        for (let i = 0; i < 90; i++) {
+        const colors = ['#e05297', '#d97706', '#0284c7', '#ffffff', '#9333ea'];
+        for (let i = 0; i < 80; i++) {
             particles.push(new Particle(
                 DOHYO.cx + (Math.random() * 450 - 225),
                 80,
@@ -816,7 +920,6 @@
         announceTimer = duration;
     }
 
-    // パステル土俵描画
     function drawDohyo() {
         ctx.save();
 
@@ -826,7 +929,6 @@
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 土俵
         ctx.beginPath();
         ctx.ellipse(DOHYO.cx, DOHYO.cy, DOHYO.rx, DOHYO.ry, 0, 0, Math.PI * 2);
         const dohyoGrad = ctx.createRadialGradient(DOHYO.cx, DOHYO.cy, 30, DOHYO.cx, DOHYO.cy, DOHYO.rx);
@@ -836,18 +938,18 @@
         ctx.fillStyle = dohyoGrad;
         ctx.fill();
         ctx.lineWidth = 8;
-        ctx.strokeStyle = '#ff85c0';
+        ctx.strokeStyle = '#e05297';
         ctx.stroke();
 
         ctx.beginPath();
         ctx.ellipse(DOHYO.cx, DOHYO.cy, DOHYO.rx - 10, DOHYO.ry - 5, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = '#c084fc';
+        ctx.strokeStyle = '#9333ea';
         ctx.lineWidth = 4;
         ctx.setLineDash([14, 10]);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.fillStyle = '#ff85c0';
+        ctx.fillStyle = '#e05297';
         ctx.fillRect(DOHYO.cx - 50, DOHYO.cy - 24, 10, 48);
         ctx.fillRect(DOHYO.cx + 40, DOHYO.cy - 24, 10, 48);
 
@@ -864,7 +966,7 @@
         if (rikishi.isDodging) {
             ctx.beginPath();
             ctx.arc(x, y, r + 14, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+            ctx.fillStyle = 'rgba(2, 132, 199, 0.4)';
             ctx.fill();
         }
 
@@ -892,14 +994,14 @@
         ctx.fillText(rikishi.avatar, x + pushOffset, y - 2);
 
         ctx.font = '900 15px "Mochiy Pop One", sans-serif';
-        ctx.fillStyle = '#4a3b52';
+        ctx.fillStyle = '#2b1f33';
         ctx.shadowColor = '#fff';
         ctx.shadowBlur = 4;
         ctx.fillText(rikishi.name, x, y - r - 14);
 
         if (rikishi.stateTextTimer > 0) {
             ctx.font = '900 18px "Mochiy Pop One", sans-serif';
-            ctx.fillStyle = '#d946ef';
+            ctx.fillStyle = '#c026d3';
             ctx.fillText(rikishi.stateText, x, y - r - 36);
         }
 
@@ -916,7 +1018,7 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        ctx.fillStyle = '#ff85c0';
+        ctx.fillStyle = '#e05297';
         ctx.shadowColor = '#fff';
         ctx.shadowBlur = 10;
         ctx.fillText(announceText, 0, 0);
