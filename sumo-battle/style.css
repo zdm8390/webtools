@@ -1,6 +1,6 @@
 /* ==========================================
    超音速スモウバトル～ちゃんこ食わんかい～
-   スタイルシート (和モダンパステル & タイムアタック対応)
+   スタイルシート (和モダンパステル & キーボードフォーカス対応)
    ========================================== */
 
 :root {
@@ -188,11 +188,12 @@ body {
 
 .matchup-actions { display: flex; gap: 8px; width: 100%; justify-content: center; }
 
-/* スキルカード選択 */
-.skill-select-header h2 { font-size: 1.4rem; color: var(--washi-purple); }
+/* スキルカード選択 (キーボードフォーカススタイル) */
+.skill-select-header h2 { font-size: 1.25rem; color: var(--washi-purple); }
 .pop-badge { display: inline-block; background: var(--washi-purple); color: #fff; padding: 3px 12px; border-radius: 12px; font-size: 0.75rem; margin-bottom: 4px; }
 .cards-container { display: flex; gap: 10px; width: 100%; margin-top: 10px; justify-content: center; }
-.skill-card { flex: 1; background: #fff; border: 2px solid var(--washi-purple); border-radius: 16px; padding: 12px 10px; min-height: 48px; display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; box-shadow: 0 3px 0px rgba(0, 0, 0, 0.08); transition: transform 0.15s ease; touch-action: manipulation; }
+.skill-card { flex: 1; background: #fff; border: 2.5px solid var(--washi-purple); border-radius: 16px; padding: 12px 10px; min-height: 48px; display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; box-shadow: 0 3px 0px rgba(0, 0, 0, 0.08); transition: transform 0.15s ease, border-color 0.15s ease; touch-action: manipulation; }
+.skill-card.selected-keyboard-card { border-color: var(--washi-amber) !important; transform: scale(1.05) !important; box-shadow: 0 0 16px rgba(180, 83, 9, 0.4) !important; background: #fffdfa !important; }
 .skill-card:active { transform: translateY(2px); box-shadow: 0 1px 0px rgba(0, 0, 0, 0.08); }
 .card-icon { font-size: 2rem; margin-bottom: 4px; }
 .card-title { font-size: 0.9rem; color: var(--text-dark); margin-bottom: 4px; }

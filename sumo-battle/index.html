@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>超音速スモウバトル～ちゃんこ食わんかい～</title>
-    <meta name="description" content="360°全方向自由移動＆最速横綱タイムアタック！敵の卑怯な塩弾飛び道具をパリィで返して全6ランク最速突破を目指せ！">
+    <meta name="description" content="360°全方向自由移動＆最速エドモーンド横綱タイムアタック！敵の卑怯な塩弾飛び道具をパリィで返して全6ランク最速突破を目指せ！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
                     <span class="logo-sub">360°自由移動×最速横綱タイムアタック</span>
                     <span class="logo-main">超音速スモウバトル <span class="highlight">～ちゃんこ食わんかい～</span></span>
                 </h1>
-                <button id="btn-top-nav" class="btn-icon-top" type="button" aria-label="タイトル画面に戻る">🏠 TOP</button>
+                <button id="btn-top-nav" class="btn-icon-top" type="button" aria-label="タイトル画面に戻る (Escキー)">🏠 TOP (Esc)</button>
             </div>
 
             <!-- ランクマップ進行度インジケーター -->
@@ -39,7 +39,7 @@
 
             <div class="header-badges">
                 <div class="badge badge-timer" id="total-timer-badge" role="status" aria-live="polite">⏱️ 00:00.00</div>
-                <div class="badge badge-level" id="level-badge" role="status" aria-live="polite">⭐ Lv.1 雷電丸</div>
+                <div class="badge badge-level" id="level-badge" role="status" aria-live="polite">⭐ Lv.1 エドモーンド</div>
                 <div class="badge" id="wins-badge" role="status" aria-live="polite">第 1 取組 (0連勝)</div>
             </div>
         </header>
@@ -64,7 +64,7 @@
                 <!-- 1. タイトル画面 -->
                 <section id="screen-title" class="screen-panel active" aria-label="タイトル画面">
                     <div class="title-banner">
-                        <span class="pop-sticker">🏆 目指せ最速横綱！タイムアタック相撲 ⚡</span>
+                        <span class="pop-sticker">🏆 エドモーンド最速横綱タイムアタック ⚡</span>
                         <h2 class="title-huge">超音速スモウバトル</h2>
                         <p class="subtitle">～ちゃんこ食わんかい～</p>
                     </div>
@@ -73,25 +73,24 @@
                         👑 自己ベストクリアタイム: <strong id="best-time-val">--:--.--</strong>
                     </div>
 
-                    <!-- ルール案内 -->
                     <div class="visual-rules-box">
                         <div class="v-rule-item">
                             <span class="v-step">STEP 1</span>
                             <span class="v-icon">⏱️</span>
-                            <strong>最速横綱を目指せ！</strong>
-                            <small>全6ランク完走タイムを計測！</small>
+                            <strong>全6ランク完走！</strong>
+                            <small>Enterキーで即スタート！</small>
                         </div>
                         <div class="v-rule-item">
                             <span class="v-step">STEP 2</span>
                             <span class="v-icon">✨</span>
                             <strong>塩弾をパリィ反射！</strong>
-                            <small>はたきキーで跳ね返して自爆ノックバック！</small>
+                            <small>Jキーではたいて反射自爆！</small>
                         </div>
                         <div class="v-rule-item">
                             <span class="v-step">STEP 3</span>
                             <span class="v-icon">🐲</span>
                             <strong>双子ラスボス撃破！</strong>
-                            <small>最速タイムで横綱称号を獲得！</small>
+                            <small>エドモーンド神横綱を目指せ！</small>
                         </div>
                     </div>
 
@@ -99,21 +98,21 @@
                         <button id="btn-mode-arcade" class="btn btn-arcade btn-main-action" type="button">
                             <span class="btn-emoji" aria-hidden="true">⏱️</span>
                             <span class="btn-content">
-                                <span class="btn-title">ランク昇格タイムアタック</span>
+                                <span class="btn-title">ランク昇格タイムアタック [Enter]</span>
                                 <span class="btn-desc">全6ランク最速突破！最速横綱を目指せ！</span>
                             </span>
                         </button>
                         <button id="btn-mode-endless" class="btn btn-endless" type="button">
                             <span class="btn-emoji" aria-hidden="true">🍲</span>
                             <span class="btn-content">
-                                <span class="btn-title">無限ちゃんこサバイバル</span>
+                                <span class="btn-title">無限ちゃんこサバイバル [2キー]</span>
                                 <span class="btn-desc">どこまで連勝できるか限界挑戦！</span>
                             </span>
                         </button>
                         <button id="btn-mode-pvp" class="btn btn-pvp" type="button">
                             <span class="btn-emoji" aria-hidden="true">⚔️</span>
                             <span class="btn-content">
-                                <span class="btn-title">ふたり対戦 (1P vs 2P)</span>
+                                <span class="btn-title">ふたり対戦 (1P vs 2P) [3キー]</span>
                                 <span class="btn-desc">スマホ1台・PCで白熱バトル！</span>
                             </span>
                         </button>
@@ -125,7 +124,7 @@
                     <div class="matchup-container">
                         <div class="rikishi-card player-card">
                             <span class="card-role" id="player-lvl-tag">⭐ Lv.1 (あなた)</span>
-                            <h3 id="player-name">雷電丸</h3>
+                            <h3 id="player-name">エドモーンド</h3>
                             <div class="rikishi-avatar" id="player-avatar-preview" aria-hidden="true">⚡</div>
                             <div class="stat-bar"><span class="stat-label">腕力</span><div class="bar"><div class="fill" id="p-str-bar"></div></div><span class="stat-num" id="p-str-num">55</span></div>
                             <div class="stat-bar"><span class="stat-label">体重</span><div class="bar"><div class="fill" id="p-wgt-bar"></div></div><span class="stat-num" id="p-wgt-num">130kg</span></div>
@@ -135,8 +134,8 @@
                         </div>
                         <div class="rikishi-card enemy-card">
                             <span class="card-role" id="enemy-type-badge">西 (ライバル)</span>
-                            <h3 id="enemy-name">富士ノ山</h3>
-                            <div class="rikishi-avatar" id="enemy-avatar-preview" aria-hidden="true">♨️</div>
+                            <h3 id="enemy-name">うさ丸</h3>
+                            <div class="rikishi-avatar" id="enemy-avatar-preview" aria-hidden="true">🐰</div>
                             <div class="stat-bar"><span class="stat-label">腕力</span><div class="bar"><div class="fill" id="e-str-bar"></div></div><span class="stat-num" id="e-str-num">20</span></div>
                             <div class="stat-bar"><span class="stat-label">体重</span><div class="bar"><div class="fill" id="e-wgt-bar"></div></div><span class="stat-num" id="e-wgt-num">110kg</span></div>
                         </div>
@@ -154,9 +153,9 @@
                     </div>
                     <div class="matchup-actions">
                         <button id="btn-start-fight" class="btn btn-arcade btn-large" type="button">
-                            見合って！立合いスタート！ 🍲
+                            見合って！立合いスタート！ [Enter] 🍲
                         </button>
-                        <button id="btn-matchup-to-top" class="btn btn-secondary" type="button">TOPへ</button>
+                        <button id="btn-matchup-to-top" class="btn btn-secondary" type="button">TOPへ (Esc)</button>
                     </div>
                 </section>
 
@@ -164,8 +163,8 @@
                 <section id="screen-skill-select" class="screen-panel hidden" aria-label="スキルカード選択画面">
                     <div class="skill-select-header">
                         <span class="pop-badge">LEVEL UP! 🍲</span>
-                        <h2>特製ちゃんこ獲得！</h2>
-                        <p>ちゃんこを食べて能力を永続アップしよう！（タイマーストップ中）</p>
+                        <h2>特製ちゃんこ獲得！ (左右キー[A/D]で選択 ➔ Enter決定)</h2>
+                        <p>ちゃんこを食べて能力を永続アップしよう！</p>
                     </div>
                     
                     <div id="cards-container" class="cards-container" role="listbox" aria-label="秘伝カード一覧"></div>
@@ -179,7 +178,7 @@
                         <div class="rankup-icon" id="rankup-icon">🥈</div>
                         <p id="rankup-desc">新しい強敵が待っている！能力全開放ボーナス！</p>
                         <button id="btn-rankup-continue" class="btn btn-arcade btn-huge" type="button">
-                            次のランクへ進む ➔
+                            次のランクへ進む [Enter] ➔
                         </button>
                     </div>
                 </section>
@@ -193,12 +192,11 @@
                         <div class="winner-announcement" id="winner-name">東 勝利！</div>
                         <div class="kimarite-badge" id="result-kimarite">決まり手：寄り切り</div>
 
-                        <!-- タイムアタック最終クリア称号カード -->
                         <div id="yokozuna-title-card" class="yokozuna-title-card hidden">
                             <div class="y-badge">👑 横綱称号獲得！ 👑</div>
                             <div class="y-title" id="y-title-name">🚀 超音速神横綱</div>
                             <div class="y-time">全6ランク総タイム: <strong id="y-total-time">01:45.20</strong></div>
-                            <div class="y-desc" id="y-title-desc">伝説の音速スピード！神の領域に達した横綱！</div>
+                            <div class="y-desc" id="y-title-desc">伝説のエドモーンド音速スピード！神の領域！</div>
                         </div>
                         
                         <div class="result-stats">
@@ -216,21 +214,20 @@
                             </div>
                         </div>
 
-                        <!-- 募金リンク -->
                         <div class="donation-card-inline">
                             <div class="donation-badge">🤝 被災地緊急支援募金</div>
-                            <a href="https://donation.yahoo.co.jp/detail/1630072" target="_blank" rel="noopener noreferrer" class="btn-donation" aria-label="Yahoo!基金の地震被害緊急支援募金ページを新しいタブで開く">
+                            <a href="https://donation.yahoo.co.jp/detail/1630072" target="_blank" rel="noopener noreferrer" class="btn-donation" aria-label="Yahoo!基金の地震被害緊急支援募金ページを開く">
                                 <span>❤️ Yahoo!基金 募金ページを開く ↗</span>
                             </a>
                         </div>
 
                         <div class="result-actions-simplified">
                             <button id="btn-next-match" class="btn btn-arcade btn-main-next" type="button">
-                                ✨ 次の取組へ（ちゃんこ獲得） ➔
+                                ✨ 次の取組へ (Enterキー) ➔
                             </button>
-                            <button id="btn-retry-match" class="btn btn-endless hidden" type="button">もう一度挑戦 🔄</button>
+                            <button id="btn-retry-match" class="btn btn-endless hidden" type="button">もう一度挑戦 [Enter] 🔄</button>
                             <div class="sub-actions">
-                                <button id="btn-to-title" class="btn-sub-link" type="button">タイトル画面へ戻る 🏠</button>
+                                <button id="btn-to-title" class="btn-sub-link" type="button">タイトル画面へ戻る (Escキー) 🏠</button>
                             </div>
                         </div>
                     </div>

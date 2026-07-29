@@ -1,6 +1,6 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * メインJavaScript (AI生成イラストアバター・タイムアタック・パリィ反射)
+ * メインJavaScript (主人公エドモーンド・全UIキーボード遷移対応・深層プロバランス)
  */
 
 (function() {
@@ -184,7 +184,6 @@
 
     const audio = new SoundEngine();
 
-    // 🖼️ アバター画像キャッシュ管理
     const imageCache = {};
     function loadAvatarImage(url) {
         if (!url) return null;
@@ -195,7 +194,6 @@
         return img;
     }
 
-    // ランク階級システム (画像アバターパス付き)
     const RANKS = [
         { name: 'ブロンズ', icon: '🐰', imgUrl: 'assets/rabbit.jpg', enemyName: 'うさ丸', aiType: 'rush', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
         { name: 'シルバー', icon: '🐻', imgUrl: null, enemyName: 'くまごろう', aiType: 'heavy', strength: 3.4, weight: 130, color: '#0284c7', avatar: '🐻' },
@@ -264,6 +262,8 @@
 
     let shakeTimer = 0;
     let hitStopTimer = 0;
+
+    let selectedCardIndex = 0; // スキル選択時のキーボードフォーカス位置
 
     const keysPressed = {};
     const dpadPressed = { up: false, down: false, left: false, right: false };
@@ -524,8 +524,8 @@
     const resExpEl = document.getElementById('res-exp');
     const resLevelEl = document.getElementById('res-level');
 
-    // プレイヤー初期ロード (イラストアバター付)
-    let p1 = new Rikishi(true, '雷電丸', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
+    // 🔴 [ご要望反映] 主人公「エドモーンド」へ改名！
+    let p1 = new Rikishi(true, 'エドモーンド', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
     let enemies = [];
 
     let particles = [];
@@ -623,6 +623,7 @@
         btnP1Dodge.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleDodge(p1); });
         btnP1Burst.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.init(); handleBurst(p1); });
 
+        // ⌨️ 全画面・全UIキーボード遷移イベント
         window.addEventListener('keydown', (e) => {
             audio.init();
             keysPressed[e.code] = true;
@@ -632,7 +633,67 @@
                 btnToggleAudio.textContent = isEnabled ? '🔊 Sound ON' : '🔇 Sound OFF';
             }
 
-            if (gameState === STATE.PLAYING) {
+            if (e.code === 'Escape') {
+                showTitle();
+                return;
+            }
+
+            // 1. タイトル画面でのキー操作
+            if (gameState === STATE.TITLE) {
+                if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space' || e.code === 'Digit1') {
+                    e.preventDefault();
+                    resetAndStartMode('arcade');
+                } else if (e.code === 'Digit2') {
+                    resetAndStartMode('endless');
+                } else if (e.code === 'Digit3') {
+                    resetAndStartMode('pvp');
+                }
+            }
+            // 2. マッチアップ画面でのキー操作
+            else if (gameState === STATE.MATCHUP) {
+                if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
+                    e.preventDefault();
+                    startCountdown();
+                }
+            }
+            // 3. スキルカード選択画面でのキー操作 (A/D or 矢印キーでカードカーソル移動 ➔ Enter決定)
+            else if (gameState === STATE.SKILL_SELECT) {
+                const cards = cardsContainer.children;
+                if (cards.length > 0) {
+                    if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+                        selectedCardIndex = Math.max(0, selectedCardIndex - 1);
+                        highlightSkillCard(selectedCardIndex);
+                    } else if (e.code === 'KeyD' || e.code === 'ArrowRight') {
+                        selectedCardIndex = Math.min(cards.length - 1, selectedCardIndex + 1);
+                        highlightSkillCard(selectedCardIndex);
+                    } else if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
+                        e.preventDefault();
+                        if (cards[selectedCardIndex]) {
+                            cards[selectedCardIndex].click();
+                        }
+                    }
+                }
+            }
+            // 4. ランク昇格ダイアログでのキー操作
+            else if (gameState === STATE.RANK_UP) {
+                if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
+                    e.preventDefault();
+                    showSkillSelect();
+                }
+            }
+            // 5. リザルト画面でのキー操作
+            else if (gameState === STATE.RESULT) {
+                if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
+                    e.preventDefault();
+                    if (!btnNextMatch.classList.contains('hidden')) {
+                        btnNextMatch.click();
+                    } else if (!btnRetryMatch.classList.contains('hidden')) {
+                        btnRetryMatch.click();
+                    }
+                }
+            }
+            // 6. プレイ中のキー操作
+            else if (gameState === STATE.PLAYING) {
                 if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab'].includes(e.code)) {
                     e.preventDefault();
                 }
@@ -652,6 +713,18 @@
         window.addEventListener('keyup', (e) => {
             keysPressed[e.code] = false;
         });
+    }
+
+    function highlightSkillCard(idx) {
+        const cards = cardsContainer.children;
+        for (let i = 0; i < cards.length; i++) {
+            if (i === idx) {
+                cards[i].classList.add('selected-keyboard-card');
+                cards[i].focus();
+            } else {
+                cards[i].classList.remove('selected-keyboard-card');
+            }
+        }
     }
 
     function setupDpadEvents(btn, dir) {
@@ -704,7 +777,7 @@
         playerLevel = 1;
         playerExp = 0;
         streakCount = 0;
-        p1 = new Rikishi(true, '雷電丸', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
+        p1 = new Rikishi(true, 'エドモーンド', '#7e6b8f', '⚡', 5.5, 130, 'player', 340, 260, 'assets/player.jpg');
 
         if (mode === 'arcade') {
             totalRunStartTime = performance.now();
@@ -727,7 +800,6 @@
         if (playerLvlTag) playerLvlTag.textContent = `⭐ Lv.${playerLevel} (あなた)`;
         if (playerNameEl) playerNameEl.textContent = p1.name;
 
-        // 🖼️ アバター画像プレビュー更新
         if (playerAvatarPreview) {
             if (p1.imgUrl) {
                 playerAvatarPreview.style.backgroundImage = `url('${p1.imgUrl}')`;
@@ -836,6 +908,7 @@
         gameState = STATE.SKILL_SELECT;
         eventBanner.classList.add('hidden');
         saltBullets = [];
+        selectedCardIndex = 0; // キーボード選択リセット
         hideAllScreens();
         screenSkillSelect.classList.add('active');
         uiOverlay.classList.add('active');
@@ -847,11 +920,13 @@
             cardsContainer.removeChild(cardsContainer.firstChild);
         }
 
-        choices.forEach(card => {
+        choices.forEach((card, idx) => {
             const cardEl = document.createElement('div');
             cardEl.className = `skill-card rare-${card.rarity}`;
             cardEl.setAttribute('role', 'option');
             cardEl.setAttribute('tabindex', '0');
+
+            if (idx === 0) cardEl.classList.add('selected-keyboard-card');
 
             const rarityEl = document.createElement('span');
             rarityEl.className = 'card-rarity';
@@ -889,15 +964,15 @@
             };
 
             cardEl.addEventListener('click', selectHandler);
-            cardEl.addEventListener('keydown', (e) => {
-                if (e.code === 'Enter' || e.code === 'Space') {
-                    e.preventDefault();
-                    selectHandler();
-                }
+            cardEl.addEventListener('focus', () => {
+                selectedCardIndex = idx;
+                highlightSkillCard(idx);
             });
 
             cardsContainer.appendChild(cardEl);
         });
+
+        setTimeout(() => highlightSkillCard(0), 100);
     }
 
     function showRankUpDialog() {
@@ -1052,7 +1127,7 @@
                 winnerNameEl.textContent = `東 ${p1.name} の勝利！`;
             }
 
-            btnNextMatch.textContent = (gameMode === 'arcade' && currentRankIdx === RANKS.length - 1) ? '🏆 タイムアタック完了 (TOPへ)' : '✨ 次の取組へ (ちゃんこ獲得) ➔';
+            btnNextMatch.textContent = (gameMode === 'arcade' && currentRankIdx === RANKS.length - 1) ? '🏆 タイムアタック完了 (TOPへ)' : '✨ 次の取組へ (Enterキー) ➔';
             btnNextMatch.classList.remove('hidden');
             btnRetryMatch.classList.add('hidden');
             spawnVictoryConfetti();
@@ -1508,7 +1583,6 @@
         ctx.restore();
     }
 
-    // 🎨 力士アバター描画（画像がある場合は円形クリッピングで画像表示！）
     function drawRikishi(rikishi) {
         if (rikishi.isEliminated) return;
 
@@ -1524,13 +1598,11 @@
             ctx.fill();
         }
 
-        // 影
         ctx.beginPath();
         ctx.ellipse(x, y + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
         ctx.fill();
 
-        // 本体外枠
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = '#fff4e6';
@@ -1539,7 +1611,6 @@
         ctx.strokeStyle = rikishi.color;
         ctx.stroke();
 
-        // 🖼️ アバター画像描画 (円形クリッピング)
         if (rikishi.imageObj && rikishi.imageObj.complete && rikishi.imageObj.naturalWidth > 0) {
             ctx.save();
             ctx.beginPath();
@@ -1548,7 +1619,6 @@
             ctx.drawImage(rikishi.imageObj, x - r, y - r, r * 2, r * 2);
             ctx.restore();
         } else {
-            // 絵文字アバターフォールバック
             ctx.beginPath();
             ctx.arc(x, y, r * 0.82, 0.3, Math.PI - 0.3);
             ctx.fillStyle = rikishi.color;
@@ -1560,7 +1630,6 @@
             ctx.fillText(rikishi.avatar, x, y - 2);
         }
 
-        // 名前
         ctx.font = '700 14px "Zen Maru Gothic", sans-serif';
         ctx.fillStyle = '#2d2633';
         ctx.shadowColor = '#fff';
