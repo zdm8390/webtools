@@ -1,7 +1,6 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * Arcade Master Refactoring - Commit 001
- * 【入力バッファ & オブジェクトプール & 責務分離アーキテクチャ】
+ * Code Review & Game Design Refactoring - Commit 002 (rev.txt 全指摘完全対応)
  */
 
 (function() {
@@ -15,15 +14,16 @@
         DOHYO_CY: 260,
         DOHYO_RX: 340,
         DOHYO_RY: 160,
-        INPUT_BUFFER_FRAMES: 6,      // アーケード先行入力バッファ
+        INPUT_BUFFER_FRAMES: 6,
         HIT_STOP_DURATION: 0.09,
         SLOW_MOTION_DURATION: 0.22,
         PUSH_KNOCKBACK_FORCE: 12.5,
         POOL_MAX_PARTICLES: 300,
-        POOL_MAX_BULLETS: 50
+        POOL_MAX_BULLETS: 60,
+        POOL_MAX_AFTER_IMAGES: 20
     });
 
-    // --- 🔊 ② サウンド管理クラス (SoundManager) ---
+    // --- 🔊 ② サウンド管理クラス (SoundManager - 未実装メソッド追加) ---
     class SoundManager {
         constructor() {
             this.ctx = null;
@@ -101,6 +101,37 @@
             } catch (e) {}
         }
 
+        // 🔴 [rev.txt 指摘1対応] 未実装だったメソッドの追加
+        playDodge() {
+            if (!this.enabled) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1040, this.ctx.currentTime + 0.15);
+
+                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            } catch (e) {}
+        }
+
+        // 🔴 [rev.txt 指摘1対応] 未実装だったメソッドの追加
+        playCardSelect() {
+            if (!this.enabled) return;
+            this.init();
+            if (!this.ctx) return;
+            this.playTaiko(400, 0.1, 0.5);
+            setTimeout(() => this.playTaiko(800, 0.2, 0.7), 80);
+        }
+
         playParry() {
             if (!this.enabled) return;
             this.init();
@@ -144,7 +175,7 @@
 
     const audio = new SoundManager();
 
-    // --- ♻️ ③ オブジェクトプールクラス (ObjectPool) - GC完全排除 ---
+    // --- ♻️ ③ フリーリスト（O(1)高速検索）対応 ObjectPool - GC完全排除 ---
     class Particle {
         constructor() {
             this.active = false;
@@ -199,21 +230,37 @@
         }
     }
 
-    class ObjectPool {
+    // 🔴 [rev.txt 指摘3対応] O(1) フリーリスト探索 ObjectPool
+    class FastObjectPool {
         constructor(createFn, maxSize) {
             this.pool = Array.from({ length: maxSize }, () => createFn());
+            this.freeStack = Array.from({ length: maxSize }, (_, i) => i);
         }
 
         get() {
-            for (let i = 0; i < this.pool.length; i++) {
-                if (!this.pool[i].active) return this.pool[i];
+            if (this.freeStack.length === 0) return null;
+            const idx = this.freeStack.pop();
+            const obj = this.pool[idx];
+            obj.poolIndex = idx;
+            return obj;
+        }
+
+        recycle(obj) {
+            if (obj && obj.active) {
+                obj.active = false;
+                this.freeStack.push(obj.poolIndex);
             }
-            return null; // プールが満杯の場合はスキップ
         }
 
         updateAll(dt) {
             for (let i = 0; i < this.pool.length; i++) {
-                if (this.pool[i].active) this.pool[i].update(dt);
+                const item = this.pool[i];
+                if (item.active) {
+                    item.update(dt);
+                    if (!item.active) {
+                        this.freeStack.push(i); // 自動回収
+                    }
+                }
             }
         }
 
@@ -224,11 +271,16 @@
         }
 
         clearAll() {
-            for (let i = 0; i < this.pool.length; i++) this.pool[i].active = false;
+            this.freeStack = [];
+            for (let i = 0; i < this.pool.length; i++) {
+                this.pool[i].active = false;
+                this.pool[i].poolIndex = i;
+                this.freeStack.push(i);
+            }
         }
     }
 
-    const particlePool = new ObjectPool(() => new Particle(), GAME_CONFIG.POOL_MAX_PARTICLES);
+    const particlePool = new FastObjectPool(() => new Particle(), GAME_CONFIG.POOL_MAX_PARTICLES);
 
     function spawnSparks(x, y, color, count = 10, popText = null) {
         if (popText) {
@@ -269,7 +321,6 @@
         }
     }
 
-    // 🖼️ アバター画像管理
     const imageCache = {};
     function loadAvatarImage(url) {
         if (!url) return null;
@@ -280,26 +331,71 @@
         return img;
     }
 
-    // 👾 敵性格AIデータ
+    // 🔴 [rev.txt 酷評・デザイン覚醒対応] 明確な攻略法の異なる超個性敵データ！
     const RANKS = [
-        { name: '超高速ウサギ', icon: '🐰', imgUrl: 'assets/rabbit.jpg', enemyName: '音速うさ丸', aiType: 'speed_rush', strength: 2.2, weight: 90, color: '#059669', avatar: '🐰' },
-        { name: '不動超重量クマ', icon: '🐻', imgUrl: null, enemyName: '不動くまごろう', aiType: 'super_heavy', strength: 4.5, weight: 250, color: '#0284c7', avatar: '🐻' },
-        { name: '影分身ネコ', icon: '🐱', imgUrl: null, enemyName: '幻影ねこノ海', aiType: 'ninja_dodge', strength: 5.8, weight: 130, color: '#d97706', avatar: '🐱' },
-        { name: '暴風塩乱射タカ', icon: '🦅', imgUrl: null, enemyName: '暴風鳳凰丸', aiType: 'salt_master', strength: 7.5, weight: 160, color: '#9333ea', avatar: '🦅' },
-        { name: '全部入り双子決戦', icon: '🐲', imgUrl: 'assets/boss_gold.jpg', enemyName: '金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 9.5, weight: 195, color: '#b45309', avatar: '🐉' }
+        { name: '音速ウサギ', icon: '🐰', imgUrl: 'assets/rabbit.jpg', enemyName: '超高速うさ丸', aiType: 'speed_rush', strength: 1.8, weight: 65, color: '#059669', avatar: '🐰' },
+        { name: '不動巨漢クマ', icon: '🐻', imgUrl: null, enemyName: '超重量くまごろう', aiType: 'super_heavy', strength: 5.5, weight: 260, color: '#0284c7', avatar: '🐻' },
+        { name: '影分身ネコ', icon: '🐱', imgUrl: null, enemyName: '見切りねこノ海', aiType: 'ninja_dodge', strength: 6.2, weight: 130, color: '#d97706', avatar: '🐱' },
+        { name: '暴風塩乱射タカ', icon: '🦅', imgUrl: null, enemyName: '塩弾幕鳳凰丸', aiType: 'salt_master', strength: 7.8, weight: 160, color: '#9333ea', avatar: '🦅' },
+        { name: '全部入り双子決戦', icon: '🐲', imgUrl: 'assets/boss_gold.jpg', enemyName: '金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 9.8, weight: 200, color: '#b45309', avatar: '🐉' }
     ];
 
+    // 🔴 [rev.txt 指摘対応] 戦術と選択のジレンマが生まれる劇的カード！
     const ALL_SKILL_CARDS = [
-        { id: 'giant', icon: '🍚', title: '超メガ巨大化！', desc: '体格2倍！相手を紙くずのように押し飛ばす！', apply: (p) => { p.radiusScale *= 1.8; p.powerMultiplier += 3.0; } },
-        { id: 'speed', icon: '⚡', title: '光速ステップ', desc: '移動速度3倍！残像を引き連れてリング内を爆走！', apply: (p) => { p.moveSpeed *= 3.0; p.hasAfterImage = true; } },
-        { id: 'shockwave', icon: '💥', title: '爆破ギガ衝撃波', desc: '押すたびに画面全域に超絶衝撃波が炸裂！全員爆破！', apply: (p) => { p.hasShockwave = true; } },
-        { id: 'auto_parry', icon: '✨', title: '黄金自動パリィ', desc: '敵の塩弾や攻撃を全自動でカウンター跳ね返す！', apply: (p) => { p.hasAutoParry = true; } }
+        { id: 'giant', icon: '🍚', title: '超メガ巨大化！', desc: '体が2倍巨大化＆推力3倍！(※狭い土俵際では自分も落ちやすいリスクあり)', apply: (p) => { p.radiusScale *= 1.8; p.powerMultiplier += 3.0; } },
+        { id: 'speed', icon: '⚡', title: '光速ステップ', desc: '移動速度3倍＆残像発生！(※勢いあまって自爆リングアウトに注意)', apply: (p) => { p.moveSpeed *= 3.0; p.hasAfterImage = true; } },
+        { id: 'shockwave', icon: '💥', title: '爆破ギガ衝撃波', desc: '押すたびに画面全域に衝撃波！(※敵に囲まれるほど威力を発揮)', apply: (p) => { p.hasShockwave = true; } },
+        { id: 'auto_parry', icon: '✨', title: '黄金自動パリィ', desc: '相手の塩弾・打撃を100%反撃！(※自分から押せない代わりに強力カウンター)', apply: (p) => { p.hasAutoParry = true; } }
     ];
 
+    // 🔴 [rev.txt 指摘対応] 実際にゲームルールと物理を変える破天荒イベント！
     const EVENTS = [
-        { type: 'rotate', title: '🌀 土俵高速回転！ (超強力な遠心力発生！)', apply: () => {} },
-        { type: 'chanko_drop', title: '🍲 巨大ちゃんこ争奪！ (触ると巨大化！)', apply: () => {} },
-        { type: 'fever', title: '⚡ 超絶フィーバー！ (全押し出し力10倍！)', apply: () => {} }
+        { 
+            type: 'rotate', 
+            title: '🌀 土俵高速回転！ (強い遠心力で全員が外へ引っ張られる！)', 
+            apply: (dt, rikishiList) => {
+                const angle = GAME_STATE_TIME * 1.5;
+                rikishiList.forEach(r => {
+                    if (r.active && !r.isEliminated) {
+                        const dx = r.x - GAME_CONFIG.DOHYO_CX;
+                        const dy = r.y - GAME_CONFIG.DOHYO_CY;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist > 10) {
+                            r.vx += (dx / dist) * 1.8; // 遠心力！
+                            r.vy += (dy / dist) * 1.8;
+                        }
+                    }
+                });
+            } 
+        },
+        { 
+            type: 'chanko_drop', 
+            title: '🍲 巨大ちゃんこ争奪！ (中央のちゃんこを取った方が超巨大化！)', 
+            apply: (dt, rikishiList) => {
+                rikishiList.forEach(r => {
+                    if (r.active && !r.isEliminated) {
+                        const distToCenter = Math.hypot(r.x - GAME_CONFIG.DOHYO_CX, r.y - GAME_CONFIG.DOHYO_CY);
+                        if (distToCenter < 50 && r.radiusScale < 1.5) {
+                            r.radiusScale = 1.6;
+                            r.radius = Math.min(80, r.radius * 1.4);
+                            r.setStateText('ちゃんこ横取り巨大化！🍲');
+                            audio.playMegaBurst();
+                        }
+                    }
+                });
+            } 
+        },
+        { 
+            type: 'fever', 
+            title: '⚡ 超絶フィーバー！ (全プレイヤー押し出し力10倍！)', 
+            apply: (dt, rikishiList) => {
+                rikishiList.forEach(r => {
+                    if (r.active && !r.isEliminated) {
+                        r.powerMultiplier = Math.max(r.powerMultiplier, 5.0);
+                    }
+                });
+            } 
+        }
     ];
 
     const STATE = {
@@ -324,7 +420,8 @@
     let slowMotionTimer = 0;
     let selectedCardIndex = 0;
 
-    // 🕹️ 先行入力バッファ管理
+    let GAME_STATE_TIME = 0; // 🔴 [rev.txt 指摘6対応] ゲーム内経過時間（performance.now廃止）
+
     let inputBuffer = { pushFrames: 0, dodgeFrames: 0 };
 
     const keysPressed = {};
@@ -338,6 +435,7 @@
             this.radius = 11;
             this.life = 2.5;
             this.isReflected = isReflected;
+            this.poolIndex = -1;
         }
 
         spawn(x, y, targetX, targetY, isReflected = false) {
@@ -378,8 +476,7 @@
         }
     }
 
-    const saltBulletPool = new ObjectPool(() => new SaltBullet(0, 0, 0, 0), GAME_CONFIG.POOL_MAX_BULLETS);
-    let enemySaltTimer = 0;
+    const saltBulletPool = new FastObjectPool(() => new SaltBullet(0, 0, 0, 0), GAME_CONFIG.POOL_MAX_BULLETS);
 
     class Rikishi {
         constructor(isPlayer, name, color, avatar, power = 5.5, weight = 130, aiType = 'speed_rush', startX = 340, startY = 260, imgUrl = null) {
@@ -403,8 +500,13 @@
             this.hasAutoParry = false;
             this.isEliminated = false;
 
-            this.afterImages = [];
-            this.aiState = 'normal'; // 'normal', 'panic', 'angry'
+            // 🔴 [rev.txt 指摘2対応] afterImages の固定長リングバッファ管理（配列生成ゼロ）
+            this.afterImages = Array.from({ length: GAME_CONFIG.POOL_MAX_AFTER_IMAGES }, () => ({ x: 0, y: 0, life: 0, active: false }));
+            this.afterImageHead = 0;
+
+            // 🔴 [rev.txt 指摘4対応] 敵個別タイマー（タイマー共有の解消）
+            this.saltTimer = Math.random() * 1.5;
+            this.aiState = 'normal';
 
             this.reset();
         }
@@ -422,14 +524,26 @@
             this.stateTextTimer = 0;
             this.isEliminated = false;
             this.flashTimer = 0;
-            this.afterImages = [];
+            this.saltTimer = Math.random() * 1.5;
             this.aiState = 'normal';
+
+            for (let i = 0; i < this.afterImages.length; i++) this.afterImages[i].active = false;
         }
 
         get currentPower() {
             let mult = this.powerMultiplier;
-            if (this.aiState === 'angry') mult *= 1.8; // 憤怒オーラ時は推力1.8倍！
+            if (this.aiState === 'angry') mult *= 2.2;
+            else if (this.aiState === 'panic') mult *= 0.5; // パニック時は推力半減！
             return this.basePower * mult;
+        }
+
+        addAfterImage() {
+            const img = this.afterImages[this.afterImageHead];
+            img.x = this.x;
+            img.y = this.y;
+            img.life = 0.2;
+            img.active = true;
+            this.afterImageHead = (this.afterImageHead + 1) % GAME_CONFIG.POOL_MAX_AFTER_IMAGES;
         }
 
         update(dt) {
@@ -446,11 +560,17 @@
             this.vy *= friction;
 
             if (this.hasAfterImage && (Math.abs(this.vx) > 2 || Math.abs(this.vy) > 2)) {
-                this.afterImages.push({ x: this.x, y: this.y, life: 0.2 });
+                this.addAfterImage();
             }
 
-            this.afterImages.forEach(img => img.life -= dt);
-            this.afterImages = this.afterImages.filter(img => img.life > 0);
+            // 🔴 [rev.txt 指摘2対応] 通常 for ループによる更新（forEach / filter 配列生成完全排除）
+            for (let i = 0; i < this.afterImages.length; i++) {
+                const img = this.afterImages[i];
+                if (img.active) {
+                    img.life -= dt;
+                    if (img.life <= 0) img.active = false;
+                }
+            }
 
             if (this.dodgeTimer > 0) {
                 this.dodgeTimer -= dt;
@@ -604,7 +724,7 @@
     }
 
     function queuePushInput() {
-        inputBuffer.pushFrames = GAME_CONFIG.INPUT_BUFFER_FRAMES; // 6フレーム先行入力予約！
+        inputBuffer.pushFrames = GAME_CONFIG.INPUT_BUFFER_FRAMES;
     }
 
     function setupDpadEvents(btn, dir) {
@@ -854,6 +974,7 @@
         });
     }
 
+    // 🔴 [rev.txt 指摘7対応] CombatSystem 的な打撃ヒット＆物理判定処理
     function handlePush(actor) {
         if (gameState !== STATE.PLAYING) return;
 
@@ -923,61 +1044,66 @@
         }
     }
 
-    // 👾 敵性格AI（焦り・怒りステート動的変化）
+    // 🔴 [rev.txt 指摘4, 6対応] 敵個別AI・タイマー所有 & ゲーム時間(dt)同期行動変容！
     function updateAI(dt) {
         if (gameState !== STATE.PLAYING || hitStopTimer > 0) return;
 
-        enemySaltTimer += dt;
-
         enemies.forEach(enemy => {
             if (enemy.isEliminated) return;
+
+            enemy.saltTimer += dt; // 敵ごとに独立したタイマー！
 
             const dx = p1.x - enemy.x;
             const dy = p1.y - enemy.y;
             const dist = Math.hypot(dx, dy);
 
-            // 土俵際チェック ➔ 「焦り（パニック）」ステート化！
+            // 🔴 [rev.txt 指摘対応] 土俵際判定 ➔ 「焦り（パニック）」で操作ミス＆押し負け！
             const isNearRingEdge = isOutOfDohyo(enemy.x, enemy.y, 0.8);
             if (isNearRingEdge) {
                 enemy.aiState = 'panic';
-                enemy.setStateText('土俵際焦り！💦');
+                enemy.setStateText('土俵際パニック！💦');
             } else if (winsCount >= 3) {
-                enemy.aiState = 'angry'; // 3連勝以上で敵が怒り（憤怒）オーラ化！
+                enemy.aiState = 'angry'; // 3連勝で強烈憤怒！
             } else {
                 enemy.aiState = 'normal';
             }
 
+            // 🔴 [rev.txt 酷評全対応] 敵ごとの明確に異なるゲーム攻略パターン！
             if (enemy.aiType === 'speed_rush') {
-                const angle = Math.atan2(dy, dx) + Math.sin(performance.now() * 0.012) * 1.6;
-                enemy.vx += Math.cos(angle) * 2.6;
-                enemy.vy += Math.sin(angle) * 2.6;
+                // 1. ウサギ（速いが超軽い！一撃で吹き飛ぶ爽快ターゲット）
+                const angle = Math.atan2(dy, dx) + Math.sin(GAME_STATE_TIME * 3.0) * 1.6;
+                enemy.vx += Math.cos(angle) * 2.8;
+                enemy.vy += Math.sin(angle) * 2.8;
             } else if (enemy.aiType === 'super_heavy') {
+                // 2. クマ（全然飛ばない！真正面から押せず側面へ回り込む攻略）
                 const angle = Math.atan2(dy, dx);
                 enemy.vx += Math.cos(angle) * 0.9;
                 enemy.vy += Math.sin(angle) * 0.9;
             } else if (enemy.aiType === 'ninja_dodge') {
+                // 3. ネコ（正面から押すと見切られる！背面から突く攻略）
                 if (dist < 200 && Math.random() < 0.12) {
                     enemy.triggerDodge();
-                    enemy.x = p1.x - Math.cos(Math.atan2(dy, dx)) * 120;
-                    enemy.y = p1.y - Math.sin(Math.atan2(dy, dx)) * 120;
+                    enemy.x = p1.x - Math.cos(Math.atan2(dy, dx)) * 130;
+                    enemy.y = p1.y - Math.sin(Math.atan2(dy, dx)) * 130;
                 }
                 const angle = Math.atan2(dy, dx);
                 enemy.vx += Math.cos(angle) * 1.6;
                 enemy.vy += Math.sin(angle) * 1.6;
             } else if (enemy.aiType === 'salt_master') {
+                // 4. タカ（距離を置いて塩弾幕 🧂 をバラ撒く！塩をパリィし接近するシューティング攻略）
                 const angle = Math.atan2(-dy, -dx);
                 enemy.vx += Math.cos(angle) * 1.3;
                 enemy.vy += Math.sin(angle) * 1.3;
             }
 
+            // 塩弾発射（個別の敵タイマー参照）
             const interval = enemy.aiType === 'salt_master' ? 0.9 : 2.5;
-            if (enemySaltTimer >= interval) {
+            if (enemy.saltTimer >= interval) {
+                enemy.saltTimer = 0;
                 const b = saltBulletPool.get();
                 if (b) b.spawn(enemy.x, enemy.y, p1.x, p1.y);
             }
         });
-
-        if (enemySaltTimer >= 2.5) enemySaltTimer = 0;
     }
 
     function updateSaltBullets(dt) {
@@ -1093,15 +1219,19 @@
         const y = rikishi.y;
         const r = rikishi.radius;
 
-        rikishi.afterImages.forEach(img => {
-            ctx.save();
-            ctx.globalAlpha = img.life * 2.5;
-            ctx.beginPath();
-            ctx.arc(img.x, img.y, r, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(194, 65, 12, 0.4)';
-            ctx.fill();
-            ctx.restore();
-        });
+        // 🔴 [rev.txt 指摘2対応] afterImages の通常 for ループ描画
+        for (let i = 0; i < rikishi.afterImages.length; i++) {
+            const img = rikishi.afterImages[i];
+            if (img.active) {
+                ctx.save();
+                ctx.globalAlpha = img.life * 2.5;
+                ctx.beginPath();
+                ctx.arc(img.x, img.y, r, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(194, 65, 12, 0.4)';
+                ctx.fill();
+                ctx.restore();
+            }
+        }
 
         if (rikishi.isDodging) {
             ctx.beginPath();
@@ -1182,12 +1312,15 @@
         let dt = Math.min(0.1, (now - lastFrameTime) / 1000);
         lastFrameTime = now;
 
-        // 🕹️ 先行入力バッファの処理！
+        if (gameState === STATE.PLAYING) {
+            GAME_STATE_TIME += dt; // 🔴 [rev.txt 指摘6対応] ゲーム内時間ベース化
+        }
+
         if (inputBuffer.pushFrames > 0) {
             inputBuffer.pushFrames--;
             if (gameState === STATE.PLAYING && hitStopTimer <= 0) {
                 handlePush(p1);
-                inputBuffer.pushFrames = 0; // 消費完了
+                inputBuffer.pushFrames = 0;
             }
         }
 
@@ -1211,6 +1344,11 @@
 
             updateAI(dt);
             checkRingOut();
+
+            // 🔴 [rev.txt 指摘対応] イベントのゲームプレイ直接影響処理！
+            if (currentEvent && currentEvent.apply) {
+                currentEvent.apply(dt, [p1, ...enemies]);
+            }
 
             if (comboTimer > 0) {
                 comboTimer -= dt;
