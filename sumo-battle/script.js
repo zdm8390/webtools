@@ -1,15 +1,8 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * 1. ダサイ修飾語の撤去 (🔥 0 連勝中！ に統一)
- * 2. 敗北・クリア画面での Yahoo!募金 リンク ＆ タイムアタック積算スコア表示
- * 3. 同じステージからのコンティニュー機能 (タイム継続積算)
- * 4. 土俵ランダム変形 (正円 / 四角形 & サイズ変化)
- * 5. 自発的土俵際踏み止まり (粘り引っ掛かりメカニクス)
- * 6. インパクト威力の調整 ＆ ストック回数制限 (初期3回・パリィ/ゲージ回復)
- * 7. パリィ大幅強化 (カウンター吹っ飛ばし ＆ パリィ成功時相手1.2秒完全ピヨりスタン)
- * 8. ジャストパリィ特大「✨ ジャストパリィ成立！✨」演出
- * 9. クリア画面アーケード名言「なにぃ ゆうしょうしゃが いない？」
- * 10. プロゲームデザイナー監修のアーケードベクトルキャンバス描画
+ * 1. 鮮やかな元カラー・アバター画像グラフィックへの完全復元
+ * 2. yokozunaTitleCard の非マスター勝利時誤表示バグの修正
+ * 3. burstCutinEl（超ドスコイ表示）の常駐バグの修正
  */
 
 (function() {
@@ -24,7 +17,7 @@
         HIT_STOP_DURATION: 0.09,
         SLOW_MOTION_DURATION: 0.22,
         PARRY_SLOW_DURATION: 0.45,
-        PUSH_KNOCKBACK_FORCE: 8.5, // 🔴 インパクト威力調整（マイルド化）
+        PUSH_KNOCKBACK_FORCE: 8.5,
         POOL_MAX_PARTICLES: 300,
         POOL_MAX_BULLETS: 100,
         POOL_MAX_AFTER_IMAGES: 20
@@ -323,12 +316,22 @@
         }
     }
 
+    const imageCache = {};
+    function loadAvatarImage(url) {
+        if (!url) return null;
+        if (imageCache[url]) return imageCache[url];
+        const img = new Image();
+        img.src = url;
+        imageCache[url] = img;
+        return img;
+    }
+
     const RANKS = [
-        { name: 'シルバー', icon: '🥈', enemyName: '音速うさ丸', aiType: 'rookie_rabbit', strength: 1.8, weight: 70, color: '#059669', avatar: '🐰' },
-        { name: 'ゴールド', icon: '🥇', enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 4.8, weight: 260, color: '#0284c7', avatar: '🐻' },
-        { name: 'ダイヤ', icon: '💎', enemyName: '閃光ねこノ海', aiType: 'ninja_dodge', strength: 7.2, weight: 140, color: '#d97706', avatar: '🐱' },
-        { name: 'プラチナ', icon: '👑', enemyName: '暴風鳳凰丸', aiType: 'salt_master', strength: 9.2, weight: 170, color: '#9333ea', avatar: '🦅' },
-        { name: 'マスター', icon: '🏆', enemyName: '覇王金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 12.0, weight: 210, color: '#b45309', avatar: '🐉' }
+        { name: 'シルバー', icon: '🥈', imgUrl: 'assets/rabbit.jpg', enemyName: '音速うさ丸', aiType: 'rookie_rabbit', strength: 1.8, weight: 70, color: '#059669', avatar: '🐰' },
+        { name: 'ゴールド', icon: '🥇', imgUrl: null, enemyName: '金剛くまごろう', aiType: 'super_heavy', strength: 4.8, weight: 260, color: '#0284c7', avatar: '🐻' },
+        { name: 'ダイヤ', icon: '💎', imgUrl: null, enemyName: '閃光ねこノ海', aiType: 'ninja_dodge', strength: 7.2, weight: 140, color: '#d97706', avatar: '🐱' },
+        { name: 'プラチナ', icon: '👑', imgUrl: null, enemyName: '暴風鳳凰丸', aiType: 'salt_master', strength: 9.2, weight: 170, color: '#9333ea', avatar: '🦅' },
+        { name: 'マスター', icon: '🏆', imgUrl: 'assets/boss_gold.jpg', enemyName: '覇王金龍丸 ＆ 銀龍丸', aiType: 'boss_duo', strength: 12.0, weight: 210, color: '#b45309', avatar: '🐉' }
     ];
 
     const ALL_SKILL_CARDS = [
@@ -398,12 +401,10 @@
     let winsCount = 0;
     let isMatchFinished = false;
 
-    // 🔴 タイムアタック積算タイマー
     let timeAttackTimer = 0;
     let isTimerRunning = false;
 
-    // 🔴 土俵ランダム形状システム (正円 / 四角形)
-    let currentDohyoShape = 'circle'; // 'circle' | 'square'
+    let currentDohyoShape = 'circle';
     let currentDohyoRadius = 230;
 
     let comboCount = 0;
@@ -484,11 +485,13 @@
     const saltBulletPool = new FastObjectPool(() => new SaltBullet(0, 0, 0, 0), GAME_CONFIG.POOL_MAX_BULLETS);
 
     class Rikishi {
-        constructor(isPlayer, name, color, avatar, power = 5.5, weight = 130, aiType = 'speed_rush', startX = 340, startY = 260) {
+        constructor(isPlayer, name, color, avatar, power = 5.5, weight = 130, aiType = 'speed_rush', startX = 340, startY = 260, imgUrl = null) {
             this.isPlayer = isPlayer;
             this.name = name;
             this.color = color;
             this.avatar = avatar;
+            this.imgUrl = imgUrl;
+            this.imageObj = imgUrl ? loadAvatarImage(imgUrl) : null;
             this.basePower = power;
             this.weight = weight;
             this.aiType = aiType;
@@ -503,7 +506,6 @@
             this.hasAutoParry = false;
             this.isEliminated = false;
 
-            // 🔴 インパクト回数ストック ＆ スタン・踏み止まりタイマー
             this.pushStock = 3;
             this.stunTimer = 0;
             this.edgeLatchTimer = 0;
@@ -558,7 +560,6 @@
         update(dt) {
             if (this.isEliminated) return;
 
-            // 🔴 相手パリィ成功時のスタンピヨピヨ硬直
             if (this.stunTimer > 0) {
                 this.stunTimer -= dt;
                 this.vx *= 0.1;
@@ -567,7 +568,6 @@
                 return;
             }
 
-            // 🔴 自発的土俵際踏み止まり
             if (this.edgeLatchTimer > 0) {
                 this.edgeLatchTimer -= dt;
                 this.vx *= 0.05;
@@ -670,7 +670,7 @@
     const finalScoreTextEl = document.getElementById('final-score-text');
     const yokozunaTitleCard = document.getElementById('yokozuna-title-card');
 
-    let p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 6.0, 130, 'player', 340, 260);
+    let p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player.jpg');
     let enemies = [];
     let announceText = '';
     let announceScale = 1;
@@ -688,10 +688,8 @@
         btnTopNav.addEventListener('click', showTitle);
         btnToTitle.addEventListener('click', showTitle);
 
-        // 🔴 コンティニューボタン処理 (同じステージからタイム積算継続して再戦)
         btnNextMatch.addEventListener('click', () => {
             if (isMatchFinished && winnerNameEl.textContent.includes('西 勝利')) {
-                // 敗北時のコンティニュー：ステージを進めず再開！
                 startNextBattleDirectly(false, false);
             } else if (currentRankIdx < RANKS.length - 1) {
                 currentRankIdx++;
@@ -797,6 +795,7 @@
         eventBanner.classList.add('hidden');
         comboDisplayEl.classList.add('hidden');
         if (parryDimOverlayEl) parryDimOverlayEl.classList.remove('active');
+        if (yokozunaTitleCard) yokozunaTitleCard.classList.add('hidden');
 
         hideAllScreens();
         screenTitle.classList.add('active');
@@ -830,10 +829,9 @@
         }
     }
 
-    // 🔴 試合開始（またはコンティニュー時）：土俵形状＆サイズをランダム生成
     function randomizeDohyo() {
-        currentDohyoShape = Math.random() < 0.25 ? 'square' : 'circle'; // 25%の確率で四角形土俵！
-        currentDohyoRadius = 200 + Math.floor(Math.random() * 50); // 半径 200～250px
+        currentDohyoShape = Math.random() < 0.25 ? 'square' : 'circle';
+        currentDohyoRadius = 200 + Math.floor(Math.random() * 50);
     }
 
     function startNextBattleDirectly(isResetAll = false, isFullReset = false) {
@@ -842,7 +840,7 @@
             winsCount = 0;
             timeAttackTimer = 0;
             isTimerRunning = true;
-            p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 6.0, 130, 'player', 340, 260);
+            p1 = new Rikishi(true, 'エドモーンド', '#6b21a8', '⚡', 6.0, 130, 'player', 340, 260, 'assets/player.jpg');
         }
 
         randomizeDohyo();
@@ -860,7 +858,9 @@
         enemies.forEach(e => e.reset());
         comboCount = 0;
         comboDisplayEl.classList.add('hidden');
+        burstCutinEl.classList.add('hidden');
         if (parryDimOverlayEl) parryDimOverlayEl.classList.remove('active');
+        if (yokozunaTitleCard) yokozunaTitleCard.classList.add('hidden');
 
         updatePushStockUI();
 
@@ -878,11 +878,11 @@
         enemies = [];
         const enemyData = RANKS[currentRankIdx];
         if (enemyData.aiType === 'boss_duo') {
-            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.0, 210, 'boss_duo', 580, 210);
-            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 10.5, 190, 'boss_duo', 580, 310);
+            const boss1 = new Rikishi(false, '金龍丸 (兄)', '#b45309', '🐲', 12.0, 210, 'boss_duo', 580, 210, 'assets/boss_gold.jpg');
+            const boss2 = new Rikishi(false, '銀龍丸 (弟)', '#1e1b4b', '🐉', 10.5, 190, 'boss_duo', 580, 310, 'assets/boss_silver.jpg');
             enemies.push(boss1, boss2);
         } else {
-            enemies.push(new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260));
+            enemies.push(new Rikishi(false, enemyData.enemyName, enemyData.color, enemyData.avatar, enemyData.strength, enemyData.weight, enemyData.aiType, 560, 260, enemyData.imgUrl));
         }
     }
 
@@ -943,6 +943,7 @@
         spawnSparks(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, '#fde047', 30, 'ハプニング！！');
     }
 
+    // 🔴 バグ修正：yokozunaTitleCard を冒頭で毎回隠蔽リセット！全5ステージ完全勝利時のみ開示！
     function finishMatch(isP1Win) {
         if (isMatchFinished) return;
         isMatchFinished = true;
@@ -957,8 +958,11 @@
 
         speedLinesEl.classList.remove('active');
         eventBanner.classList.add('hidden');
+        burstCutinEl.classList.add('hidden'); // カットイン消去
         saltBulletPool.clearAll();
         if (parryDimOverlayEl) parryDimOverlayEl.classList.remove('active');
+        if (yokozunaTitleCard) yokozunaTitleCard.classList.add('hidden'); // 🔴 必ず初期隠蔽！
+
         audio.playFanfare(isP1Win);
 
         if (finalTimeTextEl) finalTimeTextEl.textContent = formatTime(timeAttackTimer);
@@ -970,6 +974,7 @@
             resultTitleEl.textContent = '💥 豪快決まり手：寄り切り！！ 💥';
             winnerNameEl.textContent = `東 ${p1.name} の天下無双！`;
 
+            // 🔴 最終マスター階級（index 4）を撃破した時のみ「マスター到達クリアカード」を開示！
             if (currentRankIdx === RANKS.length - 1) {
                 isTimerRunning = false;
                 if (yokozunaTitleCard) yokozunaTitleCard.classList.remove('hidden');
@@ -979,7 +984,6 @@
             }
             spawnVictoryConfetti();
         } else {
-            // 🔴 敗北時：コンティニュー対応！(タイムは停止せず積算して再開可能)
             isTimerRunning = false;
             resultTitleEl.textContent = '敗 北 ... コンティニュー可能！';
             winnerNameEl.textContent = `西 勝利！`;
@@ -1002,7 +1006,6 @@
         setTimeout(() => flashOverlayEl.classList.remove('active'), 250);
     }
 
-    // 🔴 8 & 9. ジャストパリィ特大「✨ ジャストパリィ成立！✨」カットイン表示！
     function triggerParrySpecialEffect() {
         if (parryDimOverlayEl) {
             parryDimOverlayEl.classList.add('active');
@@ -1013,7 +1016,7 @@
 
         if (cutinTextContent) cutinTextContent.textContent = '✨ ジャストパリィ成立！ ✨';
         burstCutinEl.classList.remove('hidden');
-        setTimeout(() => burstCutinEl.classList.add('hidden'), 700);
+        setTimeout(() => burstCutinEl.classList.add('hidden'), 750);
     }
 
     function updateHeaderUI() {
@@ -1059,7 +1062,6 @@
             p1.vx += (dx / len) * 3.4 * p1.moveSpeed;
             p1.vy += (dy / len) * 3.4 * p1.moveSpeed;
 
-            // 🔴 自発的土俵際踏み止まりチェック！
             const isNearEdge = isOutOfDohyo(p1.x + (dx / len) * 20, p1.y + (dy / len) * 20, 0.96);
             if (isNearEdge && p1.edgeLatchTimer <= 0) {
                 p1.edgeLatchTimer = 0.18;
@@ -1073,7 +1075,7 @@
         if (!canPlayerControl() || actor.burstGauge < 100) return;
 
         actor.burstGauge = 0;
-        actor.pushStock = Math.min(5, actor.pushStock + 2); // 回復
+        actor.pushStock = Math.min(5, actor.pushStock + 2);
         updatePushStockUI();
 
         hitStopTimer = 0.20;
@@ -1094,7 +1096,6 @@
         });
     }
 
-    // 🔴 7. インパクト回数ストック消費 ＆ 威力調整
     function handlePush(actor) {
         if (!canPlayerControl()) return;
 
@@ -1130,7 +1131,6 @@
 
             const dist = Math.hypot(opponent.x - actor.x, opponent.y - actor.y);
             if (dist < actor.radius + opponent.radius + 55) {
-                // 🔴 8. パリィ発動中にアタックを受けた場合：カウンター大吹き飛ばし！
                 if (opponent.isDodging) {
                     audio.playParry();
                     actor.vx -= (opponent.x - actor.x) * 2.2;
@@ -1152,7 +1152,6 @@
         });
     }
 
-    // 🔴 8. パリィ強化 (成功時相手1.2秒スタンピヨピヨ ＋ ストック+1回復)
     function handleDodge(actor) {
         if (!canPlayerControl() || hitStopTimer > 0) return;
         
@@ -1169,15 +1168,13 @@
                     b.vx = Math.cos(angle) * 14;
                     b.vy = Math.sin(angle) * 14;
 
-                    // 相手を1.2秒スタン硬直！
                     target.stunTimer = 1.2;
-
                     parryTriggered = true;
                 }
             });
 
             if (parryTriggered) {
-                p1.pushStock = Math.min(5, p1.pushStock + 1); // パリィ成功で回復
+                p1.pushStock = Math.min(5, p1.pushStock + 1);
                 updatePushStockUI();
                 p1.setStateText('🌟 ジャストパリィ成立！✨');
                 audio.playParry();
@@ -1332,7 +1329,7 @@
                         b.active = false;
                         enemy.vx += b.vx * 2.5;
                         enemy.vy += b.vy * 2.5;
-                        enemy.stunTimer = 1.2; // 🔴 スタ爆破！
+                        enemy.stunTimer = 1.2;
                         enemy.setStateText('爆破スタンヒット！💥');
                         triggerShake(0.4);
                         audio.playHit();
@@ -1382,7 +1379,6 @@
         }
     }
 
-    // 🔴 正円 (circle) ＆ 四角形 (square) ランダム土俵のアウト判定！
     function isOutOfDohyo(x, y, scale = 1.0) {
         const rad = currentDohyoRadius * scale;
         if (currentDohyoShape === 'square') {
@@ -1399,7 +1395,6 @@
         announceTimer = duration;
     }
 
-    // 🔴 10. アーケード品質のプロフェッショナル・キャンバス描画 (生成AI写真っぽさを廃止)
     function drawDohyo() {
         ctx.save();
 
@@ -1429,7 +1424,6 @@
         ctx.strokeStyle = '#1e1b4b';
         ctx.stroke();
 
-        // 俵描画
         ctx.beginPath();
         if (currentDohyoShape === 'square') {
             ctx.rect(cx - rad + 10, cy - rad + 10, (rad - 10) * 2, (rad - 10) * 2);
@@ -1445,7 +1439,7 @@
         ctx.restore();
     }
 
-    // 🔴 生成AI写真を排した味のあるアーケードベクトル・ドット力士描画！
+    // 🔴 1. 鮮やかな配色・アバター画像の元グラフィックへ完全復元！
     function drawRikishi(rikishi) {
         if (rikishi.isEliminated) return;
 
@@ -1475,49 +1469,41 @@
         if (rikishi.isDodging) {
             ctx.beginPath();
             ctx.arc(x, y, r + 16, 0, Math.PI * 2);
-            ctx.fillStyle = parryGlowTimer > 0 ? 'rgba(253, 224, 71, 0.8)' : 'rgba(2, 132, 199, 0.5)';
+            ctx.fillStyle = parryGlowTimer > 0 ? 'rgba(253, 224, 71, 0.8)' : 'rgba(194, 65, 12, 0.4)';
             ctx.fill();
         }
 
         // 影
         ctx.beginPath();
-        ctx.ellipse(x, y + r * 0.7, r * 0.9, 14, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.ellipse(x, y + 25, r * 0.9, 14, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
         ctx.fill();
 
-        // アーケードスタイリッシュ和風エンブレム本体
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        const bodyGrad = ctx.createRadialGradient(x - r*0.3, y - r*0.3, 5, x, y, r);
-        
-        if (rikishi.isPlayer) {
-            bodyGrad.addColorStop(0, '#c084fc');
-            bodyGrad.addColorStop(1, '#581c87');
+        if (rikishi.imageObj && rikishi.imageObj.complete && rikishi.imageObj.naturalWidth > 0) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.clip();
+
+            if (parryGlowTimer > 0) {
+                ctx.filter = 'brightness(2.2) drop-shadow(0 0 15px #fde047)';
+            } else if (rikishi.flashTimer > 0) {
+                ctx.filter = 'brightness(2.5)';
+            }
+            ctx.drawImage(rikishi.imageObj, x - r, y - r, r * 2, r * 2);
+            ctx.restore();
         } else {
-            bodyGrad.addColorStop(0, '#f87171');
-            bodyGrad.addColorStop(1, '#881337');
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = parryGlowTimer > 0 ? '#fde047' : (rikishi.flashTimer > 0 ? '#ffffff' : rikishi.color);
+            ctx.fill();
+
+            ctx.font = `${Math.floor(r * 0.85)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(rikishi.avatar, x, y - 2);
         }
 
-        ctx.fillStyle = bodyGrad;
-        ctx.fill();
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = '#ffffff';
-        ctx.stroke();
-
-        // 力士の帯・化粧まわしモチーフ
-        ctx.beginPath();
-        ctx.arc(x, y, r * 0.75, 0.2, Math.PI - 0.2);
-        ctx.strokeStyle = rikishi.color;
-        ctx.lineWidth = 6;
-        ctx.stroke();
-
-        // 中央アイコン・テキスト
-        ctx.font = `${Math.floor(r * 0.95)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(rikishi.avatar, x, y - 2);
-
-        // スタン演出ピヨピヨ 💫
         if (rikishi.stunTimer > 0) {
             ctx.font = '24px sans-serif';
             ctx.fillText('💫', x, y - r - 25);

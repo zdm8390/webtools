@@ -170,7 +170,11 @@ body {
     background: #fbf9f5;
 }
 
-/* 特大演出カットイン */
+/* 特大演出カットイン (hiddenのときは絶対非表示) */
+.hidden {
+    display: none !important;
+}
+
 .flash-overlay {
     position: absolute;
     inset: 0;
@@ -199,7 +203,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(194, 65, 12, 0.85);
+    background: rgba(194, 65, 12, 0.88);
     z-index: 30;
     animation: popCutin 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
