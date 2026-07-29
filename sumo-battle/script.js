@@ -182,13 +182,14 @@
 
     const audio = new SoundEngine();
 
-    // 番付データ
+    // ランク階級システム (全6段階)
     const RANKS = [
-        { name: '序ノ口', enemyName: 'うさ丸', strength: 2.0, weight: 110, color: '#059669', avatar: '🐰' },
-        { name: '十両', enemyName: 'くまごろう', strength: 3.5, weight: 130, color: '#0284c7', avatar: '🐻' },
-        { name: '幕内', enemyName: 'ねこノ海', strength: 5.0, weight: 150, color: '#d97706', avatar: '🐱' },
-        { name: '大関', enemyName: 'ぺんぎん山', strength: 6.8, weight: 170, color: '#9333ea', avatar: '🐧' },
-        { name: '横綱', enemyName: 'ぴよ王', strength: 8.8, weight: 195, color: '#e05297', avatar: '🐥' }
+        { name: 'ブロンズ', icon: '🥉', enemyName: 'うさ丸', strength: 2.0, weight: 110, color: '#cd7f32', avatar: '🐰' },
+        { name: 'シルバー', icon: '🥈', enemyName: 'くまごろう', strength: 3.4, weight: 125, color: '#94a3b8', avatar: '🐻' },
+        { name: 'ゴールド', icon: '🥇', enemyName: 'ねこノ海', strength: 4.8, weight: 145, color: '#d97706', avatar: '🐱' },
+        { name: 'プラチナ', icon: '💎', enemyName: 'ぺんぎん山', strength: 6.2, weight: 165, color: '#0284c7', avatar: '🐧' },
+        { name: 'ダイヤ', icon: '👑', enemyName: '鳳凰丸', strength: 7.6, weight: 185, color: '#9333ea', avatar: '🦅' },
+        { name: 'マスター', icon: '🌸✨', enemyName: 'ぴよ王', strength: 9.2, weight: 200, color: '#e05297', avatar: '🐥' }
     ];
 
     const RIVAL_NAMES = ['ぽんちゃん', 'もち丸', 'わたがし山', 'いちご龍', 'みるく丸', 'キャンディ海', 'ぷりん山', 'そら丸'];
@@ -721,7 +722,8 @@
 
     function updateHeaderUI() {
         if (gameMode === 'arcade') {
-            rankBadge.textContent = `👑 番付: ${RANKS[currentRankIdx].name}`;
+            const r = RANKS[currentRankIdx];
+            rankBadge.textContent = `${r.icon} ランク: ${r.name}`;
         } else if (gameMode === 'endless') {
             rankBadge.textContent = `🔥 サバイバル中`;
         } else {
