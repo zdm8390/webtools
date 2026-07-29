@@ -1,7 +1,8 @@
 /**
  * 超音速スモウバトル～ちゃんこ食わんかい～
- * 1. 4大統計（ぶつかり回数、インパクト回数、パリィ回数、コンティニュー数）の累積保存
- * 2. マスター到達・決着時の詳細アクション統計表示 ＆ スコア加算
+ * 1. 決まり手表示の削除
+ * 2. インパクト威力弱体化 (PUSH_KNOCKBACK_FORCE 8.5 ➔ 4.0)
+ * 3. 滑り止めフリクション強化 ＆ 土俵際自動踏み止まりストッパー
  */
 
 (function() {
@@ -16,7 +17,7 @@
         HIT_STOP_DURATION: 0.09,
         SLOW_MOTION_DURATION: 0.22,
         PARRY_SLOW_DURATION: 0.45,
-        PUSH_KNOCKBACK_FORCE: 8.5,
+        PUSH_KNOCKBACK_FORCE: 4.0, // 🔴 インパクト弱体化 (8.5 ➔ 4.0)
         POOL_MAX_PARTICLES: 300,
         POOL_MAX_BULLETS: 100,
         POOL_MAX_AFTER_IMAGES: 20
@@ -403,11 +404,10 @@
     let timeAttackTimer = 0;
     let isTimerRunning = false;
 
-    // 🔴 4大詳細統計カウンター (セッション積算)
-    let statsCollisionCount = 0; // ぶつかり回数
-    let statsPushCount = 0;      // インパクト回数
-    let statsParryCount = 0;     // パリィ成功回数
-    let statsContinueCount = 0;  // コンティニュー回数
+    let statsCollisionCount = 0;
+    let statsPushCount = 0;
+    let statsParryCount = 0;
+    let statsContinueCount = 0;
 
     let currentDohyoShape = 'circle';
     let currentDohyoRadius = 230;
@@ -562,6 +562,7 @@
             this.afterImageHead = (this.afterImageHead + 1) % GAME_CONFIG.POOL_MAX_AFTER_IMAGES;
         }
 
+        // 🔴 滑り防止 (摩擦 0.80 ➔ 0.70 に高めてブレーキを強化)
         update(dt) {
             if (this.isEliminated) return;
 
@@ -575,8 +576,8 @@
 
             if (this.edgeLatchTimer > 0) {
                 this.edgeLatchTimer -= dt;
-                this.vx *= 0.05;
-                this.vy *= 0.05;
+                this.vx *= 0.03;
+                this.vy *= 0.03;
             }
 
             this.x += this.vx;
@@ -585,7 +586,7 @@
             this.x = Math.max(this.radius, Math.min(GAME_CONFIG.CANVAS_WIDTH - this.radius, this.x));
             this.y = Math.max(this.radius, Math.min(GAME_CONFIG.CANVAS_HEIGHT - this.radius, this.y));
 
-            const friction = 0.80;
+            const friction = 0.70; // ブレーキを効かせてピタッと止まりやすく！
             this.vx *= friction;
             this.vy *= friction;
 
@@ -669,12 +670,10 @@
 
     const cardsContainer = document.getElementById('cards-container');
 
-    const resultTitleEl = document.getElementById('result-title');
     const winnerNameEl = document.getElementById('winner-name');
     const finalTimeTextEl = document.getElementById('final-time-text');
     const finalScoreTextEl = document.getElementById('final-score-text');
     
-    // 🔴 4大詳細統計表示エレメント
     const statCollisionsEl = document.getElementById('stat-collisions');
     const statPushesEl = document.getElementById('stat-pushes');
     const statParriesEl = document.getElementById('stat-parries');
@@ -702,7 +701,7 @@
 
         btnNextMatch.addEventListener('click', () => {
             if (isMatchFinished && winnerNameEl.textContent.includes('西 勝利')) {
-                statsContinueCount++; // 🔴 コンティニュー数カウント
+                statsContinueCount++;
                 startNextBattleDirectly(false, false);
             } else if (currentRankIdx < RANKS.length - 1) {
                 currentRankIdx++;
@@ -818,7 +817,6 @@
         isTimerRunning = false;
         timeAttackTimer = 0;
 
-        // 🔴 統計リセット
         statsCollisionCount = 0;
         statsPushCount = 0;
         statsParryCount = 0;
@@ -976,7 +974,7 @@
         spawnSparks(GAME_CONFIG.DOHYO_CX, GAME_CONFIG.DOHYO_CY, '#fde047', 30, 'ハプニング！！');
     }
 
-    // 🔴 4大詳細統計を表示し、最終スコアを動的に計算！
+    // 🔴 決まり手非表示 ＆ 統計・スコア表示
     function finishMatch(isP1Win) {
         if (isMatchFinished) return;
         isMatchFinished = true;
@@ -1000,13 +998,11 @@
 
         if (finalTimeTextEl) finalTimeTextEl.textContent = formatTime(timeAttackTimer);
 
-        // 🔴 4大詳細統計の画面反映
         if (statCollisionsEl) statCollisionsEl.textContent = statsCollisionCount;
         if (statPushesEl) statPushesEl.textContent = statsPushCount;
         if (statParriesEl) statParriesEl.textContent = statsParryCount;
         if (statContinuesEl) statContinuesEl.textContent = statsContinueCount;
 
-        // 🔴 4大統計を組み込んだハイスコア動的計算！
         const calculatedScore = Math.max(100, Math.floor(
             winsCount * 3000 + 
             statsParryCount * 350 + 
@@ -1019,7 +1015,6 @@
 
         if (isP1Win) {
             winsCount++;
-            resultTitleEl.textContent = '💥 豪快決まり手：寄り切り！！ 💥';
             winnerNameEl.textContent = `東 ${p1.name} の天下無双！`;
 
             if (currentRankIdx === RANKS.length - 1) {
@@ -1032,7 +1027,6 @@
             spawnVictoryConfetti();
         } else {
             isTimerRunning = false;
-            resultTitleEl.textContent = '敗 北 ... コンティニュー可能！';
             winnerNameEl.textContent = `西 勝利！`;
             btnNextMatch.textContent = '🔄 同じステージからコンティニュー [Enter]';
         }
@@ -1094,6 +1088,7 @@
         comboDisplayEl.classList.remove('hidden');
     }
 
+    // 🔴 3. 土俵際での自動引っ掛かり足（自動ストッパー）判定の強化！
     function updatePlayerMovement(dt) {
         if (!canPlayerControl() || hitStopTimer > 0) return;
 
@@ -1107,13 +1102,14 @@
             const len = Math.hypot(dx, dy);
             p1.vx += (dx / len) * 3.4 * p1.moveSpeed;
             p1.vy += (dy / len) * 3.4 * p1.moveSpeed;
+        }
 
-            const isNearEdge = isOutOfDohyo(p1.x + (dx / len) * 20, p1.y + (dy / len) * 20, 0.96);
-            if (isNearEdge && p1.edgeLatchTimer <= 0) {
-                p1.edgeLatchTimer = 0.18;
-                p1.setStateText('土俵際粘り！🦶');
-                spawnSparks(p1.x, p1.y, '#fde047', 6);
-            }
+        // 🔴 土俵の最外縁（ライン）に接触した際、自動で1回強力引っ掛かりストッパーを発動！
+        const isNearEdge = isOutOfDohyo(p1.x, p1.y, 0.94);
+        if (isNearEdge && p1.edgeLatchTimer <= 0) {
+            p1.edgeLatchTimer = 0.22; // 0.22秒の強力足粘りストッパー！
+            p1.setStateText('土俵際自動踏み止まり！🦶');
+            spawnSparks(p1.x, p1.y, '#fde047', 10);
         }
     }
 
@@ -1142,7 +1138,6 @@
         });
     }
 
-    // 🔴 インパクト回数カウント (statsPushCount++)
     function handlePush(actor) {
         if (!canPlayerControl()) return;
 
@@ -1152,7 +1147,7 @@
                 return;
             }
             p1.pushStock--;
-            statsPushCount++; // カウント加算！
+            statsPushCount++;
             updatePushStockUI();
             addComboHit();
         }
@@ -1200,7 +1195,6 @@
         });
     }
 
-    // 🔴 パリィ成功回数カウント (statsParryCount++)
     function handleDodge(actor) {
         if (!canPlayerControl() || hitStopTimer > 0) return;
         
@@ -1223,7 +1217,7 @@
             });
 
             if (parryTriggered) {
-                statsParryCount++; // カウント加算！
+                statsParryCount++;
                 p1.pushStock = Math.min(5, p1.pushStock + 1);
                 updatePushStockUI();
                 p1.setStateText('🌟 ジャストパリィ成立！✨');
@@ -1234,7 +1228,6 @@
         }
     }
 
-    // 🔴 ぶつかり回数カウント (statsCollisionCount++)
     function checkCharacterCollisions() {
         const allRikishi = [p1, ...enemies].filter(r => r && !r.isEliminated);
         
@@ -1249,7 +1242,6 @@
                 const minDist = r1.radius + r2.radius;
 
                 if (dist < minDist && dist > 0.001) {
-                    // プレイヤーが関与している衝突の場合のみカウント
                     if (r1.isPlayer || r2.isPlayer) {
                         statsCollisionCount++;
                     }
