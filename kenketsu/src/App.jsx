@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Component } from 'react';
 import Navbar from './components/Navbar';
 import AnalyticsView from './components/AnalyticsView';
 import RecordTable from './components/RecordTable';
@@ -6,7 +6,76 @@ import RecordModal from './components/RecordModal';
 import XmlManager from './components/XmlManager';
 import { parseXmlToRecords, calculateAnalytics, buildXmlFromRecords } from './utils/xmlParser';
 
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  }
+
+  handleReset = () => {
+    localStorage.removeItem('haema_records_v1');
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#0f172a',
+          color: '#f8fafc',
+          padding: '24px',
+          textAlign: 'center',
+          fontFamily: 'sans-serif'
+        }}>
+          <h2 style={{ fontSize: '1.8rem', color: '#f43f5e', marginBottom: '12px' }}>⚠️ 画面の描画中にエラーが発生しました</h2>
+          <p style={{ color: '#94a3b8', marginBottom: '20px', maxWidth: '500px' }}>
+            保存されたデータキャッシュとの互換性問題、または予期せぬエラーが発生した可能性があります。
+          </p>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={this.handleReset}
+              style={{
+                backgroundColor: '#e63946',
+                color: '#fff',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              キャッシュを初期化して再読み込み
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <MainApp />
+    </ErrorBoundary>
+  );
+}
+
+function MainApp() {
   const [activeTab, setActiveTab] = useState('analytics'); // 'analytics', 'records', 'xml'
   const [theme, setTheme] = useState(() => localStorage.getItem('haema_theme') || 'dark');
   const [records, setRecords] = useState([]);
@@ -26,18 +95,22 @@ export default function App() {
     if (savedRecords) {
       try {
         const parsed = JSON.parse(savedRecords);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0] && parsed[0].date) {
           setRecords(parsed);
           setIsLoading(false);
           return;
         }
       } catch (e) {
         console.error('Failed to parse saved records', e);
+        localStorage.removeItem('haema_records_v1');
       }
     }
 
-    fetch('/kenketsu_data.xml')
-      .then((res) => res.text())
+    fetch('./kenketsu_data.xml')
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.text();
+      })
       .then((xmlText) => {
         const parsedRecords = parseXmlToRecords(xmlText);
         setRecords(parsedRecords);
@@ -110,7 +183,7 @@ export default function App() {
 
   const handleResetToInitial = () => {
     if (window.confirm('初期のExcel変換データ（255件）にリセットしますか？')) {
-      fetch('/kenketsu_data.xml')
+      fetch('./kenketsu_data.xml')
         .then((res) => res.text())
         .then((xmlText) => {
           const parsedRecords = parseXmlToRecords(xmlText);

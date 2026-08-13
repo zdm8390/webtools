@@ -97,8 +97,15 @@ export function calculateAnalytics(records) {
     return null;
   }
 
+  // Filter valid date records safely
+  const validRecords = records.filter(r => r && r.date && !isNaN(new Date(r.date).getTime()));
+
+  if (validRecords.length === 0) {
+    return null;
+  }
+
   const totalCount = records.length;
-  const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const sorted = [...validRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
   
   const firstDonation = sorted[0];
   const latestDonation = sorted[sorted.length - 1];
@@ -108,7 +115,7 @@ export function calculateAnalytics(records) {
   const today = new Date();
 
   // Elapsed years & months from first donation
-  const totalDays = Math.floor((today - firstDate) / (1000 * 60 * 60 * 24));
+  const totalDays = Math.max(0, Math.floor((today - firstDate) / (1000 * 60 * 60 * 24)));
   const elapsedYears = Math.floor(totalDays / 365.25);
   const elapsedMonths = Math.floor((totalDays % 365.25) / 30.4375);
   const elapsedDays = Math.floor((totalDays % 365.25) % 30.4375);
@@ -116,6 +123,7 @@ export function calculateAnalytics(records) {
   // Type counts
   const typeCounts = { '全血': 0, '血漿': 0, '血小板': 0, 'その他': 0 };
   records.forEach(r => {
+    if (!r) return;
     if (typeCounts[r.type] !== undefined) {
       typeCounts[r.type]++;
     } else {
@@ -126,22 +134,26 @@ export function calculateAnalytics(records) {
   // Yearly counts
   const yearlyMap = {};
   records.forEach(r => {
-    const y = r.year || parseInt(r.date.substring(0, 4), 10);
-    yearlyMap[y] = (yearlyMap[y] || 0) + 1;
+    if (!r) return;
+    const yearFromDate = r.date ? parseInt(r.date.substring(0, 4), 10) : NaN;
+    const y = r.year || (isNaN(yearFromDate) ? new Date().getFullYear() : yearFromDate);
+    if (!isNaN(y)) {
+      yearlyMap[y] = (yearlyMap[y] || 0) + 1;
+    }
   });
 
   const years = Object.keys(yearlyMap).map(Number).sort((a, b) => a - b);
   const minYear = years[0] || new Date().getFullYear();
   const maxYear = years[years.length - 1] || new Date().getFullYear();
-  const activeYearSpan = maxYear - minYear + 1;
+  const activeYearSpan = Math.max(1, maxYear - minYear + 1);
 
-  const yearlyAverage = activeYearSpan > 0 ? (totalCount / activeYearSpan).toFixed(1) : 0;
+  const yearlyAverage = (totalCount / activeYearSpan).toFixed(1);
 
   // Decade stats (00s, 10s, 20s)
   const decadeMap = { '00年代': { total: 0, years: new Set() }, '10年代': { total: 0, years: new Set() }, '20年代': { total: 0, years: new Set() } };
   
   years.forEach(y => {
-    const count = yearlyMap[y];
+    const count = yearlyMap[y] || 0;
     if (y >= 2000 && y < 2010) {
       decadeMap['00年代'].total += count;
       decadeMap['00年代'].years.add(y);
@@ -155,14 +167,15 @@ export function calculateAnalytics(records) {
   });
 
   const decadeAverages = {
-    '00年代': decadeMap['00年代'].years.size > 0 ? (decadeMap['00年代'].total / decadeMap['00年代'].years.size).toFixed(1) : 0,
-    '10年代': decadeMap['10年代'].years.size > 0 ? (decadeMap['10年代'].total / decadeMap['10年代'].years.size).toFixed(1) : 0,
-    '20年代': decadeMap['20年代'].years.size > 0 ? (decadeMap['20年代'].total / decadeMap['20年代'].years.size).toFixed(1) : 0,
+    '00年代': decadeMap['00年代'].years.size > 0 ? (decadeMap['00年代'].total / decadeMap['00年代'].years.size).toFixed(1) : '0.0',
+    '10年代': decadeMap['10年代'].years.size > 0 ? (decadeMap['10年代'].total / decadeMap['10年代'].years.size).toFixed(1) : '0.0',
+    '20年代': decadeMap['20年代'].years.size > 0 ? (decadeMap['20年代'].total / decadeMap['20年代'].years.size).toFixed(1) : '0.0',
   };
 
   // Place counts & ranking
   const placeMap = {};
   records.forEach(r => {
+    if (!r) return;
     const p = r.place || '未指定';
     placeMap[p] = (placeMap[p] || 0) + 1;
   });
@@ -173,16 +186,16 @@ export function calculateAnalytics(records) {
 
   // Monthly counts (1 to 12)
   const monthlyCounts = Array(12).fill(0);
-  records.forEach(r => {
+  validRecords.forEach(r => {
     const m = new Date(r.date).getMonth();
-    if (!isNaN(m)) monthlyCounts[m]++;
+    if (!isNaN(m) && m >= 0 && m < 12) monthlyCounts[m]++;
   });
 
   // Day of week counts (0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
   const dayOfWeekCounts = Array(7).fill(0);
-  records.forEach(r => {
+  validRecords.forEach(r => {
     const day = new Date(r.date).getDay();
-    if (!isNaN(day)) dayOfWeekCounts[day]++;
+    if (!isNaN(day) && day >= 0 && day < 7) dayOfWeekCounts[day]++;
   });
 
   // Calculate average interval in days & interval distribution groups
@@ -199,7 +212,7 @@ export function calculateAnalytics(records) {
     const prev = new Date(sorted[i - 1].date);
     const curr = new Date(sorted[i].date);
     const diffDays = Math.floor((curr - prev) / (1000 * 60 * 60 * 24));
-    if (diffDays >= 0) {
+    if (!isNaN(diffDays) && diffDays >= 0) {
       intervalSum += diffDays;
       intervalCount++;
 
@@ -217,9 +230,9 @@ export function calculateAnalytics(records) {
   const avgIntervalDays = intervalCount > 0 ? Math.round(intervalSum / intervalCount) : 0;
 
   // Next possible donation date estimation (Plasma/Platelet 2 weeks, Whole 8-12 weeks)
-  const daysSinceLatest = Math.floor((today - latestDate) / (1000 * 60 * 60 * 24));
+  const daysSinceLatest = Math.max(0, Math.floor((today - latestDate) / (1000 * 60 * 60 * 24)));
   let requiredWaitDays = 14; // default component blood
-  if (latestDonation.type === '全血') {
+  if (latestDonation && latestDonation.type === '全血') {
     requiredWaitDays = 56; // 8 weeks
   }
 
@@ -227,25 +240,34 @@ export function calculateAnalytics(records) {
   const nextAvailableDate = new Date(latestDate);
   nextAvailableDate.setDate(nextAvailableDate.getDate() + requiredWaitDays);
 
+  let formattedNextDate = latestDonation?.date || '';
+  if (!isNaN(nextAvailableDate.getTime())) {
+    try {
+      formattedNextDate = nextAvailableDate.toISOString().split('T')[0];
+    } catch (e) {
+      formattedNextDate = latestDonation?.date || '';
+    }
+  }
+
   return {
     totalCount,
-    firstDonationDate: firstDonation.date,
-    latestDonationDate: latestDonation.date,
-    elapsedYears,
-    elapsedMonths,
-    elapsedDays,
+    firstDonationDate: firstDonation?.date || '',
+    latestDonationDate: latestDonation?.date || '',
+    elapsedYears: isNaN(elapsedYears) ? 0 : elapsedYears,
+    elapsedMonths: isNaN(elapsedMonths) ? 0 : elapsedMonths,
+    elapsedDays: isNaN(elapsedDays) ? 0 : elapsedDays,
     typeCounts,
     yearlyMap,
-    yearlyAverage,
+    yearlyAverage: isNaN(yearlyAverage) ? '0.0' : yearlyAverage,
     decadeAverages,
     placeRanking,
     monthlyCounts,
     dayOfWeekCounts,
     intervalGroupCounts,
     avgIntervalDays,
-    daysSinceLatest,
-    daysUntilNext,
-    nextAvailableDate: nextAvailableDate.toISOString().split('T')[0],
+    daysSinceLatest: isNaN(daysSinceLatest) ? 0 : daysSinceLatest,
+    daysUntilNext: isNaN(daysUntilNext) ? 0 : daysUntilNext,
+    nextAvailableDate: formattedNextDate,
     isNextAvailable: daysUntilNext === 0
   };
 }
