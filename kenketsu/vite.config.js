@@ -24,6 +24,7 @@ function xmlSaverPlugin() {
                   fs.writeFileSync(rootXmlPath, body, 'utf-8');
                 }
 
+                console.log(`[XML Saver] Updated kenketsu_data.xml on disk at ${new Date().toLocaleTimeString()}`);
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({ success: true, message: 'XML saved successfully' }));

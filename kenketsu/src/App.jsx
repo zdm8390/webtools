@@ -99,22 +99,8 @@ function MainApp() {
   }, [theme]);
 
   useEffect(() => {
-    const savedRecords = localStorage.getItem('haema_records_v1');
-    if (savedRecords) {
-      try {
-        const parsed = JSON.parse(savedRecords);
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0] && parsed[0].date) {
-          setRecords(parsed);
-          setIsLoading(false);
-          return;
-        }
-      } catch (e) {
-        console.error('Failed to parse saved records', e);
-        localStorage.removeItem('haema_records_v1');
-      }
-    }
-
-    fetch('./kenketsu_data.xml')
+    // サーバー上の kenketsu_data.xml をプライマリデータ（単一の真実源）として読み込む
+    fetch(`./kenketsu_data.xml?t=${Date.now()}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.text();
@@ -125,7 +111,15 @@ function MainApp() {
         localStorage.setItem('haema_records_v1', JSON.stringify(parsedRecords));
       })
       .catch((err) => {
-        console.error('Failed to load initial XML', err);
+        console.error('サーバーのXML読み込み失敗、ローカルキャッシュにフォールバックします:', err);
+        const savedRecords = localStorage.getItem('haema_records_v1');
+        if (savedRecords) {
+          try {
+            setRecords(JSON.parse(savedRecords));
+          } catch (e) {
+            console.error('キャッシュ解析エラー:', e);
+          }
+        }
       })
       .finally(() => {
         setIsLoading(false);
