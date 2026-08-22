@@ -8,6 +8,17 @@ function xmlSaverPlugin() {
     name: 'xml-saver-plugin',
     configureServer(server) {
       server.middlewares.use('/api/save-xml', (req, res, next) => {
+        // Allow CORS for browser fetch requests
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+        if (req.method === 'OPTIONS') {
+          res.statusCode = 204;
+          res.end();
+          return;
+        }
+
         if (req.method === 'POST') {
           let body = '';
           req.setEncoding('utf8');

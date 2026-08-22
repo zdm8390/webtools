@@ -137,7 +137,7 @@ function MainApp() {
       fetch('/api/save-xml', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/xml',
+          'Content-Type': 'text/plain',
         },
         body: xmlText,
       })
