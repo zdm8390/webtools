@@ -80,10 +80,18 @@ function MainApp() {
   const [theme, setTheme] = useState(() => localStorage.getItem('haema_theme') || 'dark');
   const [records, setRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState(null);
 
   // Modals
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+
+  const showToast = (msg, type = 'success') => {
+    setToastMessage({ text: msg, type });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3500);
+  };
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -132,7 +140,7 @@ function MainApp() {
     // 自動的にXMLファイル（kenketsu_data.xml）へ書き込み保存
     try {
       const xmlText = buildXmlFromRecords(sorted);
-      fetch('./api/save-xml', {
+      fetch('/api/save-xml', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/xml',
@@ -143,9 +151,13 @@ function MainApp() {
       .then((data) => {
         if (data.success) {
           console.log('XMLファイル(kenketsu_data.xml)を更新しました');
+          showToast('✅ 記録を保存し kenketsu_data.xml に反映しました');
         }
       })
-      .catch((err) => console.error('XMLの自動保存に失敗しました:', err));
+      .catch((err) => {
+        console.error('XMLの自動保存に失敗しました:', err);
+        showToast('⚠️ kenketsu_data.xml への保存に失敗しました', 'error');
+      });
     } catch (err) {
       console.error('XML構築エラー:', err);
     }
@@ -265,6 +277,24 @@ function MainApp() {
         editingRecord={editingRecord}
         defaultPlaces={analytics ? analytics.placeRanking.map(p => p.place) : []}
       />
+
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '40px',
+          right: '24px',
+          backgroundColor: toastMessage.type === 'error' ? '#d62828' : '#10b981',
+          color: '#ffffff',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
+          fontWeight: 'bold',
+          fontSize: '0.9rem',
+          zIndex: 9999
+        }}>
+          {toastMessage.text}
+        </div>
+      )}
 
       <footer className="compact-footer">
         <span>© 2026 HaemaTrack 献血ライフマネージャー</span>

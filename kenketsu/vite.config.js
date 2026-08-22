@@ -51,7 +51,10 @@ export default defineConfig({
   base: './',
   server: {
     port: 3000,
-    open: false
+    open: false,
+    watch: {
+      ignored: ['**/kenketsu_data.xml', '**/public/kenketsu_data.xml']
+    }
   }
 })
 
