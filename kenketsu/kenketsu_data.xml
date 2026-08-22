@@ -3,7 +3,7 @@
   <meta>
     <title>献血記録データ</title>
     <author>献血管理アプリ</author>
-    <totalCount>255</totalCount>
+    <totalCount>257</totalCount>
   </meta>
   <records>
     <record id="1">
@@ -1790,6 +1790,20 @@
       <yearMonth>2026/7</yearMonth>
       <type>血漿</type>
       <place>三重（新）</place>
+    </record>
+    <record id="256">
+      <date>2026-08-08</date>
+      <year>2026</year>
+      <yearMonth>2026/8</yearMonth>
+      <type>血漿</type>
+      <place>三重（新）</place>
+    </record>
+      <record id="257">
+      <date>2026-08-22</date>
+      <year>2026</year>
+      <yearMonth>2026/8</yearMonth>
+      <type>血漿</type>
+      <place>伊勢</place>
     </record>
   </records>
 </bloodDonationData>
