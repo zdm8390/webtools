@@ -10,12 +10,14 @@ function xmlSaverPlugin() {
       server.middlewares.use('/api/save-xml', (req, res, next) => {
         if (req.method === 'POST') {
           let body = '';
+          req.setEncoding('utf8');
           req.on('data', chunk => {
-            body += chunk.toString();
+            body += chunk;
           });
           req.on('end', () => {
             try {
-              if (body) {
+              console.log(`[XML Saver Plugin] Received POST /api/save-xml request (${body.length} bytes)`);
+              if (body && body.trim().length > 0) {
                 const publicXmlPath = path.resolve(__dirname, 'public/kenketsu_data.xml');
                 fs.writeFileSync(publicXmlPath, body, 'utf-8');
 
@@ -24,19 +26,28 @@ function xmlSaverPlugin() {
                   fs.writeFileSync(rootXmlPath, body, 'utf-8');
                 }
 
-                console.log(`[XML Saver] Updated kenketsu_data.xml on disk at ${new Date().toLocaleTimeString()}`);
+                console.log(`[XML Saver Plugin] Successfully wrote ${body.length} bytes to kenketsu_data.xml at ${new Date().toLocaleTimeString()}`);
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({ success: true, message: 'XML saved successfully' }));
-                return;
+              } else {
+                console.error('[XML Saver Plugin] Error: Received empty body!');
+                res.statusCode = 400;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ success: false, error: 'Empty body received' }));
               }
             } catch (err) {
-              console.error('Error saving XML file:', err);
+              console.error('[XML Saver Plugin] File write error:', err);
               res.statusCode = 500;
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ success: false, error: err.message }));
-              return;
             }
+          });
+          req.on('error', (err) => {
+            console.error('[XML Saver Plugin] Request error:', err);
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: false, error: err.message }));
           });
         } else {
           next();
