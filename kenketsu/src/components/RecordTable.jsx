@@ -87,8 +87,11 @@ export default function RecordTable({ records, onOpenAddModal, onOpenEditModal, 
         <div className="search-box">
           <Search size={18} className="search-icon" />
           <input
+            id="table-search-input"
+            name="searchTerm"
             type="text"
             placeholder="日付、場所、種別、メモで検索..."
+            aria-label="献血記録の検索"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
@@ -98,6 +101,9 @@ export default function RecordTable({ records, onOpenAddModal, onOpenEditModal, 
           {/* Year Filter */}
           <div className="filter-item">
             <select
+              id="filter-year-select"
+              name="selectedYear"
+              aria-label="年で絞り込み"
               value={selectedYear}
               onChange={(e) => { setSelectedYear(e.target.value); setCurrentPage(1); }}
             >
@@ -111,6 +117,9 @@ export default function RecordTable({ records, onOpenAddModal, onOpenEditModal, 
           {/* Type Filter */}
           <div className="filter-item">
             <select
+              id="filter-type-select"
+              name="selectedType"
+              aria-label="献血種別で絞り込み"
               value={selectedType}
               onChange={(e) => { setSelectedType(e.target.value); setCurrentPage(1); }}
             >
@@ -124,6 +133,9 @@ export default function RecordTable({ records, onOpenAddModal, onOpenEditModal, 
           {/* Place Filter */}
           <div className="filter-item">
             <select
+              id="filter-place-select"
+              name="selectedPlace"
+              aria-label="献血場所で絞り込み"
               value={selectedPlace}
               onChange={(e) => { setSelectedPlace(e.target.value); setCurrentPage(1); }}
             >

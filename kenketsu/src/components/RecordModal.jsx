@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Calendar, MapPin, Heart, FileText, CheckCircle } from 'lucide-react';
 
 export default function RecordModal({ isOpen, onClose, onSave, editingRecord, defaultPlaces = [] }) {
@@ -7,7 +7,9 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
     '四日市', 'センタープラザ', '阪急グランドビル', '姫路', '大阪府', '福井'
   ];
 
-  const allPlaces = Array.from(new Set([...presetPlaces, ...defaultPlaces])).filter(Boolean).sort();
+  const allPlaces = useMemo(() => {
+    return Array.from(new Set([...presetPlaces, ...defaultPlaces])).filter(Boolean).sort();
+  }, [defaultPlaces]);
 
   const [formData, setFormData] = useState({
     id: '',
@@ -18,37 +20,51 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
   });
 
   const [isCustomPlace, setIsCustomPlace] = useState(false);
+  const [customPlaceText, setCustomPlaceText] = useState('');
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (editingRecord) {
-      const placeVal = editingRecord.place || (allPlaces[0] || 'ミント');
-      const isCustom = placeVal ? !allPlaces.includes(placeVal) : false;
+      const p = editingRecord.place || 'ミント';
+      const isCustom = !allPlaces.includes(p);
       setIsCustomPlace(isCustom);
+      if (isCustom) {
+        setCustomPlaceText(p);
+      } else {
+        setCustomPlaceText('');
+      }
+
       setFormData({
         id: editingRecord.id,
         date: editingRecord.date || new Date().toISOString().split('T')[0],
         type: editingRecord.type || '血漿',
-        place: placeVal,
+        place: p,
         memo: editingRecord.memo || ''
       });
     } else {
       setIsCustomPlace(false);
+      setCustomPlaceText('');
+      const defaultPlace = allPlaces.includes('ミント') ? 'ミント' : (allPlaces[0] || 'ミント');
       setFormData({
         id: '',
         date: new Date().toISOString().split('T')[0],
         type: '血漿',
-        place: allPlaces.includes('ミント') ? 'ミント' : (allPlaces[0] || ''),
+        place: defaultPlace,
         memo: ''
       });
     }
-  }, [editingRecord, isOpen]);
+  }, [editingRecord, isOpen, allPlaces]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.date || !formData.type || !formData.place) {
-      alert('日付、種別、場所を入力してください。');
+
+    const finalPlace = isCustomPlace ? customPlaceText.trim() : formData.place;
+
+    if (!formData.date || !formData.type || !finalPlace) {
+      alert('日付、種別、献血場所を入力してください。');
       return;
     }
 
@@ -58,6 +74,7 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
 
     onSave({
       ...formData,
+      place: finalPlace,
       year,
       yearMonth
     });
@@ -70,17 +87,19 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
       <div className="modal-content glass-panel">
         <div className="modal-header">
           <h3>{editingRecord ? '献血記録の編集' : '新規献血記録の登録'}</h3>
-          <button className="close-btn" onClick={onClose}>
+          <button type="button" className="close-btn" onClick={onClose} aria-label="閉じる">
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label>
+            <label htmlFor="donation-date">
               <Calendar size={16} /> 献血実施日 *
             </label>
             <input
+              id="donation-date"
+              name="date"
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -89,13 +108,14 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
           </div>
 
           <div className="form-group">
-            <label>
+            <label id="donation-type-label">
               <Heart size={16} /> 献血種別 *
             </label>
-            <div className="type-radio-group">
-              {['血漿', '血小板', '全血'].map((t) => (
-                <label key={t} className={`type-radio-btn ${formData.type === t ? 'active' : ''}`}>
+            <div className="type-radio-group" role="radiogroup" aria-labelledby="donation-type-label">
+              {['血漿', '血小板', '全血'].map((t, idx) => (
+                <label key={t} htmlFor={`donation-type-${idx}`} className={`type-radio-btn ${formData.type === t ? 'active' : ''}`}>
                   <input
+                    id={`donation-type-${idx}`}
                     type="radio"
                     name="donationType"
                     value={t}
@@ -109,25 +129,24 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
           </div>
 
           <div className="form-group">
-            <label>
+            <label htmlFor="donation-place">
               <MapPin size={16} /> 献血場所 / ルーム名 *
             </label>
             <select
+              id="donation-place"
+              name="place"
               value={isCustomPlace ? 'custom' : formData.place}
               onChange={(e) => {
                 const val = e.target.value;
                 if (val === 'custom') {
                   setIsCustomPlace(true);
-                  setFormData({ ...formData, place: '' });
                 } else {
                   setIsCustomPlace(false);
                   setFormData({ ...formData, place: val });
                 }
               }}
               className="select-input"
-              required={!isCustomPlace}
             >
-              <option value="" disabled>場所を選択してください</option>
               {allPlaces.map((p) => (
                 <option key={p} value={p}>{p}</option>
               ))}
@@ -136,10 +155,12 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
 
             {isCustomPlace && (
               <input
+                id="donation-place-custom"
+                name="customPlace"
                 type="text"
-                value={formData.place}
-                onChange={(e) => setFormData({ ...formData, place: e.target.value })}
-                placeholder="新しい献血場所の名前を入力"
+                value={customPlaceText}
+                onChange={(e) => setCustomPlaceText(e.target.value)}
+                placeholder="新しい献血場所の名前を入力してください"
                 style={{ marginTop: '8px' }}
                 required
               />
@@ -147,10 +168,12 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
           </div>
 
           <div className="form-group">
-            <label>
+            <label htmlFor="donation-memo">
               <FileText size={16} /> メモ・成分データ・体調等
             </label>
             <textarea
+              id="donation-memo"
+              name="memo"
               rows={3}
               value={formData.memo}
               onChange={(e) => setFormData({ ...formData, memo: e.target.value })}
@@ -172,4 +195,3 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
     </div>
   );
 }
-

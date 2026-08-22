@@ -92,10 +92,18 @@ export default function XmlManager({ records, onImportRecords, onResetToInitial 
             </div>
           </div>
           <div className="action-card-body">
-            <label className="btn btn-secondary btn-lg w-full file-upload-label">
+            <label htmlFor="xml-file-input" className="btn btn-secondary btn-lg w-full file-upload-label">
               <Upload size={18} />
               <span>XMLファイルを選択して読み込む</span>
-              <input type="file" accept=".xml" onChange={handleFileUpload} style={{ display: 'none' }} />
+              <input
+                id="xml-file-input"
+                name="xmlFile"
+                type="file"
+                accept=".xml"
+                aria-label="XMLファイルを選択して読み込み"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
             </label>
           </div>
         </div>
