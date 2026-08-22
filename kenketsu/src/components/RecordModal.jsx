@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { X, Calendar, MapPin, Heart, FileText, CheckCircle } from 'lucide-react';
 
 export default function RecordModal({ isOpen, onClose, onSave, editingRecord, defaultPlaces = [] }) {
+  const presetPlaces = [
+    'ミント', 'にしきた', '三重（新）', '明石', 'さんさん', '伊勢',
+    '四日市', 'センタープラザ', '阪急グランドビル', '姫路', '大阪府', '福井'
+  ];
+
+  const allPlaces = Array.from(new Set([...presetPlaces, ...defaultPlaces])).filter(Boolean).sort();
+
   const [formData, setFormData] = useState({
     id: '',
     date: new Date().toISOString().split('T')[0],
@@ -10,28 +17,27 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
     memo: ''
   });
 
-  const presetPlaces = [
-    'ミント', 'にしきた', '三重（新）', '明石', 'さんさん', '伊勢',
-    '四日市', 'センタープラザ', '阪急グランドビル', '姫路', '大阪府', '福井'
-  ];
-
-  const allPlaces = Array.from(new Set([...presetPlaces, ...defaultPlaces])).sort();
+  const [isCustomPlace, setIsCustomPlace] = useState(false);
 
   useEffect(() => {
     if (editingRecord) {
+      const placeVal = editingRecord.place || (allPlaces[0] || 'ミント');
+      const isCustom = placeVal ? !allPlaces.includes(placeVal) : false;
+      setIsCustomPlace(isCustom);
       setFormData({
         id: editingRecord.id,
         date: editingRecord.date || new Date().toISOString().split('T')[0],
         type: editingRecord.type || '血漿',
-        place: editingRecord.place || 'ミント',
+        place: placeVal,
         memo: editingRecord.memo || ''
       });
     } else {
+      setIsCustomPlace(false);
       setFormData({
         id: '',
         date: new Date().toISOString().split('T')[0],
         type: '血漿',
-        place: 'ミント',
+        place: allPlaces.includes('ミント') ? 'ミント' : (allPlaces[0] || ''),
         memo: ''
       });
     }
@@ -106,19 +112,38 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
             <label>
               <MapPin size={16} /> 献血場所 / ルーム名 *
             </label>
-            <input
-              type="text"
-              list="place-suggestions"
-              value={formData.place}
-              onChange={(e) => setFormData({ ...formData, place: e.target.value })}
-              placeholder="場所を入力または選択"
-              required
-            />
-            <datalist id="place-suggestions">
+            <select
+              value={isCustomPlace ? 'custom' : formData.place}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === 'custom') {
+                  setIsCustomPlace(true);
+                  setFormData({ ...formData, place: '' });
+                } else {
+                  setIsCustomPlace(false);
+                  setFormData({ ...formData, place: val });
+                }
+              }}
+              className="select-input"
+              required={!isCustomPlace}
+            >
+              <option value="" disabled>場所を選択してください</option>
               {allPlaces.map((p) => (
-                <option key={p} value={p} />
+                <option key={p} value={p}>{p}</option>
               ))}
-            </datalist>
+              <option value="custom">✏️ + 新しい場所を直接入力...</option>
+            </select>
+
+            {isCustomPlace && (
+              <input
+                type="text"
+                value={formData.place}
+                onChange={(e) => setFormData({ ...formData, place: e.target.value })}
+                placeholder="新しい献血場所の名前を入力"
+                style={{ marginTop: '8px' }}
+                required
+              />
+            )}
           </div>
 
           <div className="form-group">
@@ -147,3 +172,4 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
     </div>
   );
 }
+

@@ -128,6 +128,27 @@ function MainApp() {
     const sorted = [...newRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
     setRecords(sorted);
     localStorage.setItem('haema_records_v1', JSON.stringify(sorted));
+
+    // 自動的にXMLファイル（kenketsu_data.xml）へ書き込み保存
+    try {
+      const xmlText = buildXmlFromRecords(sorted);
+      fetch('./api/save-xml', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/xml',
+        },
+        body: xmlText,
+      })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          console.log('XMLファイル(kenketsu_data.xml)を更新しました');
+        }
+      })
+      .catch((err) => console.error('XMLの自動保存に失敗しました:', err));
+    } catch (err) {
+      console.error('XML構築エラー:', err);
+    }
   };
 
   const analytics = useMemo(() => calculateAnalytics(records), [records]);
