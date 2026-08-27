@@ -1,116 +1,1291 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webtools Portal - オンラインゲーム＆便利ツール集</title>
+    <title>Webtools Portal | オンラインゲーム・AI・実用Webツールコレクション</title>
+    <meta name="description" content="日常をちょっと楽しく・便利にするWebツール＆ゲームの総合コレクションポータル。本格アクションゲームからAIチャット、テキスト処理、学術・NDL検索ツールまで完全無料・登録不要で利用可能！">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@700;900&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #fbf9f5;
-            --card-bg: #fffdfa;
-            --text-dark: #1c1917;
-            --washi-navy: #1e1b4b;
-            --washi-vermilion: #c2410c;
-            --washi-gold: #b45309;
+            --font-sans: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-display: 'Shippori Mincho', 'Noto Sans JP', serif;
+            
+            --bg-base: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-surface-elevated: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --bg-hover: #f1f5f9;
+            
+            --border-subtle: #e2e8f0;
+            --border-focus: #3b82f6;
+            
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --text-inverse: #ffffff;
+            
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --primary-hover: #1d4ed8;
+            
+            --accent-hot: #ef4444;
+            --accent-gold: #d97706;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+            --shadow-hover: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            
+            --card-radius: 16px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        [data-theme="dark"] {
+            --bg-base: #090d16;
+            --bg-surface: #111827;
+            --bg-surface-elevated: #1e293b;
+            --bg-subtle: #1f293d;
+            --bg-hover: #27354f;
+            
+            --border-subtle: #1e293b;
+            --border-focus: #60a5fa;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-inverse: #090d16;
+            
+            --primary: #3b82f6;
+            --primary-light: rgba(59, 130, 246, 0.15);
+            --primary-hover: #60a5fa;
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+            --shadow-hover: 0 20px 25px -5px rgb(0 0 0 / 0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: 'Shippori Mincho', serif;
-            background-color: var(--bg-color);
-            background-image: repeating-linear-gradient(45deg, rgba(180, 83, 9, 0.03) 0, rgba(180, 83, 9, 0.03) 12px, transparent 12px, transparent 24px);
-            color: var(--text-dark);
+            font-family: var(--font-sans);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
             min-height: 100vh;
+            line-height: 1.6;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 24px 16px;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(217, 119, 6, 0.04) 0px, transparent 50%);
+            background-attachment: fixed;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
-        header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        h1 {
-            font-size: 2.2rem;
-            color: var(--washi-navy);
-            margin-bottom: 8px;
-            font-weight: 900;
-        }
-        p.sub {
-            font-family: 'Zen Maru Gothic', sans-serif;
-            color: var(--washi-vermilion);
-            font-size: 1rem;
-            font-weight: 700;
-        }
-        .portal-grid {
+
+        /* ── Header ── */
+        .site-header {
             width: 100%;
-            max-width: 800px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: var(--transition);
         }
-        .card {
-            background: var(--card-bg);
-            border: 2.5px solid var(--washi-navy);
-            border-radius: 18px;
-            padding: 20px;
+        [data-theme="dark"] .site-header {
+            background-color: rgba(9, 13, 22, 0.85);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             text-decoration: none;
             color: inherit;
-            box-shadow: 0 6px 16px rgba(30, 27, 75, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .brand-logo {
+            font-size: 1.8rem;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .brand-text h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #1e1b4b 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        [data-theme="dark"] .brand-text h1 {
+            background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle-btn, .github-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            border-radius: 9999px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+            gap: 6px;
+        }
+        .theme-toggle-btn:hover, .github-link:hover {
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+            border-color: var(--primary);
+        }
+
+        /* ── Hero ── */
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px 24px;
+            text-align: center;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 4px 14px;
+            border-radius: 9999px;
+            font-size: 0.825rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 2.75rem);
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
+        }
+
+        .hero-desc {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 680px;
+            margin: 0 auto 28px;
+        }
+
+        /* ── Controls: Search & Tabs ── */
+        .controls-container {
+            max-width: 1200px;
+            margin: 0 auto 32px;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .search-box-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 46px;
+            border-radius: 9999px;
+            border: 1.5px solid var(--border-subtle);
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: var(--font-sans);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 1.1rem;
+        }
+
+        .search-clear-btn {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px;
+            display: none;
+            border-radius: 50%;
+        }
+        .search-clear-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tab-btn:hover {
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        .tab-count {
+            font-size: 0.75rem;
+            padding: 2px 7px;
+            border-radius: 9999px;
+            background: rgba(0, 0, 0, 0.08);
+        }
+        .tab-btn.active .tab-count {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        /* ── Grid & Cards ── */
+        .portal-main {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+            flex: 1;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            padding: 0 4px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 22px;
+        }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1.5px solid var(--border-subtle);
+            border-radius: var(--card-radius);
+            padding: 24px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, transparent);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
+        }
+
+        .card:hover::before {
+            background: linear-gradient(90deg, var(--primary), #8b5cf6);
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .card-icon-wrap {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--bg-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            border: 1px solid var(--border-subtle);
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .card:hover .card-icon-wrap {
+            transform: scale(1.08) rotate(3deg);
+            background: var(--primary-light);
+        }
+
+        .card-badges {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .badge-hot {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+        [data-theme="dark"] .badge-hot {
+            background: rgba(220, 38, 38, 0.2);
+            color: #f87171;
+            border-color: rgba(220, 38, 38, 0.4);
+        }
+
+        .badge-popular {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fcd34d;
+        }
+        [data-theme="dark"] .badge-popular {
+            background: rgba(217, 119, 6, 0.2);
+            color: #fbbf24;
+            border-color: rgba(217, 119, 6, 0.4);
+        }
+
+        .badge-api {
+            background: #e0e7ff;
+            color: #4338ca;
+            border: 1px solid #c7d2fe;
+        }
+        [data-theme="dark"] .badge-api {
+            background: rgba(79, 70, 229, 0.2);
+            color: #a5b4fc;
+            border-color: rgba(79, 70, 229, 0.4);
+        }
+
+        .badge-category {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-subtle);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1.35;
+            letter-spacing: -0.01em;
+            transition: var(--transition);
+        }
+        .card:hover .card-title {
+            color: var(--primary);
+        }
+
+        .card-desc {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin-bottom: 16px;
+            flex-grow: 1;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .tag-pill {
+            font-size: 0.72rem;
+            background: var(--bg-subtle);
+            color: var(--text-muted);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 500;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .card-footer-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-subtle);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .action-arrow {
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+        .card:hover .action-arrow {
+            transform: translateX(4px);
+        }
+
+        /* ── Empty State ── */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--bg-surface);
+            border-radius: var(--card-radius);
+            border: 1px dashed var(--border-subtle);
+            display: none;
+        }
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .empty-state p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* ── Footer ── */
+        .site-footer {
+            border-top: 1px solid var(--border-subtle);
+            background: var(--bg-surface);
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: auto;
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            align-items: center;
         }
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 24px rgba(194, 65, 12, 0.2);
-            border-color: var(--washi-vermilion);
+        .footer-links {
+            display: flex;
+            gap: 16px;
+            list-style: none;
         }
-        .card-tag {
-            display: inline-block;
-            background: var(--washi-gold);
-            color: #fff;
-            padding: 2px 10px;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            font-family: 'Zen Maru Gothic', sans-serif;
-            align-self: flex-start;
-            font-weight: 900;
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition);
         }
-        .card-title {
-            font-size: 1.4rem;
-            color: var(--washi-navy);
-            font-weight: 900;
+        .footer-links a:hover {
+            color: var(--primary);
+            text-decoration: underline;
         }
-        .card-desc {
-            font-size: 0.9rem;
-            color: #57534e;
-            font-family: 'Zen Maru Gothic', sans-serif;
-            line-height: 1.5;
-            font-weight: 700;
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .hero {
+                padding: 24px 16px 16px;
+            }
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            .category-tabs {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 4px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .tab-btn {
+                white-space: nowrap;
+                padding: 6px 12px;
+                font-size: 0.82rem;
+            }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>🏯 Webtools ゲームポータル</h1>
-        <p class="sub">本格和風アクション・超音速スモウバトル公開中！</p>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="./" class="brand">
+                <span class="brand-logo">🧰</span>
+                <div class="brand-text">
+                    <h1>Webtools Portal</h1>
+                    <p>オンラインWebツール＆ゲームコレクション</p>
+                </div>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="テーマ切り替え">
+                    <span id="themeIcon">🌙</span>
+                    <span id="themeLabel">ダーク</span>
+                </button>
+                <a href="https://github.com/zdm8390/webtools" target="_blank" rel="noopener noreferrer" class="github-link" aria-label="GitHub Repository">
+                    <span>GitHub</span>
+                    <span>↗</span>
+                </a>
+            </div>
+        </div>
     </header>
 
-    <main class="portal-grid">
-        <a href="sumo-battle/" class="card">
-            <span class="card-tag">NEW 🔥 本格和風アクション</span>
-            <h2 class="card-title">超音速スモウバトル ～ちゃんこ食わんかい～</h2>
-            <p class="card-desc">360°全方向自由移動＆塩弾ジャストパリィ！主人公エドモーンドで敵の卑怯な塩飛び道具を打ち返し、全6ランク最速完走と最高称号『超音速神横綱』を目指せ！</p>
-        </a>
-        <a href="kenketsu/" class="card">
-            <span class="card-tag">🩸 献血記録・データ分析</span>
-            <h2 class="card-title">献血ライフマネージャー</h2>
-            <p class="card-desc">献血記録（XML管理・255件超データ対応）・グラフィカル統計分析・次回献血可能日カウントダウン・データ登録／編集が可能なモダンWebツール！</p>
-        </a>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-badge">✨ 全ツール無料・登録不要・即実行可能</div>
+        <h2 class="hero-title">日常をちょっと楽しく、便利にするツール集</h2>
+        <p class="hero-desc">爽快アーケードゲームからAIチャットボット、テキスト高速処理、国会議事録・NDL学術検索ツールまで多彩にラインナップ！</p>
+    </section>
+
+    <!-- Controls: Search & Categories -->
+    <section class="controls-container">
+        <div class="search-box-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" class="search-input" placeholder="ツール名、キーワード、機能で検索..." autocomplete="off" spellcheck="false">
+            <button id="searchClearBtn" class="search-clear-btn" aria-label="検索クリア">✕</button>
+        </div>
+
+        <nav class="category-tabs" id="categoryTabs" aria-label="カテゴリ選択">
+            <button class="tab-btn active" data-category="all">
+                <span>🌟 すべて</span>
+                <span class="tab-count" id="countAll">21</span>
+            </button>
+            <button class="tab-btn" data-category="game">
+                <span>🎮 ゲーム・エンタメ</span>
+                <span class="tab-count" id="countGame">6</span>
+            </button>
+            <button class="tab-btn" data-category="ai-fun">
+                <span>🤖 AI・面白ツール</span>
+                <span class="tab-count" id="countAiFun">6</span>
+            </button>
+            <button class="tab-btn" data-category="productivity">
+                <span>🛠️ 実用・テキスト</span>
+                <span class="tab-count" id="countProductivity">5</span>
+            </button>
+            <button class="tab-btn" data-category="research">
+                <span>📚 調査・図書館・研究</span>
+                <span class="tab-count" id="countResearch">4</span>
+            </button>
+        </nav>
+    </section>
+
+    <!-- Main Content: Cards Grid -->
+    <main class="portal-main">
+        <div class="status-bar">
+            <span id="resultCountLabel">表示中: 21 件</span>
+            <span id="filterStatusLabel">すべてのツール</span>
+        </div>
+
+        <div class="grid-container" id="toolsGrid">
+
+            <!-- 1. 超音速スモウバトル -->
+            <a href="sumo-battle/" class="card" data-category="game" data-keywords="超音速スモウバトル 相撲 sumo ちゃんこ食わんかい アクション パリィ ゲーム 和風 エドモーンド アーケード">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🥋</div>
+                    <div class="card-badges">
+                        <span class="badge badge-hot">HOT 🔥</span>
+                        <span class="badge-category">ゲーム</span>
+                    </div>
+                </div>
+                <h3 class="card-title">超音速スモウバトル ～ちゃんこ食わんかい～</h3>
+                <p class="card-desc">360°全方向自由移動＆塩弾ジャストパリィ！主人公エドモーンドで敵の卑怯な塩飛び道具を打ち返し、全6ランク最速完走と最高称号『超音速神横綱』を目指せ！</p>
+                <div class="card-tags">
+                    <span class="tag-pill">アーケードアクション</span>
+                    <span class="tag-pill">ジャストパリィ</span>
+                    <span class="tag-pill">360°バトル</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>今すぐプレイ</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 2. 10分サバイバーズ -->
+            <a href="10min-sv/" class="card" data-category="game" data-keywords="10分サバイバーズ 10-Minute Survivors ローグライク サバイバー 迷宮 脱出 アクション">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">⏱️</div>
+                    <div class="card-badges">
+                        <span class="badge badge-popular">POPULAR ⭐</span>
+                        <span class="badge-category">ゲーム</span>
+                    </div>
+                </div>
+                <h3 class="card-title">10分サバイバーズ (10-Minute Survivors)</h3>
+                <p class="card-desc">制限時間10分！迷宮ダンジョンを探索し、四方から迫る敵をなぎ倒して出口ポータルから脱出せよ！武器進化とスキルビルドが熱い見下ろし型サバイバーアクション。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">ローグライク</span>
+                    <span class="tag-pill">サバイバー</span>
+                    <span class="tag-pill">ダンジョン探索</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>今すぐプレイ</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 3. エレメンタル・フュージョン -->
+            <a href="element-chain/" class="card" data-category="game" data-keywords="エレメンタル・フュージョン 属性宝珠合体落ち物パズル パズル スイカゲーム 連鎖 神玉">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🔮</div>
+                    <div class="card-badges">
+                        <span class="badge-category">ゲーム</span>
+                    </div>
+                </div>
+                <h3 class="card-title">エレメンタル・フュージョン</h3>
+                <p class="card-desc">同種の魔法エレメントを隣り合わせ、神秘の精霊宝珠へとシンカ（合体）させよ！連鎖コンボを繋げて最高位『創世の神玉』を目指す本格属性落ち物パズル。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">落ち物パズル</span>
+                    <span class="tag-pill">シンカ・合体</span>
+                    <span class="tag-pill">連鎖コンボ</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>今すぐプレイ</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 4. テトリスン -->
+            <a href="tetris-versus/" class="card" data-category="game" data-keywords="テトリスン Tetrisun パステル対戦パズル テトリス 対戦 キャラクター 魔法">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🐱</div>
+                    <div class="card-badges">
+                        <span class="badge-category">ゲーム</span>
+                    </div>
+                </div>
+                <h3 class="card-title">テトリスン (Tetrisun)</h3>
+                <p class="card-desc">パステルカラーの可愛い魔法動物たちが対戦するポップな対戦型テトリスゲーム！独自魔法ルーレット、ストーリーモード、オンライン乱入対応。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">対戦パズル</span>
+                    <span class="tag-pill">ストーリーモード</span>
+                    <span class="tag-pill">魔法スキル</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>今すぐプレイ</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 5. Urban Breaker 3D -->
+            <a href="local-gamepad-game/" class="card" data-category="game" data-keywords="Urban Breaker 3D 街中破壊格闘ゲーム 3D 格闘 ゲームパッド コントローラー TPS">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🏙️</div>
+                    <div class="card-badges">
+                        <span class="badge-category">ゲーム</span>
+                    </div>
+                </div>
+                <h3 class="card-title">Urban Breaker 3D (街中破壊格闘)</h3>
+                <p class="card-desc">ゲームパッドコントローラー完全対応！三人称視点（TPS）で街中を暴れ回りオブジェクトを破壊し尽くすリアルタイム3D格闘アクションゲーム。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">3Dアクション</span>
+                    <span class="tag-pill">ゲームパッド対応</span>
+                    <span class="tag-pill">街中破壊</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>今すぐプレイ</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 6. HAPPY PRICE PARADISE シミュレーター -->
+            <a href="happy-price-paradise/" class="card" data-category="game" data-keywords="HAPPY PRICE PARADISE ハッピープライスパラダイス ダイソー 歌詞 ルーレット 確率 モンテカルロ シミュレーター ネタ">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🛒</div>
+                    <div class="card-badges">
+                        <span class="badge-category">シミュレーター</span>
+                    </div>
+                </div>
+                <h3 class="card-title">HAPPY PRICE PARADISE シミュレーター</h3>
+                <p class="card-desc">ダイソーの名曲「ハッピープライスパラダイス」の歌詞構造を完全再現するまでに何回ルーレットを回す必要があるかをリアルタイム実況＆超高速モンテカルロシミュレーション！</p>
+                <div class="card-tags">
+                    <span class="tag-pill">歌詞ルーレット</span>
+                    <span class="tag-pill">確率シミュレーション</span>
+                    <span class="tag-pill">実況ボイス</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>今すぐシミュレート</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 7. 熱叫肯定AI サンボット -->
+            <a href="sambot/" class="card" data-category="ai-fun" data-keywords="熱叫肯定AI サンボット サンボマスター AI チャット 全肯定 励まし ロック">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🎸</div>
+                    <div class="card-badges">
+                        <span class="badge badge-hot">HOT 🔥</span>
+                        <span class="badge-category">AI・ネタ</span>
+                    </div>
+                </div>
+                <h3 class="card-title">熱叫肯定AI サンボット</h3>
+                <p class="card-desc">すべてを愛とロックの叫びで全肯定するAI！サンボマスター山口さんのような熱い魂のMC口調であなたを全力で励まし、勇気と元気をチャージします。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">AIチャット</span>
+                    <span class="tag-pill">全肯定</span>
+                    <span class="tag-pill">熱血MC</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>熱く会話する</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 8. AIフレンド ココロン -->
+            <a href="cocoron/" class="card" data-category="ai-fun" data-keywords="AIフレンド ココロン AI チャット メンタル 愚痴 癒やし 肯定">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🌸</div>
+                    <div class="card-badges">
+                        <span class="badge-category">AI・ネタ</span>
+                    </div>
+                </div>
+                <h3 class="card-title">AIフレンド ココロン</h3>
+                <p class="card-desc">何でも肯定し、優しく寄り添うAIフレンド。日々のストレスや愚痴、ちょっとした呟きを聞いて優しく包み込んでくれる癒やしのパートナー。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">AIチャット</span>
+                    <span class="tag-pill">メンタルケア</span>
+                    <span class="tag-pill">癒やし系</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>ココロンとお話し</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 9. ShitCommit.js -->
+            <a href="CCG/dist/" class="card" data-category="ai-fun" data-keywords="ShitCommit.js クレイジーコミットメッセージジェネレーター Git コミット ミーム 村上春樹 ネタ">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">💩</div>
+                    <div class="card-badges">
+                        <span class="badge-category">AI・ネタ</span>
+                    </div>
+                </div>
+                <h3 class="card-title">ShitCommit.js</h3>
+                <p class="card-desc">真面目なGitコミットメッセージをネットミーム、村上春樹、パプリカ、サンボマスター風のクレイジーな文章に一瞬で変換する開発者向けネタWebツール。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">コミット生成</span>
+                    <span class="tag-pill">文体変換</span>
+                    <span class="tag-pill">ネットミーム</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>コミットを変換</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 10. Chime-Out Radar -->
+            <a href="ChimeOut/dist/" class="card" data-category="ai-fun" data-keywords="Chime-Out Radar 不穏空気検知システム 会議 レーダー ネタ ジョーク">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🚨</div>
+                    <div class="card-badges">
+                        <span class="badge-category">AI・ネタ</span>
+                    </div>
+                </div>
+                <h3 class="card-title">Chime-Out Radar (不穏空気検知)</h3>
+                <p class="card-desc">会議やチャットの不穏な空気を検知してピンチを切り抜ける！？ユーモラスな不穏空気レーダー＆アラートシステム。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">不穏空気検知</span>
+                    <span class="tag-pill">会議サポート(?)</span>
+                    <span class="tag-pill">ジョークツール</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>レーダー起動</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 11. E. HONDA CIPHER -->
+            <a href="honda-cipher/" class="card" data-category="ai-fun" data-keywords="E. HONDA CIPHER エドモンド本田 可逆暗号通信機 暗号 暗号化 復号 ストリートファイター">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">✋</div>
+                    <div class="card-badges">
+                        <span class="badge-category">AI・ネタ</span>
+                    </div>
+                </div>
+                <h3 class="card-title">E. HONDA CIPHER (本田可逆暗号)</h3>
+                <p class="card-desc">エドモンド本田モチーフの100%可逆暗号通信アプリ。テキストを「ホンダ」「ドスコーイ」「百裂張り手」などの暗号文へ相互可逆変換（エンコード／デコード）します。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">完全可逆暗号</span>
+                    <span class="tag-pill">本田ボイス暗号</span>
+                    <span class="tag-pill">秘密通信</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>暗号化・復号する</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 12. E. HONDAFY -->
+            <a href="hondafy/" class="card" data-category="ai-fun" data-keywords="E. HONDAFY ストリートファイター エドモンド本田 変換器 テキスト変換 相撲">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🍲</div>
+                    <div class="card-badges">
+                        <span class="badge-category">AI・ネタ</span>
+                    </div>
+                </div>
+                <h3 class="card-title">E. HONDAFY (エドモンド本田 変換器)</h3>
+                <p class="card-desc">あらゆるテキストを「ホンダ」と「ドスコーイ」「百貫落としじゃーい」「百裂張り手じゃい！」などの名フレーズに変換するE. HONDAFY超次元相撲アタッチメント。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">テキスト変換</span>
+                    <span class="tag-pill">相撲構文</span>
+                    <span class="tag-pill">エドモンド本田</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>ホンダ化する</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 13. 文字数カウンタースタジオ -->
+            <a href="char-counter/" class="card" data-category="productivity" data-keywords="文字数カウンタースタジオ Char Counter Studio 文字数 カウント 原稿用紙 読了時間 テキスト">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">📝</div>
+                    <div class="card-badges">
+                        <span class="badge badge-popular">CONVENIENT 💡</span>
+                        <span class="badge-category">実用</span>
+                    </div>
+                </div>
+                <h3 class="card-title">文字数カウンタースタジオ</h3>
+                <p class="card-desc">貼り付け＆ファイルアップロード対応の高速リアルタイム文字数計測！空白・改行の除外、原稿用紙枚数換算、読了時間目安をワンクリックで瞬時に計測。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">文字数リアルタイム計測</span>
+                    <span class="tag-pill">原稿用紙換算</span>
+                    <span class="tag-pill">読了時間目安</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>ツールを開く</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 14. Text Diff Studio -->
+            <a href="text-diff/" class="card" data-category="productivity" data-keywords="Text Diff Studio テキスト差分比較 Diff 差分比較 比較 テキスト コード">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🔀</div>
+                    <div class="card-badges">
+                        <span class="badge-category">実用</span>
+                    </div>
+                </div>
+                <h3 class="card-title">Text Diff Studio (テキスト差分比較)</h3>
+                <p class="card-desc">2つのテキストをコピペして「比較実行」を押すだけ！行単位・文字単位の変更差分をカラーハイライト表示する高速Web Diffツール。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">高速Diff</span>
+                    <span class="tag-pill">行・文字単位比較</span>
+                    <span class="tag-pill">コピペ対応</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>差分を比較</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 15. 和暦・西暦 年号変換 ＆ 歴史ニュース年表 -->
+            <a href="wareki-converter/" class="card" data-category="productivity" data-keywords="和暦 西暦 年号変換 歴史ニュース年表 Wareki Chronicle 令和 平成 昭和 大正 明治 干支 年齢 年表">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">📅</div>
+                    <div class="card-badges">
+                        <span class="badge-category">実用</span>
+                    </div>
+                </div>
+                <h3 class="card-title">和暦・西暦 変換 ＆ 歴史ニュース年表</h3>
+                <p class="card-desc">西暦↔和暦（令和・平成・昭和・大正・明治）の爆速相互変換！干支・年齢計算に加え、その年に起こった重大ニュースや歴史的出来事を年表で一覧表示！</p>
+                <div class="card-tags">
+                    <span class="tag-pill">和暦・西暦相互変換</span>
+                    <span class="tag-pill">年齢・干支計算</span>
+                    <span class="tag-pill">歴史ニュース年表</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>年号を変換</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 16. Flowchart Studio -->
+            <a href="flowchart/" class="card" data-category="productivity" data-keywords="Flowchart Studio フローチャート作成ツール フローチャート 作図 ダイアグラム マインドマップ">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">📊</div>
+                    <div class="card-badges">
+                        <span class="badge-category">実用</span>
+                    </div>
+                </div>
+                <h3 class="card-title">Flowchart Studio (フローチャート作成)</h3>
+                <p class="card-desc">マウスクリック＆ドラッグで自由自在に美しく作成できるWebベースのフローチャート構築ツール。ノード追加、矢印接続、エクスポート対応。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">作図エディタ</span>
+                    <span class="tag-pill">直感ドラッグ操作</span>
+                    <span class="tag-pill">図形エクスポート</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>図を作成する</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 17. チーム戦メイカー -->
+            <a href="teams/" class="card" data-category="productivity" data-keywords="チーム戦メイカー チーム分け ランダム 抽選 共有 URL">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">👥</div>
+                    <div class="card-badges">
+                        <span class="badge-category">実用</span>
+                    </div>
+                </div>
+                <h3 class="card-title">チーム戦メイカー</h3>
+                <p class="card-desc">参加メンバーの名前を入力するだけでランダムに2チームに自動振り分け！URL共有機能付きで、LINEやDiscordなどのグループに結果をワンクリック送信。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">ランダムチーム分け</span>
+                    <span class="tag-pill">人数比率調整</span>
+                    <span class="tag-pill">ワンクリックURL共有</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>チームを分ける</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 18. 国会議事録サーチ -->
+            <a href="diet-search/" class="card" data-category="research" data-keywords="国会議事録サーチ Diet Speech Explorer 国会 議事録 発言 検索 NDL 国立国会図書館 API">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🏛️</div>
+                    <div class="card-badges">
+                        <span class="badge badge-api">API連携 ⚡</span>
+                        <span class="badge-category">調査・研究</span>
+                    </div>
+                </div>
+                <h3 class="card-title">国会議事録サーチ (Diet Speech Explorer)</h3>
+                <p class="card-desc">国会でのあらゆる発言・議論をフリーワードで検索！国立国会図書館の国会議事録検索APIを利用したリアルタイムWeb調査ツール。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">国会議事録API</span>
+                    <span class="tag-pill">発言全文検索</span>
+                    <span class="tag-pill">会議録リンク</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>議事録を検索</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 19. NDL電子公開状況チェッカー -->
+            <a href="ndl-checker/" class="card" data-category="research" data-keywords="NDL電子公開状況チェッカー NDL Public Access Checker 国立国会図書館 デジコレ 公開範囲 個人送信 館内限定">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">📖</div>
+                    <div class="card-badges">
+                        <span class="badge badge-api">API連携 ⚡</span>
+                        <span class="badge-category">図書館・調査</span>
+                    </div>
+                </div>
+                <h3 class="card-title">NDL電子公開状況チェッカー</h3>
+                <p class="card-desc">NDL（国立国会図書館デジタルコレクション）の電子化・公開範囲状況を簡単に判定・検索。インターネット公開、個人送信、館内限定などの種別を一目で把握。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">NDLデジコレ</span>
+                    <span class="tag-pill">公開範囲判定</span>
+                    <span class="tag-pill">雑誌巻号チェック</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>公開状況を判定</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 20. CiNii 所蔵館チェッカー -->
+            <a href="cinii-checker/ui/" class="card" data-category="research" data-keywords="CiNii 所蔵館チェッカー CiNii Checker 書誌ID NCID 所蔵情報 OPAC 図書館">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">🔍</div>
+                    <div class="card-badges">
+                        <span class="badge-category">図書館・学術</span>
+                    </div>
+                </div>
+                <h3 class="card-title">CiNii 所蔵館チェッカー</h3>
+                <p class="card-desc">書誌ID (NCID) をもとに、CiNii Booksの所蔵情報を一括確認し、他館所蔵の有無や所蔵館数、具体的な所蔵館名およびOPACリンクを高速調査。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">CiNii Books連携</span>
+                    <span class="tag-pill">NCID一括照会</span>
+                    <span class="tag-pill">OPACリンク抽出</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>所蔵をチェック</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 21. WEKO3 Importer Helper -->
+            <a href="jairo-weko3-helper/popup.html" class="card" data-category="research" data-keywords="WEKO3 Importer Helper JAIRO-Cloud WEKO3 リポジトリ 論文登録 拡張機能 ブックマークレット 学術">
+                <div class="card-header-row">
+                    <div class="card-icon-wrap">📑</div>
+                    <div class="card-badges">
+                        <span class="badge-category">学術リポジトリ</span>
+                    </div>
+                </div>
+                <h3 class="card-title">WEKO3 Importer Helper</h3>
+                <p class="card-desc">大学図書館等の学術機関リポジトリ（JAIRO-Cloud / WEKO3）における論文登録業務を効率化するための支援ツール（Chrome拡張機能 / ブックマークレット対応）。</p>
+                <div class="card-tags">
+                    <span class="tag-pill">JAIRO-Cloud</span>
+                    <span class="tag-pill">WEKO3登録支援</span>
+                    <span class="tag-pill">メタデータ抽出</span>
+                </div>
+                <div class="card-footer-action">
+                    <span>ヘルパーを開く</span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- Empty State Container -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">🔍</div>
+                <h3>該当するツールが見つかりませんでした</h3>
+                <p>別のキーワードで検索するか、カテゴリを切り替えてみてください。</p>
+            </div>
+
+        </div>
     </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <ul class="footer-links">
+                <li><a href="./">ポータルトップ</a></li>
+                <li><a href="https://github.com/zdm8390/webtools" target="_blank" rel="noopener noreferrer">GitHub リポジトリ</a></li>
+            </ul>
+            <p>© 2026 Webtools Collection. All tools are open-source and free to use.</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Script -->
+    <script>
+        (function() {
+            // Theme Management
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const themeIcon = document.getElementById('themeIcon');
+            const themeLabel = document.getElementById('themeLabel');
+            const htmlElement = document.documentElement;
+
+            function initTheme() {
+                const savedTheme = localStorage.getItem('webtools_theme');
+                if (savedTheme) {
+                    setTheme(savedTheme);
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    setTheme('dark');
+                } else {
+                    setTheme('light');
+                }
+            }
+
+            function setTheme(theme) {
+                htmlElement.setAttribute('data-theme', theme);
+                localStorage.setItem('webtools_theme', theme);
+                if (theme === 'dark') {
+                    themeIcon.textContent = '☀️';
+                    themeLabel.textContent = 'ライト';
+                } else {
+                    themeIcon.textContent = '🌙';
+                    themeLabel.textContent = 'ダーク';
+                }
+            }
+
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = htmlElement.getAttribute('data-theme') || 'light';
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            });
+
+            initTheme();
+
+            // Filter and Search Logic
+            const searchInput = document.getElementById('searchInput');
+            const searchClearBtn = document.getElementById('searchClearBtn');
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const cards = Array.from(document.querySelectorAll('.card'));
+            const emptyState = document.getElementById('emptyState');
+            const resultCountLabel = document.getElementById('resultCountLabel');
+            const filterStatusLabel = document.getElementById('filterStatusLabel');
+
+            let currentCategory = 'all';
+            let searchQuery = '';
+
+            const categoryLabels = {
+                'all': 'すべてのツール',
+                'game': '🎮 ゲーム・エンタメ',
+                'ai-fun': '🤖 AI・面白ツール',
+                'productivity': '🛠️ 実用・テキスト',
+                'research': '📚 調査・図書館・研究'
+            };
+
+            function filterCards() {
+                const query = searchQuery.toLowerCase().trim();
+                let visibleCount = 0;
+
+                cards.forEach(card => {
+                    const cardCategory = card.getAttribute('data-category');
+                    const cardKeywords = (card.getAttribute('data-keywords') || '').toLowerCase();
+                    const cardTitle = card.querySelector('.card-title').textContent.toLowerCase();
+                    const cardDesc = card.querySelector('.card-desc').textContent.toLowerCase();
+
+                    const matchesCategory = (currentCategory === 'all' || cardCategory === currentCategory);
+                    const matchesSearch = (!query || 
+                        cardTitle.includes(query) || 
+                        cardDesc.includes(query) || 
+                        cardKeywords.includes(query));
+
+                    if (matchesCategory && matchesSearch) {
+                        card.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Update UI counts and empty state
+                resultCountLabel.textContent = `表示中: ${visibleCount} 件`;
+                if (query) {
+                    filterStatusLabel.textContent = `検索: "${searchQuery}" (${categoryLabels[currentCategory] || 'すべて'})`;
+                } else {
+                    filterStatusLabel.textContent = categoryLabels[currentCategory] || 'すべてのツール';
+                }
+
+                if (visibleCount === 0) {
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                }
+
+                searchClearBtn.style.display = searchQuery ? 'block' : 'none';
+            }
+
+            // Category Tabs Event
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentCategory = btn.getAttribute('data-category');
+                    filterCards();
+                });
+            });
+
+            // Search Input Event
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                filterCards();
+            });
+
+            // Search Clear Button Event
+            searchClearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                searchQuery = '';
+                filterCards();
+                searchInput.focus();
+            });
+
+            // Update Counts for badges dynamically
+            function updateBadgeCounts() {
+                const countAll = cards.length;
+                const countGame = cards.filter(c => c.getAttribute('data-category') === 'game').length;
+                const countAiFun = cards.filter(c => c.getAttribute('data-category') === 'ai-fun').length;
+                const countProductivity = cards.filter(c => c.getAttribute('data-category') === 'productivity').length;
+                const countResearch = cards.filter(c => c.getAttribute('data-category') === 'research').length;
+
+                document.getElementById('countAll').textContent = countAll;
+                document.getElementById('countGame').textContent = countGame;
+                document.getElementById('countAiFun').textContent = countAiFun;
+                document.getElementById('countProductivity').textContent = countProductivity;
+                document.getElementById('countResearch').textContent = countResearch;
+            }
+
+            updateBadgeCounts();
+            filterCards();
+        })();
+    </script>
 </body>
 </html>

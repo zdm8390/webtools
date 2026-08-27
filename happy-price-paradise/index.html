@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAPPY PRICE PARADISE 歌詞ルーレットシミュレーター</title>
+    <meta name="description" content="ダイソーの名曲「HAPPY PRICE PARADISE」の歌詞（ハッピー/ハイパー・プライス/プライム・パラダイス/パラダイム）を完全再現するまでに何回ルーレットを回す必要があるかをシミュレーション！">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-title-area">
+                <div class="badge-tag">DAISO SONG</div>
+                <h1 class="title">HAPPY PRICE PARADISE</h1>
+                <span class="subtitle">🛒 歌詞完全再現ルーレット＆確率シミュレーター 🎶</span>
+            </div>
+            <div class="header-controls">
+                <button id="btn-mute" class="btn-icon muted" type="button">🔇 サウンドOFF</button>
+                <a href="../" class="btn-icon back-link">🏠 Webtools Top</a>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="slot" type="button">🎰 ルーレット実況</button>
+            <button class="tab-btn" data-tab="sim" type="button">⚡ 超高速モンテカルロ計算</button>
+            <button class="tab-btn" data-tab="theory" type="button">📖 歌詞構造＆確率理論</button>
+        </nav>
+
+        <!-- TAB 1: Live Slot Machine -->
+        <main class="tab-panel active" id="tab-slot">
+            <div class="slot-layout">
+                <!-- Left: Slot Display -->
+                <section class="slot-stage-card">
+                    <div class="stage-header">
+                        <div class="preset-selector-group">
+                            <label for="preset-select">🎯 再現目標：</label>
+                            <select id="preset-select" class="custom-select">
+                                <option value="officialSong15" selected>公式完全歌詞（全15フレーズ・3回連呼×5ブロック）</option>
+                                <option value="official5">代表5フレーズ順（ショート版）</option>
+                                <option value="all8">全8パターン完全コンプリート（全種類引く）</option>
+                            </select>
+                        </div>
+                        <div class="rule-selector-group">
+                            <label for="rule-select">⚙️ 判定ルール：</label>
+                            <select id="rule-select" class="custom-select">
+                                <option value="sequential_strict" selected>全15行完全連続（外れたら最初から・奇跡に挑戦！）</option>
+                                <option value="block_strict">ブロック別3連呼連続（平均2,920回・おすすめ）</option>
+                                <option value="cumulative">累積一致（各行が出るまで進む・平均120回）</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Slot Machine Reels -->
+                    <div class="slot-machine">
+                        <div class="slot-roof">HAPPY PRICE SLOT (DAISO!)</div>
+                        <div class="reels-container">
+                            <div class="reel-column">
+                                <div class="reel-label">Slot 1</div>
+                                <div id="reel-0" class="reel-box word-happy">happy</div>
+                                <div class="reel-sub">ハッピー / ハイパー</div>
+                            </div>
+                            <div class="reel-column">
+                                <div class="reel-label">Slot 2</div>
+                                <div id="reel-1" class="reel-box word-price">price</div>
+                                <div class="reel-sub">プライス / プライム</div>
+                            </div>
+                            <div class="reel-column">
+                                <div class="reel-label">Slot 3</div>
+                                <div id="reel-2" class="reel-box word-paradise">paradise</div>
+                                <div class="reel-sub">パラダイス / パラダイム</div>
+                            </div>
+                        </div>
+
+                        <!-- DAISO Pop-up Effect -->
+                        <div id="daiso-shout" class="daiso-shout-overlay">＼ DAISO! ／</div>
+
+                        <div class="slot-footer-status">
+                            <div class="status-chip">直前の結果: <span id="last-result-badge" class="result-badge">待機中</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Counter Bar -->
+                    <div class="counter-dashboard">
+                        <div class="counter-item">
+                            <div class="c-label">現在の進行度</div>
+                            <div id="current-step-display" class="c-val highlight">0 / 15 フレーズ</div>
+                        </div>
+                        <div class="counter-item best-record-item">
+                            <div class="c-label">🔥 最大進行 (最高記録)</div>
+                            <div id="max-step-display" class="c-val text-gold">0 / 15 フレーズ</div>
+                        </div>
+                        <div class="counter-item">
+                            <div class="c-label">総スピン回数</div>
+                            <div id="total-spins-display" class="c-val">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="controls-toolbar">
+                        <button id="btn-start" class="btn btn-primary" type="button">▶ 自動ルーレット開始</button>
+                        <button id="btn-stop" class="btn btn-danger" type="button" disabled>⏹ 一時停止</button>
+                        <button id="btn-single-spin" class="btn btn-secondary" type="button">🎲 1回だけ回す</button>
+                        <button id="btn-skip-goal" class="btn btn-warning" type="button">⏩ 瞬間ゴールスキップ</button>
+                        <button id="btn-reset" class="btn btn-outline" type="button">🔄 リセット</button>
+                    </div>
+
+                    <div class="speed-control-group">
+                        <label for="speed-select">⚡ アニメーション速度：</label>
+                        <select id="speed-select" class="custom-select speed-select">
+                            <option value="150">のんびり (150ms)</option>
+                            <option value="80">通常 (80ms)</option>
+                            <option value="30">高速 (30ms)</option>
+                            <option value="5">マッハ爆速 (5ms / 毎秒200回)</option>
+                            <option value="-100" selected>⚡ 光速バッチ (毎秒約6,000回・おすすめ)</option>
+                            <option value="-500">🌌 超光速ワープ (毎秒約30,000回・異次元)</option>
+                            <option value="-2000">💥 極限ブラックホール (毎秒約120,000回)</option>
+                        </select>
+                        <button id="btn-share" class="btn btn-share" type="button">🔗 結果をシェア</button>
+                    </div>
+                </section>
+
+                <!-- Right: Target Progress & Log -->
+                <aside class="slot-sidebar">
+                    <div class="sidebar-card target-card">
+                        <div id="target-list">
+                            <!-- Dynamic Content -->
+                        </div>
+                    </div>
+
+                    <div class="sidebar-card log-card">
+                        <div class="card-header-sm">📜 実況ログ（最新50件）</div>
+                        <div id="history-log" class="log-stream">
+                            <div class="log-entry normal">[準備完了] 「自動ルーレット開始」または「1回だけ回す」を押してください</div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </main>
+
+        <!-- TAB 2: Fast Monte Carlo Simulator -->
+        <section class="tab-panel" id="tab-sim">
+            <div class="sim-card">
+                <div class="sim-header">
+                    <h2>⚡ 超高速モンテカルロ・シミュレーション</h2>
+                    <p>数万回〜数十万回の歌詞完全再現をブラウザ内で一瞬でシミュレーションし、平均回数や分布を導き出します。</p>
+                </div>
+
+                <div class="sim-config-bar">
+                    <div class="cfg-item">
+                        <label for="monte-carlo-count">📊 試行回数 (データ数)：</label>
+                        <select id="monte-carlo-count" class="custom-select">
+                            <option value="100">100 回 (超速・約0.05秒)</option>
+                            <option value="500">500 回 (高速・約0.2秒)</option>
+                            <option value="1000" selected>1,000 回 (推奨・約0.4秒)</option>
+                            <option value="5000">5,000 回 (高精度・約2秒)</option>
+                            <option value="10000">10,000 回 (極限精度・約4秒)</option>
+                        </select>
+                    </div>
+                    <button id="btn-fast-sim" class="btn btn-primary btn-large" type="button">🚀 シミュレーションを実行</button>
+                    <button id="btn-cancel-sim" class="btn btn-danger btn-large" type="button" style="display: none;">⏹ 中断する</button>
+                </div>
+
+                <!-- Simulation Output -->
+                <div id="mc-results" class="mc-results-area">
+                    <div class="sim-placeholder">
+                        上の「シミュレーションを実行」ボタンを押すと、統計データと分布グラフが瞬時に算出されます！
+                    </div>
+                </div>
+
+                <!-- Histogram Canvas -->
+                <div class="chart-wrapper">
+                    <div class="chart-title">📈 達成スピン回数の確率分布グラフ（ヒストグラム）</div>
+                    <canvas id="mc-chart"></canvas>
+                </div>
+
+                <!-- Twitter Shareable Infographic Section -->
+                <div class="infographic-section-wrapper">
+                    <div class="info-sec-header">
+                        <div>
+                            <h3>📊 歌詞の状態遷移図＆ルーレット・ゴールパターン</h3>
+                            <p class="info-sec-sub">ルーレットの組み合わせ構造から全15フレーズ完走までの状態遷移・宝くじ比較インフォグラフィックです。</p>
+                        </div>
+                        <div class="info-btn-group">
+                            <button id="btn-download-infographic" class="btn btn-primary" type="button">📸 画像をダウンロード (PNG・Twitter用)</button>
+                            <button id="btn-copy-infographic" class="btn btn-secondary" type="button">📋 画像をクリップボードにコピー</button>
+                        </div>
+                    </div>
+                    <div class="infographic-canvas-container">
+                        <canvas id="infographic-canvas" width="1200" height="780"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: Theory & Lyrics Breakdown -->
+        <section class="tab-panel" id="tab-theory">
+            <div class="theory-card">
+                <h2>📖 「HAPPY PRICE PARADISE」歌詞の数理構造と正規表現</h2>
+                
+                <div class="theory-section">
+                    <h3>1. 歌詞の単語スロット構造</h3>
+                    <p>ダイソーの公式ソングは、3つのスロット（各2択）からなる単語の組み合わせで構成されています。</p>
+                    <div class="theory-table-wrapper">
+                        <table class="theory-table">
+                            <thead>
+                                <tr>
+                                    <th>スロット</th>
+                                    <th>選択肢1</th>
+                                    <th>選択肢2</th>
+                                    <th>単語数</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>第1スロット (形容詞)</td>
+                                    <td><strong class="color-pink">happy</strong> (ハッピー)</td>
+                                    <td><strong class="color-purple">hyper</strong> (ハイパー)</td>
+                                    <td>2通り</td>
+                                </tr>
+                                <tr>
+                                    <td>第2スロット (名詞1)</td>
+                                    <td><strong class="color-green">price</strong> (プライス)</td>
+                                    <td><strong class="color-amber">prime</strong> (プライム)</td>
+                                    <td>2通り</td>
+                                </tr>
+                                <tr>
+                                    <td>第3スロット (名詞2)</td>
+                                    <td><strong class="color-blue">paradise</strong> (パラダイス)</td>
+                                    <td><strong class="color-magenta">paradigm</strong> (パラダイム)</td>
+                                    <td>2通り</td>
+                                </tr>
+                                <tr>
+                                    <td>掛け声 (サビ末尾)</td>
+                                    <td colspan="2"><strong class="color-daiso">（DAISO!）</strong></td>
+                                    <td>固定</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="formula-box">
+                        全組み合わせ数 = 2 × 2 × 2 = <strong>8 パターン</strong><br>
+                        任意の1フレーズが偶然出る確率 = 1/2 × 1/2 × 1/2 = <strong>1/8 (12.5%)</strong>
+                    </p>
+                </div>
+
+                <div class="theory-section">
+                    <h3>2. 公式ソング完全版（全15フレーズ構成）</h3>
+                    <p>ダイソー店内で流れる公式ストアソングの正確な歌詞構造は、以下の<strong>3回連呼×5ブロック（全15フレーズ）</strong>で構成されています。</p>
+                    <div class="code-box">
+【第1ブロック：原形連呼】<br>
+happy price paradise (DAISO!)<br>
+happy price paradise (DAISO!)<br>
+happy price paradise (DAISO!)<br><br>
+【第2ブロック：第1語 hyper 変異】<br>
+hyper price paradise (DAISO!)<br>
+hyper price paradise (DAISO!)<br>
+hyper price paradise (DAISO!)<br><br>
+【第3ブロック：第2語 prime 変異】<br>
+happy prime paradise (DAISO!)<br>
+happy prime paradise (DAISO!)<br>
+happy prime paradise (DAISO!)<br><br>
+【第4ブロック：第3語 paradigm 変異】<br>
+happy price paradigm (DAISO!)<br>
+happy price paradigm (DAISO!)<br>
+happy price paradigm (DAISO!)<br><br>
+【第5ブロック：全語変異×2 ＋ 原点回帰締め×1】<br>
+hyper prime paradigm (DAISO!)<br>
+hyper prime paradigm (DAISO!)<br>
+happy price paradise (DAISO!)
+                    </div>
+                </div>
+
+                <div class="theory-section">
+                    <h3>3. 確率・期待値の数学的解説</h3>
+                    <p>
+                        各スロットは2択（ハッピー/ハイパー、プライス/プライム、パラダイス/パラダイム）なので、任意の1フレーズが出る確率は <code>p = 1/2 × 1/2 × 1/2 = 1/8 (12.5%)</code> です。
+                    </p>
+                    <div class="formula-box">
+                        <strong>① 累積一致モード（各行が出るまで回す）:</strong><br>
+                        期待値 E = 15 フレーズ × 8 回 = <strong>120 回</strong><br><br>
+                        <strong>② ブロック別3連呼連続モード（各ブロックの連呼を成功させて進む）:</strong><br>
+                        1ブロック(3連続)の期待値 = 8 + 64 + 512 = 584 回<br>
+                        全5ブロック合計期待値 = 584 × 5 = <strong>約 2,920 回</strong><br><br>
+                        <strong>③ 全15行完全連続モード（一度でも外れたら1番最初へ）:</strong><br>
+                        期待値 E ≈ 8¹⁵ ≈ <strong>約 35兆回</strong>（まさに奇跡の領域！）
+                    </div>
+                <div class="theory-section">
+                    <h3>4. 🎫 宝くじ当選確率との比較・対照表</h3>
+                    <p>ハピパラの歌詞スロットで連続一致を達成する難易度を、日本の代表的な宝くじの1等当選確率と比較したスケールです。</p>
+                    <div class="theory-table-wrapper">
+                        <table class="theory-table">
+                            <thead>
+                                <tr>
+                                    <th>宝くじの種類・等級</th>
+                                    <th>当選金額</th>
+                                    <th>当選確率</th>
+                                    <th>ハピパラ歌詞スロットでの難易度相当</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>年末ジャンボ 6等</strong></td>
+                                    <td>3,000円</td>
+                                    <td>1 / 100 (1%)</td>
+                                    <td>1フレーズ当てるより簡単 (1/8 = 12.5%)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ナンバーズ3 ストレート</strong></td>
+                                    <td>約10万円</td>
+                                    <td>1 / 1,000 (0.1%)</td>
+                                    <td><strong>約3連続一致</strong>（1/512 ≒ 1/1,000）</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ナンバーズ4 ストレート</strong></td>
+                                    <td>約100万円</td>
+                                    <td>1 / 10,000 (0.01%)</td>
+                                    <td><strong>約4.4連続一致</strong>（8⁴ = 4,096）</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>年末ジャンボ 3等</strong></td>
+                                    <td>100万円</td>
+                                    <td>1 / 100,000 (0.001%)</td>
+                                    <td><strong>約5.5連続一致</strong>（8⁵ = 32,768）</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ミニロト 1等</strong></td>
+                                    <td>約1,000万円</td>
+                                    <td>1 / 169,911 (約0.0006%)</td>
+                                    <td><strong>約5.8連続一致</strong>（8⁶ = 262,144）</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>年末ジャンボ 2等</strong></td>
+                                    <td>1,000万円</td>
+                                    <td>1 / 1,333,333 (約133万分の1)</td>
+                                    <td><strong>約6.8連続一致</strong>（8⁷ = 2,097,152）</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>toto BIG 1等</strong></td>
+                                    <td>最高6億円</td>
+                                    <td>1 / 4,782,969 (約480万分の1)</td>
+                                    <td><strong>約7.4連続一致</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ロト6 1等</strong></td>
+                                    <td>最高6億円</td>
+                                    <td>1 / 6,096,454 (約610万分の1)</td>
+                                    <td><strong>約7.5連続一致</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ロト7 1等</strong></td>
+                                    <td>最高10億円</td>
+                                    <td>1 / 10,295,472 (約1030万分の1)</td>
+                                    <td><strong>約7.8連続一致</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong class="color-daiso">年末ジャンボ 1等</strong></td>
+                                    <td><strong>7億円</strong></td>
+                                    <td><strong>1 / 20,000,000 (2000万分の1)</strong></td>
+                                    <td><strong>約8.1連続一致</strong>（8⁸ = 16,777,216）</td>
+                                </tr>
+                                <tr>
+                                    <td><strong class="color-magenta">全15フレーズ完全連続</strong></td>
+                                    <td><strong>奇跡の栄誉</strong></td>
+                                    <td><strong>1 / 35,184,372,088,832 (約35兆分の1)</strong></td>
+                                    <td><strong class="color-pink">年末ジャンボ1等を175万回連続で当てるレベル！</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>© 2026 Webtools - HAPPY PRICE PARADISE Simulator | Inspired by DAISO Store Song</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
