@@ -1,0 +1,399 @@
+================================================================================
+  Antigravity 会話・作業ログ
+  セッションID: 45a65c36-95a0-4917-8e8e-c16c94466277
+  出力日時: 2026-08-26
+================================================================================
+
+
+################################################################################
+【ターン 1】 ユーザーのリクエスト
+################################################################################
+>> カーリルMCPを追加して
+
+[システム処理] ツール実行: list_dir | 
+[システム処理] ツール実行: find_by_name | 
+[システム処理] ツール実行: find_by_name | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: list_dir | 
+[システム処理] ツール実行: list_dir | 
+[システム処理] ツール実行: list_dir | 
+[システム処理] ツール実行: list_dir | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: list_dir | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: list_dir | 
+[システム処理] ツール実行: list_dir | 
+[システム処理] ツール実行: list_dir | 
+[システム処理] ツール実行: search_web | 
+[システム処理] ツール実行: read_url_content | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: find_by_name | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: grep_search | 
+[システム処理] ツール実行: run_command | 
+  コマンド: Get-ChildItem -Path "C:\Users\hana\.gemini" -Recurse -Filter "*.json" | ForEach-Object { Select-String -Path $_.FullName -Pattern "mcp-beta|mcpServers|serverUrl" }
+[システム処理] ツール実行: manage_task | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+I'm checking the MCP configuration settings and will update you shortly.
+
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: run_command | 
+  コマンド: python -c "import httpx; res = httpx.get('https://mcp-beta.calil.jp/mcp'); print('Status:', res.status_code); print('Headers:', res.headers); print('Body:', res.text[:500])"
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: run_command | 
+  コマンド: agy --help
+[システム処理] ツール実行: run_command | 
+  コマンド: agy mcp --help
+[システム処理] ツール実行: run_command | 
+  コマンド: agy mcp list
+[システム処理] ツール実行: run_command | 
+  コマンド: agy mcp add --help
+[システム処理] ツール実行: run_command | 
+  コマンド: agy mcp add calil-mcp-server https://mcp-beta.calil.jp/mcp
+[システム処理] ツール実行: run_command | 
+  コマンド: agy mcp list
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: write_to_file | 
+[システム処理] ツール実行: replace_file_content | 
+[システム処理] ツール実行: list_dir | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: run_command | 
+  コマンド: agy mcp list
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+カーリル図書館MCP（カーリル for AI）の追加が完了しました。
+
+### 設定内容
+[mcp_config.json](file:///C:/Users/hana/.gemini/config/mcp_config.json) に以下の通りカーリル公式MCPサーバー（Streamable HTTP / Remote MCP）を登録しました。
+
+```json
+{
+  "mcpServers": {
+    "calil-mcp-server": {
+      "disabled": false,
+      "serverUrl": "https://mcp-beta.calil.jp/mcp"
+    }
+  }
+}
+```
+
+### 現在のMCPサーバー一覧
+```text
+NAME              TYPE   STATUS   COMMAND/URL
+calil-mcp-server  http   enabled  https://mcp-beta.calil.jp/mcp
+cinii-mcp-server  stdio  enabled  uv --directory C:/Users/hana/cinii-mcp-server run server.py
+crd-mcp-server    stdio  enabled  uv --directory C:/Users/hana/crd-mcp-server run server.py
+iiif-mcp-server   stdio  enabled  node C:/Users/hana/IIIF_MCP/dist/index.js
+kokkai-giji-mcp   stdio  enabled  node C:/Users/hana/kokkai-lib-mcp/build/index.js
+ndl-search-mcp    stdio  enabled  uv --directory C:/Users/hana/ndl-mcp run server.py
+```
+
+### 利用可能なツール機能
+1. **図書館蔵書検索 (`search_books`)**: 全国の公共図書館・大学図書館・専門図書館の蔵書横断検索
+2. **図書館検索 (`search_libraries`)**: 図書館名や地域からのシステムID検索
+3. **NDC分類情報取得 (`get_ndc_info`)**: 日本十進分類法（NDC第9版）の参照
+
+> [!NOTE]
+> 初回アクセス時にブラウザでカーリルのOAuth認証画面が開いた場合は、画面の指示に従って「許可」を選択してください。
+
+
+################################################################################
+【ターン 2】 ユーザーのリクエスト
+################################################################################
+>> カーリルのMCPを使って図書館蔵書検索から「■■■■■■■■■■■■■■■■■■■■」というタイトルの図書を持っている図書館をリストアップして
+
+[システム処理] ツール実行: call_mcp_tool | 
+  MCPサーバー: calil-mcp-server -> ツール: search_books
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: manage_task | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+I'm checking the OAuth registration and connection details for Calil MCP.
+
+[システム処理] ツール実行: schedule | 
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: write_to_file | 
+[システム処理] ツール実行: run_command | 
+  コマンド: python C:\Users\hana\.gemini\antigravity-cli\brain\45a65c36-95a0-4917-8e8e-c16c94466277\scratch\calil_auth.py
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+カーリルのOAuth認証用ページをブラウザで開きました。
+ブラウザの画面で「**許可**」をクリックしてください。認証完了後、検索を自動的に実行します。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: call_mcp_tool | 
+  MCPサーバー: ndl-search-mcp -> ツール: ndl_search
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: run_command | 
+  コマンド: netstat -ano | findstr 8080
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+I'm querying Calil to check the holdings for 『■■■■■■■■■■■■■■■■■■■■』 across libraries.
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: write_to_file | 
+[システム処理] ツール実行: run_command | 
+  コマンド: python C:\Users\hana\.gemini\antigravity-cli\brain\45a65c36-95a0-4917-8e8e-c16c94466277\scratch\search_calil_holdings.py
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: view_file | 
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+[システム処理] ツール実行: manage_task | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+全国の図書館システム（約2,600システム・7,500館）に対して、カーリルAPIを通じた『■■■■■■■■■■■■■■■■■■■■』（ISBN: 999-9-999-99999-9 / 著者: ■■■■■■■■ / ■■■■■■）の蔵書・所蔵状況の一括検索を実行中です。完了次第、所蔵館一覧をまとめてご報告します。
+
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+検索結果を取得中です。少々お待ちください。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+全国の蔵書データを順次問い合わせ中です。完了までしばらくお待ちください。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: manage_task | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+蔵書データの検索処理を継続しています。完了まで少々お待ちください。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+全国の図書館へ問い合わせを行っております。完了まで少々お待ちください。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+検索処理を実行中です。間もなく結果がまとまります。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+引き続き全国の図書館の所蔵データを取得中です。少々お待ちください。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+全国の図書館システムの照会が終盤に入っております。間もなく完了します。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+照会完了まで少々お待ちください。結果がまとまり次第表示します。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+全バッチの集計が完了間近です。少々お待ちください。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+最終集計を行っております。まもなく完了します。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+集計処理を継続しています。完了まで少々お待ちください。
+
+[システム処理] ツール実行: manage_task | 
+[システム処理] ツール実行: schedule | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+引き続き取得中です。まもなく完了します。
+
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: run_command | 
+  コマンド: (Pythonスクリプト等実行)
+[システム処理] ツール実行: view_file | 
+
+--------------------------------------------------------------------------------
+【アシスタントの回答】
+--------------------------------------------------------------------------------
+カーリルの蔵書検索データベースより、対象書籍の所蔵状況を全国の図書館（約2,600システム・7,500館）から検索・集計しました。
+
+---
+
+### 検索対象図書情報
+* **タイトル**: ■■■■■■■■■■■■■■■■■■■■■■■■
+* **著者**: ■■■■■■■■
+* **出版社**: ■■■■■■■■ (■■■■■■年)
+* **ISBN**: `999-9-999-99999-9`
+* **所蔵確認数**: **全国 79 自治体・大学等の図書館システム**
+
+---
+
+### 都道府県別 所蔵図書館一覧
+
+#### 東京都 (14自治体)
+* **[東京都江東区](https://www.koto-lib.tokyo.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B16433237)**: 城東図書館 (貸出可), 深川図書館 (貸出可), 東大島図書館 (貸出可), 古石場図書館 (貸出可)
+* **[東京都北区](https://www.library.city.kita.lg.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B13427868)**: 田端図書館 (貸出可), 赤羽北図書館 (貸出可), 東十条図書館 (貸出可)
+* **[東京都港区](https://www.lib.city.minato.tokyo.jp/licsxp-opac/WOpacTifTilListToTifTilDetailAction.do?tilcod=1000002354643)**: 赤坂図書館 (貸出可), 高輪図書館分室 (貸出可)
+* **[東京都中央区](https://www.library.city.chuo.tokyo.jp/bookdetail?ctg=1&num=3665537)**: 京橋図書館「本の森ちゅうおう」 (貸出可)
+* **[東京都品川区](https://www.shinagawa-lib.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B12998745)**: 大井図書館 (貸出可)
+* **[東京都目黒区](https://www.meguro-library.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B13607852)**: 大橋図書館 (貸出可)
+* **[東京都荒川区](https://www.library.city.arakawa.tokyo.jp/bookdetail?ctg=1&num=3064495)**: ゆいの森あらかわ (貸出可)
+* **[東京都三鷹市](https://www.library.mitaka.tokyo.jp/bookdetail?ctg=1&num=3031292)**: 東部図書館 (貸出可)
+* **[東京都八王子市](https://www.library.city.hachioji.tokyo.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B13727055)**: 生涯学習センター図書館 (貸出可)
+* **[東京都日野市](https://www.lib.city.hino.lg.jp/winj/opac/switch-detail-iccap.do?bibid=1103032538)**: 中央図書館 (貸出可)
+* **[東京都小平市](https://library.kodaira.ed.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B13079392)**: 上宿図書館 (貸出可)
+* **[東京都武蔵村山市](https://www.library.musashimurayama.tokyo.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B11462026)**: 大南地区図書館 (貸出可)
+* **[東京都稲城市](https://www.library.inagi.tokyo.jp/winj/opac/switch-detail-iccap.do?bibid=1102635980)**: 中央図書館 (貸出可)
+* **[東京都瑞穂町](https://ilisod003.apsel.jp/lib-mizuho/item-details?id=283964)**: 瑞穂町図書館 (貸出可)
+
+#### 関東地方 (東京除く)
+* **[神奈川県横須賀市](https://www.yokosuka-lib.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B12622297)**: 田浦コミュニティセンター図書室 (貸出可)
+* **[埼玉県春日部市](https://www.ip.licsre-saas.jp/kasukabe/webopac/searchdetail.do?biblioid=11059695#v2)**: 庄和図書館 (貸出可)
+* **[埼玉県朝霞市](https://www.lics-saas.nexs-service.jp/asaka/webopac/searchdetail.do?biblioid=11242650#v2)**: 朝霞市立図書館分館 (貸出可)
+* **[埼玉県蕨市](https://www.iu.licsre-saas.jp/warabi/webopac/searchdetail.do?biblioid=1810370#v2)**: 蕨市立図書館 (貸出可)
+* **[聖学院大学（女子聖中高）](https://opac.std.cloud.iliswave.jp/iwjs0014opc/catdbl.do?pkey=BB00479415)**: 女子聖中高図書館 (貸出可)
+* **[千葉県松戸市](https://www.library-matsudo.jp/winj/opac/switch-detail-iccap.do?bibid=1103244836)**: 矢切分館 (貸出可)
+* **[千葉県成田市](https://www.library.city.narita.lg.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B13050484)**: 成田市立図書館 (貸出中)
+* **[千葉県袖ケ浦市](https://www.im.licsre-saas.jp/sodegaura/webopac/searchdetail.do?biblioid=2048277#v2)**: 長浦おかのうえ図書館 (貸出可)
+* **[栃木県栃木市](https://www.library.tochigi.tochigi.jp/opac/books/2425389)**: 大平図書館 (貸出可)
+
+#### 関西地方
+* **[大阪府枚方市](https://toshokan.city.hirakata.osaka.jp/WebOpac/webopac/searchdetail.do?biblioid=6163650#v2)**: 中央図書館 (貸出可)
+* **[大阪府守口市](https://www.im.licsre-saas.jp/moriguchi/webopac/searchdetail.do?biblioid=443183#v2)**: 守口市立図書館 (貸出可)
+* **[大阪府岸和田市](https://www.lics-saas.nexs-service.jp/kishiwada/webopac/searchdetail.do?biblioid=11248381#v2)**: 岸和田市立図書館 (貸出可)
+* **[大阪府豊中市](https://www.lib.toyonaka.osaka.jp/licsxp-opac/WOpacTifTilListToTifTilDetailAction.do?tilcod=1003001008142)**: 東豊中図書館 (貸出可)
+* **[京都府京都市](https://www.kyotocitylib.jp/winj/opac/switch-detail-iccap.do?bibid=1111165798)**: 醍醐中央図書館 (貸出可)
+* **[兵庫県神戸市](https://www.lib.city.kobe.jp/winj/opac/switch-detail-iccap.do?bibid=1110424118)**: 中央図書館 (館内のみ), 東灘図書館 (貸出可), 名谷図書館 (貸出中)
+* **[兵庫県明石市](https://www.akashi-lib.jp/WebOpac/webopac/searchdetail.do?biblioid=11266035#v2)**: 西部図書館 (貸出可)
+* **[兵庫県養父市](https://ilisod010.apsel.jp/yabu-library/item-details?id=90390)**: 養父市立図書館 (貸出可)
+* **[甲南大学](https://library.konan-u.ac.jp/detail?bbid=1000149689)**: 甲南大学図書館 (貸出可)
+* **[滋賀県草津市](https://www.lics-saas.nexs-service.jp/kusatsu/webopac/searchdetail.do?biblioid=1825268#v2)**: 草津市立図書館 (貸出可)
+* **[和歌山県和歌山市](https://www.ip.licsre-saas.jp/wakayama/webopac/searchdetail.do?biblioid=1338350#v2)**: 和歌山市民図書館 (貸出可)
+* **[和歌山県橋本市](https://opac003.libcloud.jp/lib-hashimoto/item-details?id=189417)**: 橋本市図書館 (貸出可)
+* **[三重県津市](https://www4.library.city.tsu.mie.jp/winj/opac/switch-detail-iccap.do?bibid=1102962341)**: 津市一志図書館 (貸出可)
+
+#### 中部・甲信越地方
+* **[愛知県岡崎市](https://websv.library.okazaki.aichi.jp/winj/opac/switch-detail-iccap.do?bibid=1121056028)**: 岡崎市立中央図書館 (貸出可)
+* **[愛知県東海市](https://www.tokai-city-library.jp/tosho/asp/WwShousaiKen.aspx?FCode=1820735&MODE=txtdetail)**: 中央図書館 (貸出可), 横須賀図書館 (貸出可)
+* **[静岡県富士市](https://library.fujishi.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B13296582)**: 富士市立中央図書館 (貸出可)
+* **[静岡県富士宮市](https://www.fujinomiyalib.jp/bookdetail?ctg=1&num=3641253)**: 富士宮市立中央図書館 (貸出可)
+* **[長野県長野市](https://search.library.nagano-ngn.ed.jp/WebOpac/webopac/searchdetail.do?biblioid=3024218#v2)**: 南部図書館 (貸出可)
+* **[長野県松本市](https://opac.lib.city.matsumoto.lg.jp/WebOpac/webopac/searchdetail.do?biblioid=11417087#v2)**: 松本市中央図書館 (貸出可)
+* **[長野県上田地域](https://opac.echol.gr.jp/WebOpac/webopac/searchdetail.do?biblioid=3096152#v2)**: 真田図書館 (貸出可)
+* **[長野県小布施町](https://ilisod003.apsel.jp/machitoshoterrasow/item-details?id=122490)**: まちとしょテラソ (貸出可)
+* **[長野県大桑村](https://www.library-shiojiri.jp/okwopw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B10019484)**: 大桑村図書館 (貸出可)
+* **[山梨県北杜市](https://www.lib.city-hokuto.ed.jp/Libsearch/Materials/Detail/1755623?asShozoKan=AK01%2CST01%2CTK01%2CNS01%2COZ01%2CKB01%2CHK01%2CMK01%2CNK01)**: ながさか図書館 (貸出可)
+* **[山梨県甲州市](https://www.lib-koshu.jp/WebOpac/webopac/searchdetail.do?biblioid=1249950#v2)**: 塩山図書館 (貸出可)
+* **[岐阜県多治見市](https://www.lib.tajimi.gifu.jp/csp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B12502477)**: 多治見市図書館 (貸出可)
+* **[富山県高岡市](https://opac002.libcloud.jp/takaoka-lib/item-details?id=687742)**: 高岡市立中央図書館 (貸出中)
+* **[新潟県新潟市](https://opac.niigatacitylib.jp/winj/opac/switch-detail-iccap.do?bibid=1104393933)**: 坂井輪図書館 (貸出可)
+
+#### 北海道・東北地方
+* **[北海道苫小牧市](https://opac.tomakomai-lib.jp/WebOpac/webopac/searchdetail.do?biblioid=11480132#v2)**: 中央図書館 (貸出可)
+* **[北海道根室市](https://www.lib-nemuro.jp/WebOpac/webopac/searchdetail.do?biblioid=574096#v2)**: 根室市図書館 (貸出可)
+* **[北海道訓子府町](https://opac.libcloud.jp/kunneppulib/item-details?id=168116)**: 訓子府町図書館 (貸出可)
+* **[北海道雄武町](https://opac.libcloud.jp/oumulib/item-details?id=96986)**: 雄武町図書館 (貸出可)
+* **[青森県青森市](https://www.library.city.aomori.aomori.jp/wo/opc_srh/srh_detail?detail[sid]=1001829624)**: 青森市民図書館 (貸出可)
+* **[青森県八戸市](https://www.iu.licsre-saas.jp/hachinohe/webopac/searchdetail.do?biblioid=11442514#v2)**: 八戸市立図書館 (貸出可)
+* **[岩手県一関市](https://ilisod006.apsel.jp/ichinoseki-library/item-details?id=781803)**: 一関図書館 (貸出可), 藤沢図書館 (貸出可)
+* **[岩手県宮古市](https://opac.libcloud.jp/miyako-library/item-details?id=344091)**: 宮古市立図書館 (貸出可)
+* **[宮城県利府町](https://ilisod004.apsel.jp/rifu-library/item-details?id=188365)**: 利府町図書館 (貸出可)
+* **[山形県酒田市](https://sakata-lib.tmcss.jp/WebOpac/webopac/searchdetail.do?biblioid=536833#v2)**: 中央図書館 (貸出可)
+* **[福島県南相馬市](https://libsys.city.minamisoma.lg.jp/opac/item-details?id=2153452)**: 中央図書館 (貸出可)
+* **[秋田県由利本荘市](https://ilisod005.apsel.jp/yurihonjo-lib/item-details?id=372061)**: 由利本荘市中央図書館 (貸出可)
+* **[秋田県湯沢市](https://opac901.libcloud.jp/yuzawa-lib/item-details?id=250294)**: 皆瀬生涯学習センター (貸出可)
+
+#### 中国・四国・九州・沖縄地方
+* **[岡山県岡山市](https://www.ocl.city.okayama.jp/winj/opac/switch-detail-iccap.do?bibid=1103342948)**: 中央図書館 (貸出中)
+* **[山口県防府市](https://www.library.hofu.yamaguchi.jp/WebOpac/webopac/searchdetail.do?biblioid=11220428#v2)**: 防府図書館 (貸出可)
+* **[香川県立図書館](https://www.library.pref.kagawa.lg.jp/winj/opac/switch-detail-iccap.do?bibid=1130570864)**: 香川県立図書館 (貸出可)
+* **[徳島県北島町](https://opac002.libcloud.jp/kitajima-library/item-details?id=317216)**: 北島町立図書館 (貸出可)
+* **[愛媛県宇和島市](https://opac002.libcloud.jp/uwajima-library/item-details?id=348807)**: 中央図書館 (貸出可)
+* **[福岡県志免町](https://ilisod002.apsel.jp/lib-shime-fukuoka/item-details?id=229281)**: 志免町立町民図書館 (貸出可)
+* **[佐賀県佐賀市](https://www2.lib.saga.saga.jp/winj/opac/switch-detail-iccap.do?bibid=1103032730)**: 三瀬館 (貸出可)
+* **[長崎県雲仙市](https://library-unzen.jp/opw/OPW/OPWSRCHTYPE.CSP?DB=LIB&FROMFLG=1&BID=B10185456)**: 吾妻町ふるさと会館図書室 (貸出可)
+* **[長崎県長与町](https://opac.nagayolib.jp/WebOpac/webopac/searchdetail.do?biblioid=112771#v2)**: 長与町図書館 (貸出可)
+* **[熊本県熊本市](https://www2.library.city.kumamoto.jp/winj/opac/switch-detail-iccap.do?bibid=1110900251)**: 清水公民館 (貸出可), とみあい図書館 (貸出中), 五福公民館 (貸出可), くまもと森都心プラザ図書館 (貸出可)
+* **[熊本県合志市](https://search.koshi-lib.jp/WebOpac/webopac/searchdetail.do?biblioid=1713080#v2)**: 西合志図書館 (貸出可)
+* **[熊本県山鹿市](https://search.yamaga-lib.jp/WebOpac/webopac/searchdetail.do?biblioid=334074#v2)**: こもれび図書館 (貸出可)
+* **[大分県大分市](https://www.library.city.oita.oita.jp/winj/opac/switch-detail-iccap.do?bibid=1120038879)**: 大分市民図書館 (貸出可), 坂ノ市公民館 (貸出可)
+* **[大分県津久見市](https://www3.city.tsukumi.oita.jp/WebOpac/webopac/searchdetail.do?biblioid=10800066#v2)**: 津久見市民図書館 (貸出可)
+* **[宮崎県宮崎市](https://www2.city.miyazaki.miyazaki.jp/WebOpac/webopac/searchdetail.do?biblioid=1789665#v2)**: 宮崎市立図書館 (貸出可)
+* **[沖縄県浦添市](https://www.iu.licsre-saas.jp/urasoe/webopac/searchdetail.do?biblioid=381738#v2)**: 浦添市立図書館 (貸出可)
+
+---
+
+全79館の詳細リンク付きレポートは [calil_holding_libraries.md](file:///C:/Users/hana/.gemini/antigravity-cli/brain/45a65c36-95a0-4917-8e8e-c16c94466277/calil_holding_libraries.md) にも保存されています。各図書館名をクリックすると直接OPAC詳細画面を開いて予約・貸出状況の確認が可能です。
