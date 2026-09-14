@@ -1805,5 +1805,12 @@
       <type>血漿</type>
       <place>伊勢</place>
     </record>
+          <record id="258">
+      <date>2026-09-13</date>
+      <year>2026</year>
+      <yearMonth>2026/8</yearMonth>
+      <type>血漿</type>
+      <place>大阪府</place>
+    </record>
   </records>
 </bloodDonationData>
