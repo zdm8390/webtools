@@ -68,9 +68,10 @@ export default function RecordModal({ isOpen, onClose, onSave, editingRecord, de
       return;
     }
 
-    const year = parseInt(formData.date.substring(0, 4), 10);
-    const dateObj = new Date(formData.date);
-    const yearMonth = `${year}/${dateObj.getMonth() + 1}`;
+    const parts = formData.date.split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const yearMonth = `${year}/${month}`;
 
     onSave({
       ...formData,

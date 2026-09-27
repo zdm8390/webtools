@@ -20,6 +20,29 @@ export default function XmlManager({ records, onImportRecords, onResetToInitial 
     document.body.removeChild(link);
   };
 
+  // CSV File Download (Excel / Colab compatible)
+  const handleDownloadCsv = () => {
+    const headers = ['通算回数', '献血日', '年', '年月', '種別', '献血場所', 'メモ'];
+    const rows = records.map(r => [
+      r.id,
+      r.date,
+      r.year,
+      `"${r.yearMonth}"`,
+      `"${r.type}"`,
+      `"${(r.place || '').replace(/"/g, '""')}"`,
+      `"${(r.memo || '').replace(/"/g, '""')}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `blood_donation_records_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // XML File Import Handler
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -74,10 +97,14 @@ export default function XmlManager({ records, onImportRecords, onResetToInitial 
               <p>現在の献血記録（{records.length}件）を標準XML形式でローカルに保存します。</p>
             </div>
           </div>
-          <div className="action-card-body">
+          <div className="action-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <button className="btn btn-primary btn-lg w-full" onClick={handleDownloadXml}>
               <Download size={18} />
               <span>blood_donation_records.xml をダウンロード</span>
+            </button>
+            <button className="btn btn-outline btn-md w-full" onClick={handleDownloadCsv} title="ExcelやPython Colabで開きやすいCSV形式">
+              <Download size={16} />
+              <span>CSV形式（Excel / Colab用）でダウンロード</span>
             </button>
           </div>
         </div>
@@ -125,9 +152,9 @@ export default function XmlManager({ records, onImportRecords, onResetToInitial 
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="btn btn-outline btn-sm" onClick={onResetToInitial} title="Excelからの初期データ(255件)にリセット">
+            <button className="btn btn-outline btn-sm" onClick={onResetToInitial} title="サーバーの最新XMLデータに同期・リセット">
               <RefreshCw size={14} />
-              <span>初期状態に復元</span>
+              <span>最新XMLに同期・復元</span>
             </button>
             <button className="btn btn-outline btn-sm" onClick={handleCopyXml}>
               {copied ? <Check size={14} color="#2ec4b6" /> : <Copy size={14} />}

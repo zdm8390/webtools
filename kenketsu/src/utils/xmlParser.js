@@ -57,9 +57,9 @@ export function buildXmlFromRecords(records) {
 
   sorted.forEach((rec, idx) => {
     const id = rec.id || idx + 1;
-    const year = rec.year || rec.date.substring(0, 4);
-    const dateObj = new Date(rec.date);
-    const yearMonth = rec.yearMonth || `${dateObj.getFullYear()}/${dateObj.getMonth() + 1}`;
+    const dateParts = (rec.date || '').split('-');
+    const year = rec.year || (dateParts[0] ? parseInt(dateParts[0], 10) : new Date().getFullYear());
+    const yearMonth = rec.yearMonth || (dateParts.length >= 2 ? `${year}/${parseInt(dateParts[1], 10)}` : `${year}/1`);
 
     xml += `    <record id="${id}">\n`;
     xml += `      <date>${escapeXml(rec.date)}</date>\n`;

@@ -209,13 +209,13 @@ function MainApp() {
   };
 
   const handleResetToInitial = () => {
-    if (window.confirm('初期のExcel変換データ（255件）にリセットしますか？')) {
-      fetch('./kenketsu_data.xml')
+    if (window.confirm('サーバーの最新XMLデータから再読み込みしてリセットしますか？')) {
+      fetch(`./kenketsu_data.xml?t=${Date.now()}`)
         .then((res) => res.text())
         .then((xmlText) => {
           const parsedRecords = parseXmlToRecords(xmlText);
           updateRecords(parsedRecords);
-          alert('初期データの255件に復元しました。');
+          alert(`最新のXMLデータ（${parsedRecords.length}件）に復元しました。`);
         });
     }
   };

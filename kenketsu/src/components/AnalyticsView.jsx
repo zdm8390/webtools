@@ -20,7 +20,7 @@ function YearlyBarChart({ years, counts }) {
   const maxCount = Math.max(...counts, 1);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'flex-end', paddingTop: '12px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', height: '140px', gap: '4px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', height: '140px', gap: '4px', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>
         {years.map((year, idx) => {
           const count = counts[idx] || 0;
           const heightPercent = (count / maxCount) * 100;
@@ -38,7 +38,7 @@ function YearlyBarChart({ years, counts }) {
                 position: 'relative'
               }}
             >
-              <span style={{ fontSize: '0.65rem', color: count > 0 ? '#ff6b6b' : 'transparent', fontWeight: 'bold', marginBottom: '2px' }}>
+              <span style={{ fontSize: '0.65rem', color: count > 0 ? 'var(--accent-red)' : 'transparent', fontWeight: 'bold', marginBottom: '2px' }}>
                 {count > 0 ? count : ''}
               </span>
               <div
@@ -48,10 +48,10 @@ function YearlyBarChart({ years, counts }) {
                   height: `${Math.max(heightPercent, count > 0 ? 8 : 2)}%`,
                   background: count > 0
                     ? 'linear-gradient(180deg, #ff4d6d 0%, #c9184a 100%)'
-                    : 'rgba(255,255,255,0.05)',
+                    : 'var(--bg-tertiary)',
                   borderRadius: '3px 3px 0 0',
                   transition: 'height 0.4s ease, opacity 0.2s ease',
-                  boxShadow: count > 0 ? '0 2px 8px rgba(255,77,109,0.3)' : 'none'
+                  boxShadow: count > 0 ? '0 2px 8px rgba(255,77,109,0.25)' : 'none'
                 }}
               />
             </div>
@@ -60,7 +60,7 @@ function YearlyBarChart({ years, counts }) {
       </div>
       <div style={{ display: 'flex', gap: '4px', paddingTop: '4px' }}>
         {years.map((year) => (
-          <div key={year} style={{ flex: 1, textAlign: 'center', fontSize: '0.6rem', color: '#94a3b8', transform: 'rotate(-45deg)', transformOrigin: 'top center' }}>
+          <div key={year} style={{ flex: 1, textAlign: 'center', fontSize: '0.6rem', color: 'var(--text-secondary)', transform: 'rotate(-45deg)', transformOrigin: 'top center' }}>
             {String(year).slice(-2)}
           </div>
         ))}
@@ -77,7 +77,7 @@ function DonutChart({ typeCounts }) {
   const typeColors = { '全血': '#e63946', '血漿': '#3a86ff', '血小板': '#ff9f1c', 'その他': '#7209b7' };
 
   if (total === 0) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>データなし</div>;
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>データなし</div>;
   }
 
   const items = Object.entries(typeCounts).filter(([_, count]) => count > 0);
@@ -124,19 +124,19 @@ function DonutChart({ typeCounts }) {
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#f8fafc', lineHeight: 1 }}>{total}</span>
-          <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>合計回数</span>
+          <span style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', lineHeight: 1 }}>{total}</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: '600' }}>合計回数</span>
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
         {slices.map((slice) => (
-          <div key={slice.type} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+          <div key={slice.type} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: slice.color }} />
-              <span style={{ color: '#e2e8f0', fontWeight: '500' }}>{slice.type}</span>
+              <span style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: slice.color, flexShrink: 0 }} />
+              <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{slice.type}</span>
             </div>
-            <span style={{ color: '#94a3b8', fontWeight: 'bold' }}>{slice.count}回 ({Math.round(slice.percent * 100)}%)</span>
+            <span style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>{slice.count}回 ({Math.round(slice.percent * 100)}%)</span>
           </div>
         ))}
       </div>
@@ -157,14 +157,14 @@ function RankingHorizontalBar({ ranking }) {
         const percent = (item.count / maxCount) * 100;
         return (
           <div key={item.place} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem' }}>
-              <span style={{ color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>
-                <strong style={{ color: idx === 0 ? '#ff6b6b' : '#94a3b8', marginRight: '4px' }}>#{idx + 1}</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+              <span style={{ color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>
+                <strong style={{ color: idx === 0 ? 'var(--accent-red)' : 'var(--text-muted)', marginRight: '4px' }}>#{idx + 1}</strong>
                 {item.place}
               </span>
-              <span style={{ color: '#2ec4b6', fontWeight: 'bold' }}>{item.count} 回</span>
+              <span style={{ color: 'var(--accent-teal)', fontWeight: 'bold' }}>{item.count} 回</span>
             </div>
-            <div style={{ width: '100%', height: '6px', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ width: '100%', height: '6px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '3px', overflow: 'hidden' }}>
               <div
                 style={{
                   width: `${percent}%`,
@@ -197,7 +197,7 @@ function DecadeBarChart({ decadeAverages }) {
         const heightPercent = (val / maxVal) * 80;
         return (
           <div key={decade} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flex: 1 }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: colors[idx % colors.length] }}>{val}回/年</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 'bold', color: colors[idx % colors.length] }}>{val}回/年</span>
             <div
               style={{
                 width: '100%',
@@ -205,10 +205,10 @@ function DecadeBarChart({ decadeAverages }) {
                 height: `${Math.max(heightPercent, 12)}px`,
                 backgroundColor: colors[idx % colors.length],
                 borderRadius: '6px 6px 0 0',
-                boxShadow: `0 4px 12px ${colors[idx % colors.length]}44`
+                boxShadow: `0 4px 12px ${colors[idx % colors.length]}33`
               }}
             />
-            <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{decade}</span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '500' }}>{decade}</span>
           </div>
         );
       })}
@@ -225,13 +225,13 @@ function MonthlyBarChart({ monthlyCounts }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'flex-end', paddingTop: '12px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', height: '130px', gap: '3px', paddingBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', height: '130px', gap: '3px', paddingBottom: '4px', borderBottom: '1px solid var(--border-color)' }}>
         {monthNames.map((m, idx) => {
           const count = monthlyCounts[idx] || 0;
           const heightPercent = (count / maxCount) * 100;
           return (
             <div key={m} title={`${m}: ${count}回`} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-              <span style={{ fontSize: '0.6rem', color: '#f72585', fontWeight: 'bold', marginBottom: '2px' }}>
+              <span style={{ fontSize: '0.62rem', color: 'var(--accent-pink)', fontWeight: 'bold', marginBottom: '2px' }}>
                 {count > 0 ? count : ''}
               </span>
               <div
@@ -248,7 +248,7 @@ function MonthlyBarChart({ monthlyCounts }) {
       </div>
       <div style={{ display: 'flex', gap: '3px', paddingTop: '4px' }}>
         {monthNames.map((m) => (
-          <div key={m} style={{ flex: 1, textAlign: 'center', fontSize: '0.6rem', color: '#94a3b8' }}>
+          <div key={m} style={{ flex: 1, textAlign: 'center', fontSize: '0.62rem', color: 'var(--text-secondary)' }}>
             {m.replace('月', '')}
           </div>
         ))}
@@ -272,11 +272,11 @@ function IntervalProgressChart({ intervalGroupCounts, totalCount }) {
         const percent = Math.round((count / totalValid) * 100);
         return (
           <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem' }}>
-              <span style={{ color: '#e2e8f0' }}>{label}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+              <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{label}</span>
               <span style={{ color: colors[idx % colors.length], fontWeight: 'bold' }}>{count}回 ({percent}%)</span>
             </div>
-            <div style={{ width: '100%', height: '6px', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ width: '100%', height: '6px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '3px', overflow: 'hidden' }}>
               <div
                 style={{
                   width: `${percent}%`,

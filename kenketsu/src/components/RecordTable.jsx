@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Plus, Edit2, Trash2, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { Search, Filter, Plus, Edit2, Trash2, ChevronLeft, ChevronRight, ArrowUpDown, Download, RotateCcw } from 'lucide-react';
 
 export default function RecordTable({ records, onOpenAddModal, onOpenEditModal, onDeleteRecord }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -10,6 +10,36 @@ export default function RecordTable({ records, onOpenAddModal, onOpenEditModal, 
   const [sortAsc, setSortAsc] = useState(false); // Default latest first
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
+
+  const handleExportCsv = () => {
+    const headers = ['通算回数', '献血日', '年', '年月', '種別', '献血場所', 'メモ'];
+    const rows = filteredRecords.map(r => [
+      r.id,
+      r.date,
+      r.year,
+      `"${r.yearMonth}"`,
+      `"${r.type}"`,
+      `"${(r.place || '').replace(/"/g, '""')}"`,
+      `"${(r.memo || '').replace(/"/g, '""')}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `kenketsu_records_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setSelectedType('all');
+    setSelectedYear('all');
+    setSelectedPlace('all');
+    setCurrentPage(1);
+  };
 
   // Extract unique filter options
   const years = useMemo(() => {
@@ -146,6 +176,18 @@ export default function RecordTable({ records, onOpenAddModal, onOpenEditModal, 
             </select>
           </div>
 
+          <button className="btn btn-outline btn-sm" onClick={handleExportCsv} title="表示中の記録をCSV形式でダウンロード（Excel対応）">
+            <Download size={15} />
+            <span>CSV出力</span>
+          </button>
+
+          {(searchTerm || selectedType !== 'all' || selectedYear !== 'all' || selectedPlace !== 'all') && (
+            <button className="btn btn-outline btn-sm" onClick={handleResetFilters} title="絞り込みを解除">
+              <RotateCcw size={14} />
+              <span>リセット</span>
+            </button>
+          )}
+
           <button className="btn btn-primary btn-sm" onClick={onOpenAddModal}>
             <Plus size={16} />
             <span>新規登録</span>
@@ -175,8 +217,12 @@ export default function RecordTable({ records, onOpenAddModal, onOpenEditModal, 
           <tbody>
             {paginatedRecords.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-20">
-                  該当する献血記録が見つかりません。
+                <td colSpan={6} style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-secondary)' }}>
+                  <p style={{ marginBottom: '12px', fontSize: '0.92rem' }}>該当する献血記録が見つかりませんでした。</p>
+                  <button className="btn btn-outline btn-sm" onClick={handleResetFilters}>
+                    <RotateCcw size={14} />
+                    <span>絞り込み条件をクリア</span>
+                  </button>
                 </td>
               </tr>
             ) : (
