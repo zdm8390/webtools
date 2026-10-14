@@ -1819,5 +1819,12 @@
       <type>血漿</type>
       <place>伊勢</place>
     </record>
+      <record id="260">
+      <date>2026-10-11</date>
+      <year>2026</year>
+      <yearMonth>2026/10</yearMonth>
+      <type>血漿</type>
+      <place>三重（新）</place>
+    </record>
   </records>
 </bloodDonationData>
